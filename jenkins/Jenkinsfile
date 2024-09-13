@@ -2,6 +2,9 @@ pipeline {
     agent {
        label 'gcloud-build--rocky-linux-8--x64'
     }
+    environment {               
+       JAVA_HOME = "/opt/corretto_java17"  
+    }  
     stages {
         stage('Build') { 
             steps {
