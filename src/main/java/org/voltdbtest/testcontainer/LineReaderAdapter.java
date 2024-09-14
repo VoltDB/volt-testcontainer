@@ -1,20 +1,10 @@
-/* This file is part of VoltDB.
- * Copyright (C) 2008-2022 Volt Active Data Inc.
+/*
+ * Copyright (C) 2024 Volt Active Data Inc.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with VoltDB.  If not, see <http://www.gnu.org/licenses/>.
+ * Use of this source code is governed by an MIT
+ * license that can be found in the LICENSE file or at
+ * https://opensource.org/licenses/MIT.
  */
-
 package org.voltdbtest.testcontainer;
 
 import java.io.BufferedReader;
@@ -30,7 +20,9 @@ class LineReaderAdapter implements SQLCommandLineReader {
     private final BufferedReader m_reader;
     private int m_lineNum = 0;
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getLineNumber() {
         return m_lineNum;
@@ -45,7 +37,9 @@ class LineReaderAdapter implements SQLCommandLineReader {
         m_reader = new BufferedReader(reader);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String readBatchLine() throws IOException {
         m_lineNum++;
@@ -58,6 +52,7 @@ class LineReaderAdapter implements SQLCommandLineReader {
     public void close() {
         try {
             m_reader.close();
-        } catch (IOException e) { }
+        } catch (IOException e) {
+        }
     }
 }

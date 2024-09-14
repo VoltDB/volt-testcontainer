@@ -1,23 +1,13 @@
-/* This file is part of VoltDB.
+/*
  * Copyright (C) 2024 Volt Active Data Inc.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with VoltDB.  If not, see <http://www.gnu.org/licenses/>.
+ * Use of this source code is governed by an MIT
+ * license that can be found in the LICENSE file or at
+ * https://opensource.org/licenses/MIT.
  */
-
 package org.voltdbtest.testcontainer;
 
-import com.google_voltpatches.common.base.Joiner;
+import com.google.common.base.Joiner;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.Network;
 import org.testcontainers.images.builder.Transferable;
@@ -59,12 +49,12 @@ public class VoltDBCluster {
      * The images variable is a protected final Map that stores image names for the VoltDB instances.
      * The keys are strings representing the image names, and the values are also strings representing the image paths.
      * The images map is used within the VoltDBCluster class to specify the image name for the VoltDB instances.
-     *
+     * <p>
      * Example usage:
-     *      VoltDBCluster cluster = new VoltDBCluster("volt-image");
-     *      cluster.images.put("volt-image", "/path/to/volt-image");
-     *      cluster.start();
-     *
+     * VoltDBCluster cluster = new VoltDBCluster("volt-image");
+     * cluster.images.put("volt-image", "/path/to/volt-image");
+     * cluster.start();
+     * <p>
      * This variable is only accessible within the class and its subclasses.
      */
     protected final Map<String, String> images = new HashMap<>();
@@ -82,21 +72,20 @@ public class VoltDBCluster {
      */
     protected int hostCount;
     /**
-     * The k-safety value of the VoltDB cluster.
-     *
-     * The k-safety value determines the level of fault tolerance in the cluster. It represents the number of replicas
-     * for each partition of data in the cluster. A k-safety value of 0 means no replicas, while a k-safety value of 1
+     * The kfactor value of the VoltDB cluster.
+     * <p>
+     * The kfactor value determines the level of fault tolerance in the cluster. It represents the number of replicas
+     * for each partition of data in the cluster. A kfactor value of 0 means no replicas, while a kfactor value of 1
      * means each partition has one replica.
-     *
      */
-    protected int ksafety;
+    protected int kfactor;
     /**
      * The licensePath variable represents the path of the license file used by the VoltDBCluster class.
      *
      * <p>
      * The licensePath is a protected String variable that is used within the VoltDBCluster class to specify the path of the license file.
      * It is used during the initialization and configuration of the VoltDB cluster.
-     *
+     * <p>
      * For example, the licensePath variable can be set to a file path like "/path/to/license.txt" to specify the location of the license file.
      * </p>
      *
@@ -118,6 +107,7 @@ public class VoltDBCluster {
     public VoltDBCluster() {
         this("voltdb/voltdb-enterprise-dev", 1, 0);
     }
+
     /**
      * Represents a VoltDB cluster with a single host for testing purposes.
      *
@@ -128,9 +118,9 @@ public class VoltDBCluster {
     }
 
     /**
-     * Creates a VoltDBCluster with the specified number of hosts, k-safety value, and image name.
+     * Creates a VoltDBCluster with the specified number of hosts, kfactor value, and image name.
      *
-     * @param image the image name of the VoltDB instance to use
+     * @param image     the image name of the VoltDB instance to use
      * @param extraLibs Folder from where extra jars needs to be added to server extension directory
      * @throws java.lang.RuntimeException if the license file is not found or the VOLTDB_LICENSE environment variable is not set correctly
      */
@@ -139,29 +129,32 @@ public class VoltDBCluster {
     }
 
     /**
-     * Creates a VoltDBCluster with the specified number of hosts, k-safety value, and image name.
+     * Creates a VoltDBCluster with the specified number of hosts, kfactor value, and image name.
      *
-     * @param hostCount  the number of hosts in the cluster
-     * @param image      the image name of the VoltDB instance to use
+     * @param hostCount the number of hosts in the cluster
+     * @param image     the image name of the VoltDB instance to use
+     * @param kfactor   kfactor of voltdb cluster.
      * @throws java.lang.RuntimeException if the license file is not found or the VOLTDB_LICENSE environment variable is not set correctly
      */
-    public VoltDBCluster(String image, int hostCount, int ksafety) {
-        this(image, hostCount, ksafety, null, null);
+    public VoltDBCluster(String image, int hostCount, int kfactor) {
+        this(image, hostCount, kfactor, null, null);
     }
 
     /**
-     * Creates a VoltDBCluster with the specified number of hosts, k-safety value, and image name.
+     * Creates a VoltDBCluster with the specified number of hosts, kfactor value, and image name.
      * The license file is picked by
      * - env variable VOLTDB_LICENSE pointing to a license file
      * - or $HOME/license.xml
      * - or /tmp/voltdb-license.xml
-     * @param image the image name of the VoltDB instance to use
-     * @param hostCount the number of hosts in the cluster
+     *
+     * @param image         the image name of the VoltDB instance to use
+     * @param hostCount     the number of hosts in the cluster
+     * @param kfactor       kfactor of voltdb cluster.
      * @param myLicensePath externally supplied license file path.
-     * @param extraLibs Folder from where extra jars needs to be added to server extension directory
+     * @param extraLibs     Folder from where extra jars needs to be added to server extension directory
      * @throws java.lang.RuntimeException if the license file is not found or the VOLTDB_LICENSE environment variable is not set correctly
      */
-    public VoltDBCluster(String image, int hostCount, int ksafety, String myLicensePath, String extraLibs) {
+    public VoltDBCluster(String image, int hostCount, int kfactor, String myLicensePath, String extraLibs) {
         // Default if you dont use any
         String licensePath = userHome() + "/voltdb-license.xml";
         if (myLicensePath != null) {
@@ -195,12 +188,12 @@ public class VoltDBCluster {
         }
         this.licensePath = licensePath;
         this.hostCount = hostCount;
-        this.ksafety = ksafety;
+        this.kfactor = kfactor;
         String startCommand = getStartCommand(hostCount);
         for (int i = 0; i < hostCount; i++) {
             String host = String.format("%s-%d", "host", i);
-            VoltDBContainer container = new VoltDBContainer(i, image, licensePath, hostCount, ksafety, startCommand, extraLibs);
-            container.setKsafety(ksafety);
+            VoltDBContainer container = new VoltDBContainer(i, image, licensePath, hostCount, kfactor, startCommand, extraLibs);
+            container.setKfactor(kfactor);
             containers.put(host, container);
             images.put(host, image);
         }
@@ -214,7 +207,7 @@ public class VoltDBCluster {
     /**
      * Starts the VoltDB cluster by starting each VoltDB container in the cluster.
      *
-     * @throws java.io.IOException if an I/O error occurs while starting the VoltDB containers
+     * @throws java.io.IOException        if an I/O error occurs while starting the VoltDB containers
      * @throws java.lang.RuntimeException if an error occurs during the starting process
      */
     public void start() throws IOException {
@@ -243,7 +236,7 @@ public class VoltDBCluster {
      * <p>start.</p>
      *
      * @param voltDBContainer a {@link org.voltdbtest.testcontainer.VoltDBContainer} object
-     * @param expectClient a boolean
+     * @param expectClient    a boolean
      * @throws java.io.IOException if any.
      */
     protected void start(VoltDBContainer voltDBContainer, boolean expectClient) throws IOException {
@@ -268,11 +261,11 @@ public class VoltDBCluster {
      *
      * @param ddl the DDL file to execute
      * @return true if the DDL execution is successful, false otherwise
-     * @throws java.io.IOException if an I/O error occurs while reading the DDL file
+     * @throws java.io.IOException                 if an I/O error occurs while reading the DDL file
      * @throws org.voltdb.client.ProcCallException if an error occurs during the DDL execution process
      */
     public boolean runDDL(File ddl) throws IOException, ProcCallException {
-        String[] args = {"--file=" + ddl.getAbsolutePath() };
+        String[] args = {"--file=" + ddl.getAbsolutePath()};
         Client client = getClient();
         SQLLoader sqlcmd = new SQLLoader(client);
         int exitCode = sqlcmd.execute(args);
@@ -283,9 +276,9 @@ public class VoltDBCluster {
      * Executes the given DDL schema on the VoltDB cluster.
      *
      * @param schema the DDL schema to execute
-     * @throws java.io.IOException if an I/O error occurs while executing the DDL schema
-     * @throws org.voltdb.client.ProcCallException if an error occurs during the DDL execution process
      * @return a {@link org.voltdb.client.ClientResponse} object
+     * @throws java.io.IOException                 if an I/O error occurs while executing the DDL schema
+     * @throws org.voltdb.client.ProcCallException if an error occurs during the DDL execution process
      */
     public ClientResponse runDDL(String schema) throws IOException, ProcCallException {
         for (VoltDBContainer voltDBContainer : containers.values()) {
@@ -301,7 +294,7 @@ public class VoltDBCluster {
      *
      * @param jar the path to the JAR file to be loaded
      * @return a ClientResponse object representing the result of the operation
-     * @throws java.io.IOException if an I/O error occurs while reading the JAR file
+     * @throws java.io.IOException                 if an I/O error occurs while reading the JAR file
      * @throws org.voltdb.client.ProcCallException if an error occurs during the class loading process
      */
     public ClientResponse loadClasses(String jar) throws IOException, ProcCallException {
@@ -316,10 +309,10 @@ public class VoltDBCluster {
     /**
      * Loads classes from a JAR file into the VoltDB cluster.
      *
-     * @param jar the path to the JAR file to be loaded
+     * @param jar             the path to the JAR file to be loaded
      * @param classesToDelete classes to delete from the cluster
      * @return a ClientResponse object representing the result of the operation
-     * @throws java.io.IOException if an I/O error occurs while reading the JAR file
+     * @throws java.io.IOException                 if an I/O error occurs while reading the JAR file
      * @throws org.voltdb.client.ProcCallException if an error occurs during the class loading process
      */
     public ClientResponse loadClasses(String jar, String classesToDelete) throws IOException, ProcCallException {
@@ -337,10 +330,10 @@ public class VoltDBCluster {
      * @param proc   the name of the stored procedure to call
      * @param params the parameters to pass to the stored procedure
      * @return a ClientResponse object representing the result of the procedure call
-     * @throws java.io.IOException        if an I/O error occurs while making the procedure call
-     * @throws org.voltdb.client.ProcCallException  if an error occurs during the procedure call process
+     * @throws java.io.IOException                 if an I/O error occurs while making the procedure call
+     * @throws org.voltdb.client.ProcCallException if an error occurs during the procedure call process
      */
-    public ClientResponse callProcedure(String proc, Object...params) throws IOException, ProcCallException {
+    public ClientResponse callProcedure(String proc, Object... params) throws IOException, ProcCallException {
         Client client = getClient();
         return client.callProcedure(proc, params);
     }
@@ -433,15 +426,16 @@ public class VoltDBCluster {
     }
 
     // Used by our extension which does add (elastic) tests
+
     /**
      * <p>getJoinCommand.</p>
      *
      * @return a {@link java.lang.String} object
      */
     protected String getJoinCommand() {
-        StringBuilder startAction = new StringBuilder("--ignore=thp --count=" + (hostCount + ksafety +1) + " --host=" +
-                containers.keySet().stream().findFirst().get() + " --add");
-        return startAction.toString();
+        String startAction = "--ignore=thp --count=" + (hostCount + kfactor + 1) + " --host=" +
+                containers.keySet().stream().findFirst().get() + " --add";
+        return startAction;
     }
 
     /**
@@ -451,12 +445,11 @@ public class VoltDBCluster {
      * @return a {@link java.lang.String} object
      */
     protected String getStartCommand(int hostcount) {
-        StringBuilder startAction = new StringBuilder("--ignore=thp --count=" + hostcount + " --host=");
-        startAction.append(Joiner.on(',').join(getHostList(hostcount)));
-        return startAction.toString();
+        return "--ignore=thp --count=" + hostcount + " --host=" + Joiner.on(',').join(getHostList(hostcount));
     }
 
     // Used by our extension which does stop and require access to container for many other purposes.
+
     /**
      * <p>getContainer.</p>
      *
@@ -502,7 +495,7 @@ public class VoltDBCluster {
      * @return the updated VoltDBCluster object
      */
     public VoltDBCluster withTruststore(String resourcePath, String password) {
-        String certificateTxt = "trustStore=" + "/etc/ssl/truststore.jks"  + "\n" +
+        String certificateTxt = "trustStore=" + "/etc/ssl/truststore.jks" + "\n" +
                 "trustStorePassword=" + password + "\n" +
                 "external=true";
 
@@ -643,12 +636,12 @@ public class VoltDBCluster {
     /**
      * <p>withKsaftey.</p>
      *
-     * @param ksafety a int
+     * @param kfactor a int
      * @return a {@link org.voltdbtest.testcontainer.VoltDBCluster} object
      */
-    public VoltDBCluster withKsaftey(int ksafety) {
+    public VoltDBCluster withKsaftey(int kfactor) {
         for (VoltDBContainer voltDBContainer : containers.values()) {
-            voltDBContainer.setKsafety(ksafety);
+            voltDBContainer.setKfactor(kfactor);
         }
         return this;
     }

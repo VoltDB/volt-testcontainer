@@ -1,18 +1,9 @@
-/* This file is part of VoltDB.
- * Copyright (C) 2008-2022 Volt Active Data Inc.
+/*
+ * Copyright (C) 2024 Volt Active Data Inc.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with VoltDB.  If not, see <http://www.gnu.org/licenses/>.
+ * Use of this source code is governed by an MIT
+ * license that can be found in the LICENSE file or at
+ * https://opensource.org/licenses/MIT.
  */
 
 package org.voltdbtest.testcontainer;
@@ -32,12 +23,12 @@ interface SQLCommandLineReader {
      * @return a {@link java.lang.String} object
      * @throws java.io.IOException if any.
      */
-    public String readBatchLine() throws IOException;
+    String readBatchLine() throws IOException;
 
     /**
      * Return the line number of the most recently read line.
      *
      * @return a int
      */
-    public int getLineNumber();
+    int getLineNumber();
 }

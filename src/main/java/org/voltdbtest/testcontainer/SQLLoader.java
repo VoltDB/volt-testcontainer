@@ -1,20 +1,10 @@
-/* This file is part of VoltDB.
- * Copyright (C) 2008-2024 Volt Active Data Inc.
+/*
+ * Copyright (C) 2024 Volt Active Data Inc.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with VoltDB.  If not, see <http://www.gnu.org/licenses/>.
+ * Use of this source code is governed by an MIT
+ * license that can be found in the LICENSE file or at
+ * https://opensource.org/licenses/MIT.
  */
-
 package org.voltdbtest.testcontainer;
 
 import org.voltdb.VoltTable;
@@ -50,9 +40,9 @@ import java.util.regex.Pattern;
 class SQLLoader {
     private static final String USER_HOME = userHome();
 
-    private boolean m_hasBatchTimeout = true;
-    private int m_batchTimeout = BatchTimeoutOverrideType.DEFAULT_TIMEOUT;
-    private Charset m_charset = StandardCharsets.UTF_8;
+    private final boolean m_hasBatchTimeout = true;
+    private final int m_batchTimeout = BatchTimeoutOverrideType.DEFAULT_TIMEOUT;
+    private final Charset m_charset = StandardCharsets.UTF_8;
 
     private final Client m_client;
 
@@ -76,9 +66,9 @@ class SQLLoader {
      * its content. Note that the "script file" could be an inline
      * batch, i.e., a "here document" that is coming from the same
      * input stream as the "file" directive.
-     *
+     * <p>
      * Called recursively for nested "file" directives.
-     *
+     * <p>
      * Package access for unit tests.
      */
     void executeScriptFiles(List<FileInfo> filesInfo, SQLCommandLineReader parentLineReader) {
@@ -90,7 +80,7 @@ class SQLLoader {
         for (int ii = 1; ii < filesInfo.size(); ii++) {
             commandString.append(' ').append(filesInfo.get(ii).getFile().toString());
         }
-        System.out.println(commandString.toString());
+        System.out.println(commandString);
 
         // Loop through files. Operation depends on whether we're
         // in 'batch mode' (in which case we collect all file content
@@ -107,8 +97,7 @@ class SQLLoader {
                     // File command is a "here document" so pass in the current
                     // input stream.
                     reader = parentLineReader;
-                }
-                else {
+                } else {
                     // Get a reader for this file
                     FileInputStream fis = new FileInputStream(fileInfo.getFile());
                     reader = adapter = new LineReaderAdapter(new InputStreamReader(fis, m_charset));
@@ -136,16 +125,13 @@ class SQLLoader {
                 if (reader != null) {
                     executeScriptFromReader(fileInfo, reader);
                 }
-            }
-            catch (FileNotFoundException ex) {
+            } catch (FileNotFoundException ex) {
                 System.err.printf("Script file '%s' could not be found.\n", fileInfo.getFile());
                 stopOrContinue(ex);
                 break; // abandon the file loop
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 stopOrContinue(ex);
-            }
-            finally {
+            } finally {
                 if (adapter != null) {
                     adapter.close();
                     adapter = null;
@@ -158,17 +144,17 @@ class SQLLoader {
      * Execute script from a supplied reader. This is used for
      * 'file' directives and for handling primary input when
      * sqlcmd is executed in non-interactive mode.
-     *
+     * <p>
      * The input may be stdin in two cases: sqlcmd is executing
      * in non-interactive mode (likely 'sqlcmd <script'), or
      * when a 'file' directive in interactive mode uses a
      * here-document.
-     *
+     * <p>
      * The 'reader' is expected to have been opened using an
      * appropriate charset for input conversion.
      */
     private void executeScriptFromReader(FileInfo fileInfo, SQLCommandLineReader reader)
-        throws Exception {
+            throws Exception {
         if (reader == null) {
             return; // nothing to see here
         }
@@ -178,7 +164,7 @@ class SQLLoader {
         StringBuilder batch = fileInfo.isBatch() ? new StringBuilder() : null;
 
         String delimiter = (fileInfo.getOption() == FileOption.INLINEBATCH) ?
-            fileInfo.getDelimiter() : null;
+                fileInfo.getDelimiter() : null;
 
         // Loop by lines
         while (true) {
@@ -193,7 +179,7 @@ class SQLLoader {
                     // ctrl-D and exits the process before this code can execute,
                     // even if this code is in a "finally" block.
                     throw new EOFException("ERROR: Failed to find delimiter \"" + delimiter +
-                             "\" indicating end of inline batch. No batched statements were executed.");
+                            "\" indicating end of inline batch. No batched statements were executed.");
                 }
                 if (delimiter.equals(line)) {
                     line = null;
@@ -209,8 +195,7 @@ class SQLLoader {
                     if (!statementString.trim().isEmpty()) {
                         executeStatements(statementString, reader.getLineNumber());
                     }
-                }
-                else {
+                } else {
                     batch.append(statement);
                     if (batch.length() > 0) {
                         String batchName = fileInfo.getFilePath();
@@ -281,7 +266,7 @@ class SQLLoader {
                         int incompleteStmtOffset = splitResults.getIncompleteStmtOffset();
                         statementStarted = true;
                         if (incompleteStmtOffset != 0) {
-                            batch.append(statementString.substring(0, incompleteStmtOffset));
+                            batch.append(statementString, 0, incompleteStmtOffset);
                             statement = new StringBuilder(statementString.substring(incompleteStmtOffset));
                         }
                     }
@@ -296,10 +281,10 @@ class SQLLoader {
     /**
      * Process batch of DDL statements (presented as a single string).
      * Batching is only supported for DDL.
-     *
+     * <p>
      * 'batchFileName' may not be an actual file name; it is
      * used only in error messages.
-     *
+     * <p>
      * All exceptions are swallowed here. If m_stopOnError is set
      * then a StopException will be thrown, which is expected to
      * bubble all the way up the stack. Otherwise we make a normal
@@ -322,14 +307,12 @@ class SQLLoader {
             }
 
             // Assert the current DDL AdHoc batch call behavior
-            assert(response.getResults().length == 1);
+            assert (response.getResults().length == 1);
             System.out.println("Batch command succeeded.");
-        }
-        catch (ProcCallException ex) {
+        } catch (ProcCallException ex) {
             String fixedMessage = patchErrorMessageWithFile(batchFileName, ex.getMessage());
             stopOrContinue(new RuntimeException(fixedMessage));
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             stopOrContinue(ex);
         }
     }
@@ -357,8 +340,7 @@ class SQLLoader {
         for (String statement : parsedStatements) {
             try {
                 executeStatement(statement, lineNum);
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 stopOrContinue(ex);
             }
         }
@@ -366,11 +348,12 @@ class SQLLoader {
     }
 
     // Unit tests override this
+
     /**
      * <p>executeStatement.</p>
      *
      * @param statement a {@link java.lang.String} object
-     * @param lineNum a int
+     * @param lineNum   a int
      * @throws java.lang.Exception if any.
      */
     protected void executeStatement(String statement, int lineNum) throws Exception {
@@ -413,10 +396,10 @@ class SQLLoader {
      * Output generation. Output is either to standard output or
      * to a named output file, in both cases mediated by the
      * user's choice of formatter (fixed, csv, or tab-delimited)
-     *
+     * <p>
      * In the case of a named output file, the file may have been
      * opened with a user-specified charset.
-     *
+     * <p>
      * The printResponseToStdout variant is available for cases
      * that should never use the named file even if configured.
      */
@@ -449,8 +432,7 @@ class SQLLoader {
     private static void printDdlResponse(ClientResponse response) throws Exception {
         if (response.getStatus() != ClientResponse.SUCCESS) {
             throw new Exception("Execution Error: " + response.getStatusString());
-        }
-        else {
+        } else {
             System.out.println("Command succeeded.");
         }
     }
@@ -467,13 +449,11 @@ class SQLLoader {
             try {
                 client.createConnection(server.trim(), port);
                 connectedAnyServer = true;
-            }
-            catch (UnknownHostException e) {
+            } catch (UnknownHostException e) {
                 connectionErrorMessages.append("\n    ")
                         .append(server.trim()).append(':').append(port)
                         .append(" - UnknownHostException");
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 connectionErrorMessages.append("\n    ")
                         .append(server.trim()).append(':').append(port)
                         .append(" - ").append(e.getMessage());
@@ -489,8 +469,7 @@ class SQLLoader {
     private static void closeClient(Client client) {
         try {
             client.close();
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             // ignored
         }
     }
@@ -513,94 +492,94 @@ class SQLLoader {
      */
     private void printUsage() {
         System.out.println(
-        "Usage: sqlcmd --help\n"
-        + "   or  sqlcmd [--servers=server-list]\n"
-        + "              [--port=port-number]\n"
-        + "              [--user=user]\n"
-        + "              [--password=password]\n"
-        + "              [--credentials=properties-file]\n"
-        + "              [--kerberos or --kerberos=jaas-entry-name]\n"
-        + "              [--ssl or --ssl=properties-or-truststore-file]\n"
-        + "              [--charset=charset-name]\n"
-        + "              [--query=query-string]\n"
-        + "              [--file=filename]\n"
-        + "              [--batch]\n"
-        + "              [--output-format=(fixed|csv|tab)]\n"
-        + "              [--output-file=filename]\n"
-        + "              [--output-skip-metadata]\n"
-        + "              [--stop-on-error=(true|false)]\n"
-        + "              [--query-timeout=milliseconds]\n"
-        + "\n"
-        + "[--servers=server-list]\n"
-        + "  Comma-separated list of servers to connect to.\n"
-        + "  Default: localhost.\n"
-        + "\n"
-        + "[--port=port-number]\n"
-        + "  Client port to connect to on cluster nodes.\n"
-        + "  Default: 21212.\n"
-        + "\n"
-        + "[--user=user]\n"
-        + "  Name of the user for database login.\n"
-        + "  Default: (not defined - connection made without credentials).\n"
-        + "\n"
-        + "[--password=password]\n"
-        + "  Password of the user for database login.\n"
-        + "  Default: (not defined - connection made without credentials).\n"
-        + "\n"
-        + "[--credentials=properties-file]\n"
-        + "  File that contains username and password information.\n"
-        + "  Default: (not defined - connection made without credentials).\n"
-        + "\n"
-        + "[--kerberos[=jaas-entry-name]]\n"
-        + "  Enable kerberos authentication for user login by specifying the\n"
-        + "  JAAS login configuration file entry name, or 'VoltDBClient' if\n"
-        + "  no entry name is given.\n"
-        + "  Default: (not defined - connection made without credentials).\n"
-        + "\n"
-        + "[--ssl[=properties-file]]\n"
-        + "  Enable TLS/SSL for server communication with truststore specified\n"
-        + "  in the named properties file, or with system default truststore.\n"
-        + "  Default: TLS/SSL not enabled.\n"
-        + "\n"
-        + "[--charset=charset-name]]\n"
-        + "  Use the named character set for input via 'file' command or the\n"
-        + "  '--file' option, and for result output when the '--output-file'\n"
-        + "  option is used.\n"
-        + "  Default: Use the UTF-8 character set.\n"
-        + "\n"
-        + "[--query=query-string]\n"
-        + "  Execute a non-interactive query. Multiple query options are allowed.\n"
-        + "  Default: (runs the interactive shell when no query options are present).\n"
-        + "\n"
-        + "[--file=filename]\n"
-        + "  Executes a sqlcmd 'FILE' operation from the command line.\n"
-        + "  Default: (runs the interactive shell when no file option is present).\n"
-        + "\n"
-        + "[--batch]\n"
-        + "  In conjunction with the --file option, executes the file in batch mode.\n"
-        + "  Default: (executes the file in statement-by-statement mode).\n"
-        + "\n"
-        + "[--output-format=(fixed|csv|tab)]\n"
-        + "  Format of returned resultset data (fixed-width, CSV or tab-delimited).\n"
-        + "  Default: fixed.\n"
-        + "\n"
-        + "[--output-file=filename]\n"
-        + "  Specifies that formatted resultset data are written to the named file.\n"
-        + "  Default: (formatted data are written to standard output).\n"
-        + "\n"
-        + "[--output-skip-metadata]\n"
-        + "  Removes metadata information such as column headers and row count from\n"
-        + "  produced output. Default: metadata output is enabled.\n"
-        + "\n"
-        + "[--stop-on-error=(true|false)]\n"
-        + "  Causes the utility to stop immediately or continue after detecting an error.\n"
-        + "  In interactive mode, a value of \"true\" discards any unprocessed input\n"
-        + "  and returns to the command prompt. Default: true.\n"
-        + "\n"
-        + "[--query-timeout=milliseconds]\n"
-        + "  Read-only queries that take longer than this number of milliseconds will abort.\n"
-        + "  Default: " + BatchTimeoutOverrideType.DEFAULT_TIMEOUT/1000.0 + " seconds.\n"
-        + "\n"
+                "Usage: sqlcmd --help\n"
+                        + "   or  sqlcmd [--servers=server-list]\n"
+                        + "              [--port=port-number]\n"
+                        + "              [--user=user]\n"
+                        + "              [--password=password]\n"
+                        + "              [--credentials=properties-file]\n"
+                        + "              [--kerberos or --kerberos=jaas-entry-name]\n"
+                        + "              [--ssl or --ssl=properties-or-truststore-file]\n"
+                        + "              [--charset=charset-name]\n"
+                        + "              [--query=query-string]\n"
+                        + "              [--file=filename]\n"
+                        + "              [--batch]\n"
+                        + "              [--output-format=(fixed|csv|tab)]\n"
+                        + "              [--output-file=filename]\n"
+                        + "              [--output-skip-metadata]\n"
+                        + "              [--stop-on-error=(true|false)]\n"
+                        + "              [--query-timeout=milliseconds]\n"
+                        + "\n"
+                        + "[--servers=server-list]\n"
+                        + "  Comma-separated list of servers to connect to.\n"
+                        + "  Default: localhost.\n"
+                        + "\n"
+                        + "[--port=port-number]\n"
+                        + "  Client port to connect to on cluster nodes.\n"
+                        + "  Default: 21212.\n"
+                        + "\n"
+                        + "[--user=user]\n"
+                        + "  Name of the user for database login.\n"
+                        + "  Default: (not defined - connection made without credentials).\n"
+                        + "\n"
+                        + "[--password=password]\n"
+                        + "  Password of the user for database login.\n"
+                        + "  Default: (not defined - connection made without credentials).\n"
+                        + "\n"
+                        + "[--credentials=properties-file]\n"
+                        + "  File that contains username and password information.\n"
+                        + "  Default: (not defined - connection made without credentials).\n"
+                        + "\n"
+                        + "[--kerberos[=jaas-entry-name]]\n"
+                        + "  Enable kerberos authentication for user login by specifying the\n"
+                        + "  JAAS login configuration file entry name, or 'VoltDBClient' if\n"
+                        + "  no entry name is given.\n"
+                        + "  Default: (not defined - connection made without credentials).\n"
+                        + "\n"
+                        + "[--ssl[=properties-file]]\n"
+                        + "  Enable TLS/SSL for server communication with truststore specified\n"
+                        + "  in the named properties file, or with system default truststore.\n"
+                        + "  Default: TLS/SSL not enabled.\n"
+                        + "\n"
+                        + "[--charset=charset-name]]\n"
+                        + "  Use the named character set for input via 'file' command or the\n"
+                        + "  '--file' option, and for result output when the '--output-file'\n"
+                        + "  option is used.\n"
+                        + "  Default: Use the UTF-8 character set.\n"
+                        + "\n"
+                        + "[--query=query-string]\n"
+                        + "  Execute a non-interactive query. Multiple query options are allowed.\n"
+                        + "  Default: (runs the interactive shell when no query options are present).\n"
+                        + "\n"
+                        + "[--file=filename]\n"
+                        + "  Executes a sqlcmd 'FILE' operation from the command line.\n"
+                        + "  Default: (runs the interactive shell when no file option is present).\n"
+                        + "\n"
+                        + "[--batch]\n"
+                        + "  In conjunction with the --file option, executes the file in batch mode.\n"
+                        + "  Default: (executes the file in statement-by-statement mode).\n"
+                        + "\n"
+                        + "[--output-format=(fixed|csv|tab)]\n"
+                        + "  Format of returned resultset data (fixed-width, CSV or tab-delimited).\n"
+                        + "  Default: fixed.\n"
+                        + "\n"
+                        + "[--output-file=filename]\n"
+                        + "  Specifies that formatted resultset data are written to the named file.\n"
+                        + "  Default: (formatted data are written to standard output).\n"
+                        + "\n"
+                        + "[--output-skip-metadata]\n"
+                        + "  Removes metadata information such as column headers and row count from\n"
+                        + "  produced output. Default: metadata output is enabled.\n"
+                        + "\n"
+                        + "[--stop-on-error=(true|false)]\n"
+                        + "  Causes the utility to stop immediately or continue after detecting an error.\n"
+                        + "  In interactive mode, a value of \"true\" discards any unprocessed input\n"
+                        + "  and returns to the command prompt. Default: true.\n"
+                        + "\n"
+                        + "[--query-timeout=milliseconds]\n"
+                        + "  Read-only queries that take longer than this number of milliseconds will abort.\n"
+                        + "  Default: " + BatchTimeoutOverrideType.DEFAULT_TIMEOUT / 1000.0 + " seconds.\n"
+                        + "\n"
         );
     }
 
@@ -625,7 +604,7 @@ class SQLLoader {
      * this method. Absent catastrophic failure of the JVM,
      * this method always returns; it catches all exceptions,
      * and it never calls System.exit().
-     *
+     * <p>
      * The return value is non-zero for an error that results in
      * immediate return. Otherwise, if we encoutered an earlier
      * error, m_exitCode will be set (see method stopOrContinue)
@@ -652,7 +631,8 @@ class SQLLoader {
                 key = arg.substring(2);
                 if (key.contains("=")) {
                     String[] split = key.split(" *= *", 2);
-                    key = split[0]; val = split[1];
+                    key = split[0];
+                    val = split[1];
                     hasValue = true; // even if empty
                 }
 
@@ -663,12 +643,12 @@ class SQLLoader {
                 if (!hasValue) {
                     recognized = true; // assumed
                     switch (key) {
-                    case "batch":
-                        inputBatch = true;
-                        break;
-                    default: // may be a valid key requring a value, or entirely unknown
-                        recognized = false;
-                        break;
+                        case "batch":
+                            inputBatch = true;
+                            break;
+                        default: // may be a valid key requring a value, or entirely unknown
+                            recognized = false;
+                            break;
                     }
                 }
 
@@ -679,16 +659,15 @@ class SQLLoader {
                 // order as the 'usage' text for ease of checking for consistency.
                 if (!recognized) {
                     switch (key) {
-                    case "file":
-                        inputFilePath = val;
-                        break;
-                    default:
-                        recognized = false;
-                        break;
+                        case "file":
+                            inputFilePath = val;
+                            break;
+                        default:
+                            recognized = false;
+                            break;
                     }
                 }
-            }
-            catch (NumberFormatException ex) {
+            } catch (NumberFormatException ex) {
                 return -1;
             }
         }
@@ -697,7 +676,7 @@ class SQLLoader {
         int nAuth = 0;
         try {
             // Command-line file input; just like a 'FILE file' command
-             if (!inputFilePath.isEmpty()) {
+            if (!inputFilePath.isEmpty()) {
                 List<FileInfo> files = Collections.singletonList(new FileInfo(inputFilePath, inputBatch));
                 executeScriptFiles(files, null);
             }

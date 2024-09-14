@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2024 Volt Active Data Inc.
+ *
+ * Use of this source code is governed by an MIT
+ * license that can be found in the LICENSE file or at
+ * https://opensource.org/licenses/MIT.
+ */
 pipeline {
     agent {
        label 'gcloud-build--rocky-linux-8--x64'

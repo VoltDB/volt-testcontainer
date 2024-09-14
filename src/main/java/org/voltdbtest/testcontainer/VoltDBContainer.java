@@ -1,20 +1,10 @@
-/* This file is part of VoltDB.
+/*
  * Copyright (C) 2024 Volt Active Data Inc.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with VoltDB.  If not, see <http://www.gnu.org/licenses/>.
+ * Use of this source code is governed by an MIT
+ * license that can be found in the LICENSE file or at
+ * https://opensource.org/licenses/MIT.
  */
-
 package org.voltdbtest.testcontainer;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
@@ -114,39 +104,42 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     private String keyStorePassword = "";
     private String keyStorePath = "";
     private String trustStorePath = "";
-    private int ksafety = 0;
+    private int kfactor = 0;
     private int hostcount = 1;
 
     /**
      * Creates a VoltDB container with the specified parameters.
      *
-     * @param id          the ID of the container
-     * @param image       the image name of the Docker container
-     * @param licensePath the path to the license file
-     * @param hostcount   the number of hosts in the cluster
+     * @param id           the ID of the container
+     * @param image        the image name of the Docker container
+     * @param licensePath  the path to the license file
+     * @param hostcount    the number of hosts in the cluster
+     * @param kfactor      kfactor of voltdb cluster.
      * @param startCommand the start command for the VoltDB container
-     * @param extraLibs   folder from where extra jars need to be added to server extension directory
+     * @param extraLibs    folder from where extra jars need to be added to server extension directory
      */
     public VoltDBContainer(int id, String image, String licensePath, int hostcount, int kfactor, String startCommand, String extraLibs) {
         this(id, image, licensePath, hostcount, kfactor, null, startCommand, extraLibs);
     }
 
     private String startCommand;
+
     /**
      * Creates a VoltDB container with the specified parameters.
      *
-     * @param id            the ID of the container
-     * @param image         the image name of the Docker container
-     * @param licensePath   the path to the license file
-     * @param hostcount     the number of hosts in the cluster
-     * @param deployment    the deployment information (optional, if null, it will be generated based on hostcount and kfactor)
-     * @param startCommand  the start command for the VoltDB container
-     * @param extraLibs     folder from where extra jars need to be added to the server extension directory
+     * @param id           the ID of the container
+     * @param image        the image name of the Docker container
+     * @param licensePath  the path to the license file
+     * @param hostcount    the number of hosts in the cluster
+     * @param kfactor      kfactor of voltdb cluster.
+     * @param deployment   the deployment information (optional, if null, it will be generated based on hostcount and kfactor)
+     * @param startCommand the start command for the VoltDB container
+     * @param extraLibs    folder from where extra jars need to be added to the server extension directory
      */
-    public VoltDBContainer(int id, String image, String licensePath, int hostcount, int ksafety, String deployment, String startCommand, String extraLibs) {
+    public VoltDBContainer(int id, String image, String licensePath, int hostcount, int kfactor, String deployment, String startCommand, String extraLibs) {
         super(DockerImageName.parse(image));
         this.hostcount = hostcount;
-        this.ksafety = ksafety;
+        this.kfactor = kfactor;
         hostId = "host-" + id;
         if (deployment == null) {
             deployment = getDeployment();
@@ -156,8 +149,8 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         withEnv("VOLTDB_CONFIG", "/etc/deployment.xml");
         withEnv("VOLTDB_OPTS",
                 "-Dlog4j.configuration=file:///opt/voltdb/tools/kubernetes/console-log4j.xml "
-                + " --add-opens=java.base/java.net=ALL-UNNAMED"
-                + " --add-opens=java.base/java.lang.reflect=ALL-UNNAMED");
+                        + " --add-opens=java.base/java.net=ALL-UNNAMED"
+                        + " --add-opens=java.base/java.lang.reflect=ALL-UNNAMED");
         withNetworkMode(NETWORK.getId());
         withNetwork(NETWORK);
         withNetworkAliases(hostId);
@@ -171,7 +164,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         withReuse(true);
         // If requested to copy jars do it here.
         if (extraLibs != null) {
-            File jars[] = getJars(extraLibs);
+            File[] jars = getJars(extraLibs);
             for (File jar : jars) {
                 String name = jar.getName();
                 container.withCopyToContainer(MountableFile.forHostPath(jar.getAbsolutePath()), "/opt/voltdb/lib/extension/" + name);
@@ -186,12 +179,9 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
                 return false;
             }
             String name = pathname.getName();
-            if (name.endsWith(".jar")) {
-                return true;
-            }
-            return false;
+            return name.endsWith(".jar");
         };
-        File jars[] = targetDir.listFiles(jarFiles);
+        File[] jars = targetDir.listFiles(jarFiles);
         return jars;
     }
 
@@ -199,9 +189,9 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     protected void configure() {
         // START_SCRIPT waiter
         this.withCommand("/bin/bash", "-c",
-                        "while [ ! -f /opt/voltdb/tools/entrypoint.sh ]; " +
-                                "do sleep 1; done; /opt/voltdb/tools/entrypoint.sh"
-                );
+                "while [ ! -f /opt/voltdb/tools/entrypoint.sh ]; " +
+                        "do sleep 1; done; /opt/voltdb/tools/entrypoint.sh"
+        );
     }
 
     @Override
@@ -222,7 +212,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
      *
      * @param schema the DDL schema to execute
      * @return a {@link ClientResponse} object representing the result of the DDL execution
-     * @throws IOException if an I/O error occurs while executing the DDL schema
+     * @throws IOException       if an I/O error occurs while executing the DDL schema
      * @throws ProcCallException if an error occurs during the DDL execution process
      */
     public ClientResponse runDDL(String schema) throws IOException, ProcCallException {
@@ -234,7 +224,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
      *
      * @param jar a {@link java.lang.String} object
      * @return a {@link org.voltdb.client.ClientResponse} object
-     * @throws java.io.IOException if any.
+     * @throws java.io.IOException                 if any.
      * @throws org.voltdb.client.ProcCallException if any.
      */
     public ClientResponse loadClasses(String jar) throws IOException, ProcCallException {
@@ -244,10 +234,10 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     /**
      * <p>loadClasses.</p>
      *
-     * @param jar a {@link java.lang.String} object
+     * @param jar             a {@link java.lang.String} object
      * @param classesToDelete a {@link java.lang.String} object
      * @return a {@link org.voltdb.client.ClientResponse} object
-     * @throws java.io.IOException if any.
+     * @throws java.io.IOException                 if any.
      * @throws org.voltdb.client.ProcCallException if any.
      */
     public ClientResponse loadClasses(String jar, String classesToDelete) throws IOException, ProcCallException {
@@ -257,13 +247,13 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     /**
      * <p>callProcedure.</p>
      *
-     * @param proc a {@link java.lang.String} object
+     * @param proc   a {@link java.lang.String} object
      * @param params a {@link java.lang.Object} object
      * @return a {@link org.voltdb.client.ClientResponse} object
-     * @throws java.io.IOException if any.
+     * @throws java.io.IOException                 if any.
      * @throws org.voltdb.client.ProcCallException if any.
      */
-    public ClientResponse callProcedure(String proc, Object...params) throws IOException, ProcCallException {
+    public ClientResponse callProcedure(String proc, Object... params) throws IOException, ProcCallException {
         return client.callProcedure(proc, params);
     }
 
@@ -384,6 +374,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     }
 
     // This is only used for join, rejoin cases when our extension uses it for verification and connecting.
+
     /**
      * <p>Setter for the field <code>client</code>.</p>
      *
@@ -394,11 +385,16 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     }
 
     private String getDeployment() {
-        return String.format(deploymentTemplate, hostcount, ksafety);
+        return String.format(deploymentTemplate, hostcount, kfactor);
     }
 
-    protected void setKsafety(int ksafety) {
-        this.ksafety = ksafety;
+    /**
+     * Sets the kfactor for the VoltDBContainer and updates the deployment configuration.
+     *
+     * @param kfactor the kfactor value to set
+     */
+    protected void setKfactor(int kfactor) {
+        this.kfactor = kfactor;
         String deployment = getDeployment();
         withCopyToContainer(Transferable.of(deployment), "/etc/deployment.xml");
     }
