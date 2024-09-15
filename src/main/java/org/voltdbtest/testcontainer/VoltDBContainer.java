@@ -271,7 +271,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
             config.setTrustStore(trustStorePath, trustStorePassword);
         }
         long st = System.currentTimeMillis();
-        while (st < System.currentTimeMillis() + 120000) {
+        while (System.currentTimeMillis() <  st + 60000) {
             client = ClientFactory.createClient(config);
             try {
                 client.createConnection("localhost:" + mappedPort);

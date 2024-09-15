@@ -19,7 +19,6 @@ import org.voltdb.client.ProcCallException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -104,8 +103,8 @@ public class VoltDBCluster {
     /**
      * Represents a VoltDB cluster with a single host for testing purposes.
      */
-    public VoltDBCluster() {
-        this("voltdb/voltdb-enterprise-dev", 1, 0);
+    public VoltDBCluster(String licensePath) {
+        this(licensePath, "voltdb/voltdb-enterprise-dev", 1, 0);
     }
 
     /**
@@ -113,8 +112,8 @@ public class VoltDBCluster {
      *
      * @param image the image name of the VoltDB instance to use
      */
-    public VoltDBCluster(String image) {
-        this(image, null);
+    public VoltDBCluster(String licensePath, String image) {
+        this(licensePath, image, null);
     }
 
     /**
@@ -124,8 +123,8 @@ public class VoltDBCluster {
      * @param extraLibs Folder from where extra jars needs to be added to server extension directory
      * @throws java.lang.RuntimeException if the license file is not found or the VOLTDB_LICENSE environment variable is not set correctly
      */
-    public VoltDBCluster(String image, String extraLibs) {
-        this(image, 1, 0, null, extraLibs);
+    public VoltDBCluster(String licensePath, String image, String extraLibs) {
+        this(licensePath, image, 1, 0, extraLibs);
     }
 
     /**
@@ -136,8 +135,8 @@ public class VoltDBCluster {
      * @param kfactor   kfactor of voltdb cluster.
      * @throws java.lang.RuntimeException if the license file is not found or the VOLTDB_LICENSE environment variable is not set correctly
      */
-    public VoltDBCluster(String image, int hostCount, int kfactor) {
-        this(image, hostCount, kfactor, null, null);
+    public VoltDBCluster(String licensePath, String image, int hostCount, int kfactor) {
+        this(licensePath, image, hostCount, kfactor, null);
     }
 
     /**
@@ -150,42 +149,10 @@ public class VoltDBCluster {
      * @param image         the image name of the VoltDB instance to use
      * @param hostCount     the number of hosts in the cluster
      * @param kfactor       kfactor of voltdb cluster.
-     * @param myLicensePath externally supplied license file path.
      * @param extraLibs     Folder from where extra jars needs to be added to server extension directory
      * @throws java.lang.RuntimeException if the license file is not found or the VOLTDB_LICENSE environment variable is not set correctly
      */
-    public VoltDBCluster(String image, int hostCount, int kfactor, String myLicensePath, String extraLibs) {
-        // Default if you dont use any
-        String licensePath = userHome() + "/voltdb-license.xml";
-        if (myLicensePath != null) {
-            licensePath = myLicensePath;
-        }
-        // Try file from environment variable
-        String elicenseFile = System.getenv("VOLTDB_LICENSE");
-        if (elicenseFile != null) {
-            File file = Paths.get(elicenseFile).toAbsolutePath().toFile();
-            licensePath = file.getAbsolutePath();
-        } else {
-            // Try -D this will only work for us in our jenkins.
-            String proenv = System.getProperty("env.VOLTPRO");
-            if (proenv != null) {
-                File prodir = new File(proenv).getAbsoluteFile();
-                File file = new File(prodir.getPath() + "/tests/frontend/org/voltdb/v4_general_test_license.xml");
-                licensePath = file.getAbsolutePath();
-            }
-            //env.VOLTPRO
-        }
-        File file = Paths.get(licensePath).toAbsolutePath().toFile();
-        if (!file.exists()) {
-            // finally Look for license in /tmp
-            licensePath = "/tmp/voltdb-license.xml";
-            file = Paths.get(licensePath).toAbsolutePath().toFile();
-            if (!file.exists()) {
-                throw new RuntimeException("Could not find license file. " +
-                        "environment variable VOLTDB_LICENSE not pointing to a license file. " +
-                        "Default locations $HOME/voltdb-license.xml /tmp/voltdb-license.xml does not have a license file.");
-            }
-        }
+    public VoltDBCluster(String licensePath, String image, int hostCount, int kfactor, String extraLibs) {
         this.licensePath = licensePath;
         this.hostCount = hostCount;
         this.kfactor = kfactor;
