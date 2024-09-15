@@ -102,6 +102,7 @@ public class VoltDBCluster {
 
     /**
      * Represents a VoltDB cluster with a single host for testing purposes.
+     * @param licensePath development license for VoltDB
      */
     public VoltDBCluster(String licensePath) {
         this(licensePath, "voltdb/voltdb-enterprise-dev", 1, 0);
@@ -110,6 +111,7 @@ public class VoltDBCluster {
     /**
      * Represents a VoltDB cluster with a single host for testing purposes.
      *
+     * @param licensePath development license for VoltDB
      * @param image the image name of the VoltDB instance to use
      */
     public VoltDBCluster(String licensePath, String image) {
@@ -119,6 +121,7 @@ public class VoltDBCluster {
     /**
      * Creates a VoltDBCluster with the specified number of hosts, kfactor value, and image name.
      *
+     * @param licensePath development license for VoltDB
      * @param image     the image name of the VoltDB instance to use
      * @param extraLibs Folder from where extra jars needs to be added to server extension directory
      * @throws java.lang.RuntimeException if the license file is not found or the VOLTDB_LICENSE environment variable is not set correctly
@@ -130,8 +133,9 @@ public class VoltDBCluster {
     /**
      * Creates a VoltDBCluster with the specified number of hosts, kfactor value, and image name.
      *
-     * @param hostCount the number of hosts in the cluster
+     * @param licensePath development license for VoltDB
      * @param image     the image name of the VoltDB instance to use
+     * @param hostCount the number of hosts in the cluster
      * @param kfactor   kfactor of voltdb cluster.
      * @throws java.lang.RuntimeException if the license file is not found or the VOLTDB_LICENSE environment variable is not set correctly
      */
@@ -146,6 +150,7 @@ public class VoltDBCluster {
      * - or $HOME/license.xml
      * - or /tmp/voltdb-license.xml
      *
+     * @param licensePath development license for VoltDB
      * @param image         the image name of the VoltDB instance to use
      * @param hostCount     the number of hosts in the cluster
      * @param kfactor       kfactor of voltdb cluster.
