@@ -164,7 +164,7 @@ public class VoltDBCluster {
         String startCommand = getStartCommand(hostCount);
         for (int i = 0; i < hostCount; i++) {
             String host = String.format("%s-%d", "host", i);
-            VoltDBContainer container = new VoltDBContainer(i, image, licensePath, hostCount, kfactor, startCommand, extraLibs);
+            VoltDBContainer container = new VoltDBContainer(i, licensePath, image, hostCount, kfactor, startCommand, extraLibs);
             container.setKfactor(kfactor);
             containers.put(host, container);
             images.put(host, image);

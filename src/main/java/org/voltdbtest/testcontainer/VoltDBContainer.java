@@ -118,8 +118,8 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
      * @param startCommand the start command for the VoltDB container
      * @param extraLibs    folder from where extra jars need to be added to server extension directory
      */
-    public VoltDBContainer(int id, String image, String licensePath, int hostcount, int kfactor, String startCommand, String extraLibs) {
-        this(id, image, licensePath, hostcount, kfactor, null, startCommand, extraLibs);
+    public VoltDBContainer(int id, String licensePath, String image, int hostcount, int kfactor, String startCommand, String extraLibs) {
+        this(id, licensePath, image, hostcount, kfactor, null, startCommand, extraLibs);
     }
 
     private String startCommand;
@@ -136,7 +136,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
      * @param startCommand the start command for the VoltDB container
      * @param extraLibs    folder from where extra jars need to be added to the server extension directory
      */
-    public VoltDBContainer(int id, String image, String licensePath, int hostcount, int kfactor, String deployment, String startCommand, String extraLibs) {
+    public VoltDBContainer(int id, String licensePath, String image, int hostcount, int kfactor, String deployment, String startCommand, String extraLibs) {
         super(DockerImageName.parse(image));
         this.hostcount = hostcount;
         this.kfactor = kfactor;
