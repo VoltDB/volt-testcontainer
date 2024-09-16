@@ -9,7 +9,6 @@ package org.voltdbtest.testcontainer;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.OutputFrame;
@@ -144,8 +143,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         if (deployment == null) {
             deployment = getDeployment();
         }
-        GenericContainer container = withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(hostId)));
-        withEnv("VOLTDB_START_CONFIG", startCommand);
+        GenericContainer container = withEnv("VOLTDB_START_CONFIG", startCommand);
         withEnv("VOLTDB_CONFIG", "/etc/deployment.xml");
         withEnv("VOLTDB_OPTS",
                 "-Dlog4j.configuration=file:///opt/voltdb/tools/kubernetes/console-log4j.xml "
@@ -202,9 +200,6 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         // Its twice here because script has a echo.
         String finalScript = String.format(startScript, topicPublic, drpublic);
         copyFileToContainer(Transferable.of(finalScript, 511), "/opt/voltdb/tools/entrypoint.sh");
-        Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(LoggerFactory.getLogger(hostId)).withSeparateOutputStreams();
-        withLogConsumer(logConsumer);
-        followOutput(logConsumer, OutputFrame.OutputType.STDOUT, OutputFrame.OutputType.STDERR);
     }
 
     /**
