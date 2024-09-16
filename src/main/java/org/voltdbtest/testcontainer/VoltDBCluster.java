@@ -7,7 +7,6 @@
  */
 package org.voltdbtest.testcontainer;
 
-import com.google.common.base.Joiner;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.Network;
 import org.testcontainers.images.builder.Transferable;
@@ -417,7 +416,7 @@ public class VoltDBCluster {
      * @return a {@link java.lang.String} object
      */
     protected String getStartCommand(int hostcount) {
-        return "--ignore=thp --count=" + hostcount + " --host=" + Joiner.on(',').join(getHostList(hostcount));
+        return "--ignore=thp --count=" + hostcount + " --host=" + String.join(",", getHostList(hostcount));
     }
 
     // Used by our extension which does stop and require access to container for many other purposes.

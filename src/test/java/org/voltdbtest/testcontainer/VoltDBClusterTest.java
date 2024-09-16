@@ -2,8 +2,6 @@ package org.voltdbtest.testcontainer;
 
 import junit.framework.TestCase;
 
-import java.io.IOException;
-
 public class VoltDBClusterTest extends TestCase {
 
     public void testStart() {
@@ -13,6 +11,7 @@ public class VoltDBClusterTest extends TestCase {
             fail("Cluster should fail to start without license. Most likely you have voltdb-license.xml in your /tmp directory.");
         } catch (Exception e) {
             // We are good.
+            e.printStackTrace();
         } finally {
             cluster.shutdown();
         }
