@@ -61,6 +61,7 @@
             <groupId>org.voltdb</groupId>
             <artifactId>voltdbclient</artifactId>
             <version>${voltClientVersion}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
