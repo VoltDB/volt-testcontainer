@@ -5,7 +5,7 @@ import junit.framework.TestCase;
 public class VoltDBClusterTest extends TestCase {
 
     public void testStart() {
-        VoltDBCluster cluster = new VoltDBCluster("/tmp/voltdb-license.xml");
+        VoltDBCluster cluster = new VoltDBCluster("/tmp/voltdb-license.xml", "voltdb/voltdb-enterprise-dev:master--latest");
         try {
             cluster.start();
             fail("Cluster should fail to start without license. Most likely you have voltdb-license.xml in your /tmp directory.");
