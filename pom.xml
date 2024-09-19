@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    This file is part of VoltDB.
+
+    Copyright (C) 2023 Volt Active Data, Inc.
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+    You should have received a copy of the GNU Affero General Public License
+    along with VoltDB.  If not, see <http://www.gnu.org/licenses/>.
+
+    This pom is used to:
+    - resolve dependencies from remote repo.
+    - set dependency version properties in one place (see: https://maven.apache.org/pom.html#Inheritance)
+    - set version in one place for all child projects (see: https://maven.apache.org/maven-ci-friendly.html)
+-->
+<project
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.voltdb</groupId>
+    <artifactId>volt-testcontainer-module</artifactId>
+    <version>1.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>VoltDb Test Container Core</name>
+    <description>
+        This project has VoltDB testcontainer module with a sample of how to write unit tests using testcontainer and VoltDB
+    </description>
+
+    <modules>
+        <module>volt-testcontainer</module>
+        <module>volt-test-container-test</module>
+    </modules>
+
+    <properties>
+        <!-- VERSION IS SET HERE -->
+        <revision>1.0.1-SNAPSHOT</revision>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <junit-platform.version>1.9.2</junit-platform.version>
+        <junit.jupiter.version>5.9.2</junit.jupiter.version>
+        <junit5.version>${junit.jupiter.version}</junit5.version>
+    </properties>
+
+    <build>
+        <extensions>
+            <extension>
+                <groupId>com.google.cloud.artifactregistry</groupId>
+                <artifactId>artifactregistry-maven-wagon</artifactId>
+                <version>2.2.0</version>
+            </extension>
+        </extensions>
+    </build>
+
+</project>
