@@ -1,79 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<!--
+    This file is part of VoltDB.
+
+    Copyright (C) 2023 Volt Active Data, Inc.
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+    You should have received a copy of the GNU Affero General Public License
+    along with VoltDB.  If not, see <http://www.gnu.org/licenses/>.
+
+    This pom is used to:
+    - resolve dependencies from remote repo.
+    - set dependency version properties in one place (see: https://maven.apache.org/pom.html#Inheritance)
+    - set version in one place for all child projects (see: https://maven.apache.org/maven-ci-friendly.html)
+-->
+<project
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.voltdb</groupId>
-    <artifactId>volt-testcontainer</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <artifactId>volt-testcontainer-module</artifactId>
+    <version>1.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>VoltDb Test Container Core</name>
+    <description>
+        This project has VoltDB testcontainer module with a sample of how to write unit tests using testcontainer and VoltDB
+    </description>
+
+    <modules>
+        <module>volt-testcontainer</module>
+        <module>volt-test-container-test</module>
+    </modules>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <junit-platform.version>1.9.2</junit-platform.version>
+        <junit.jupiter.version>5.9.2</junit.jupiter.version>
+        <junit5.version>${junit.jupiter.version}</junit5.version>
         <voltClientVersion>13.2.2</voltClientVersion>
         <testcontainerVersion>1.20.1</testcontainerVersion>
         <dockerjavaVersion>3.4.0</dockerjavaVersion>
         <slf4jVersion>1.7.36</slf4jVersion>
     </properties>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>testcontainers</artifactId>
-            <version>${testcontainerVersion}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-api</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-simple</artifactId>
-                    </exclusion>
-                </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.github.docker-java</groupId>
-            <artifactId>docker-java</artifactId>
-            <version>${dockerjavaVersion}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-simple</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-compress</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpclient</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.voltdb</groupId>
-            <artifactId>voltdbclient</artifactId>
-            <version>${voltClientVersion}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4jVersion}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>${slf4jVersion}</version>
-        </dependency>
-    </dependencies>
 
     <build>
         <extensions>
@@ -83,26 +61,6 @@
                 <version>2.2.0</version>
             </extension>
         </extensions>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.7.0</version>
-            </plugin>
-        </plugins>
     </build>
-
-    <distributionManagement>
-        <repository>
-            <id>volt-internal-artifacts</id>
-            <url>artifactregistry://us-maven.pkg.dev/voltdb-operator/volt-artifacts-internal</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </distributionManagement>
 
 </project>
