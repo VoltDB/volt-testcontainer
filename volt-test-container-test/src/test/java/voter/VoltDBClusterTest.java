@@ -1,9 +1,11 @@
-package org.voltdbtest.testcontainer;
+package voter;
 
 import junit.framework.TestCase;
+import org.voltdbtest.testcontainer.VoltDBCluster;
 
 public class VoltDBClusterTest extends TestCase {
 
+    // This test should fail unless you put a valid VoltDB license in /tmp/voltdb-license.xml
     public void testStart() {
         VoltDBCluster cluster = new VoltDBCluster("/tmp/voltdb-license.xml", "voltdb/voltdb-enterprise-dev:master--latest");
         try {
