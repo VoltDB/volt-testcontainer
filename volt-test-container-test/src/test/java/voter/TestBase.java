@@ -81,6 +81,7 @@ public class TestBase {
             File file = Paths.get(elicenseFile).toAbsolutePath().toFile();
             licensePath = file.getAbsolutePath();
         }
+        System.out.println("License file path is: " + licensePath);
         return licensePath;
     }
 }
