@@ -18,7 +18,7 @@ public class IntegrationVoterTestWithPreloadedSchemaAndClasses extends TestBase 
     @Test
     public void testBasicContainer() {
         // Create a cluster and load schema and classes at init tile then just run the app.
-        VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise:13.3.0").
+        VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise-dev:master--latest").
                 withInitialSchema("/schema.ddl", "schema.ddl").
                 withInitialClasses(getJars());
         try {
