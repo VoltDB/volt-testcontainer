@@ -32,7 +32,7 @@ pipeline {
                 }
                 script {
                     withCredentials([string(credentialsId: 'VOLTDB_LICENSE', variable: 'LICENSE')]) {
-                        writeFile file: "/tmp/voltdb-license.xml", text: "$LICENSE", encoding: "UTF-8"
+                        writeFile file: "/home/test/voltdb-license.xml", text: "$LICENSE", encoding: "UTF-8"
                     }
 
                     withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_CREDS_USR', passwordVariable: 'DOCKER_CREDS_PSW')]) {
