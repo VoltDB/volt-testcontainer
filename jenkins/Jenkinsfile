@@ -5,6 +5,13 @@
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  */
+
+@Library('voltdb') _
+def defaultRelease = false
+if (BRANCH_NAME == "main") {
+    defaultRelease = true
+}
+
 pipeline {
     agent {
        label 'gcloud-build--rocky-linux-8--x64'
@@ -16,7 +23,41 @@ pipeline {
         stage('Build') { 
             steps {
                 sh 'mvn -DskipTests clean package javadoc:javadoc'
-                sh 'mvn test'
+            }
+        }
+        stage('Tests') {
+            steps {
+                script {
+                    startedStage('Tests')
+                }
+                script {
+                    withCredentials([string(credentialsId: 'VOLTDB_LICENSE', variable: 'LICENSE')]) {
+                        writeFile file: "/tmp/voltdb-license.xml", text: "$LICENSE", encoding: "UTF-8"
+                    }
+
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_CREDS_USR', passwordVariable: 'DOCKER_CREDS_PSW')]) {
+                        sh '''
+                            echo "login to docker..."
+                            echo ${DOCKER_CREDS_PSW} | docker login -u ${DOCKER_CREDS_USR} --password-stdin docker.io
+                            echo "building..."
+                        '''
+                    }
+
+                    sh '''
+                       mvn test
+                    '''
+                }
+            }
+            post {
+                success {
+                    successfulStage('Tests')
+                }
+                unsuccessful {
+                    failedStage('Tests')
+                }
+                always {
+                    junit '**/target/surefire-reports/*.xml'
+                }
             }
         }
     }
