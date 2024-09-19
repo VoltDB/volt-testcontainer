@@ -67,19 +67,14 @@ public class TestBase {
     }
 
     protected String getLicensePath() {
-        String home = System.getProperty("user.home");
-        if (home == null || home.isEmpty() || home.equals("?")) {
-            home = System.getenv("HOME");
-            if (home == null || home.isEmpty()) {
-                home = "/etc";
-            }
-        }
-        String licensePath = home + "/voltdb-license.xml";
+        String licensePath = "/tmp/voltdb-license.xml";
         // Try file from environment variable
         String elicenseFile = System.getenv("VOLTDB_LICENSE");
         if (elicenseFile != null) {
             File file = Paths.get(elicenseFile).toAbsolutePath().toFile();
-            licensePath = file.getAbsolutePath();
+            if (file.exists()) {
+                licensePath = file.getAbsolutePath();
+            }
         }
         System.out.println("License file path is: " + licensePath);
         return licensePath;
