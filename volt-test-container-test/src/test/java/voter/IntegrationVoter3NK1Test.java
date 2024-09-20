@@ -11,11 +11,9 @@ import org.junit.Test;
 import org.voltdb.client.ProcCallException;
 import org.voltdbtest.testcontainer.VoltDBCluster;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 
-public class IntegrationVoterTest3NK1 extends TestBase {
+public class IntegrationVoter3NK1Test extends TestBase {
 
     @Test
     public void testBasicContainer() {
