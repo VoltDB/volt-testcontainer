@@ -96,7 +96,6 @@ CREATE PROCEDURE FROM CLASS voter.procedures.Initialize;
 CREATE PROCEDURE FROM CLASS voter.procedures.Results;
 CREATE PROCEDURE PARTITION ON TABLE votes COLUMN phone_number FROM CLASS voter.procedures.Vote;
 CREATE PROCEDURE FROM CLASS voter.procedures.ContestantWinningStates;
-CREATE PROCEDURE FROM CLASS voter.procedures.GetStateHeatmap;
 
 CREATE PROCEDURE FROM CLASS voter.procedures.JodaTimeInsert;
 

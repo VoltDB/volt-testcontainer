@@ -15,26 +15,62 @@ import voter.common.Constants;
 
 import static voter.common.Constants.ERR_INVALID_CONTESTANT;
 
+/**
+ * The Vote class represents a stored procedure for casting votes in a
+ * voting system. The class extends VoltProcedure and includes methods
+ * for checking contestant validity, voter limits, and state retrieval
+ * based on the voter's phone number area code.
+ */
 public class Vote extends VoltProcedure {
 
     // potential return codes (synced with client app)
 
-    // Checks if the vote is for a valid contestant
+    /**
+     * SQL statement to check if a contestant number exists in the `contestants` table.
+     * This statement selects the contestant number from the database where the contestant number matches the provided value.
+     * It is used to validate the existence of a contestant during the voting process.
+     */
     public final SQLStmt checkContestantStmt = new SQLStmt(
             "SELECT contestant_number FROM contestants WHERE contestant_number = ?;");
 
-    // Checks if the voter has exceeded their allowed number of votes
+    /**
+     * SQL statement to check the number of votes associated with a particular phone number.
+     * This statement selects the `num_votes` column from the `v_votes_by_phone_number` view
+     * where the `phone_number` matches the provided value. It is used to determine how many
+     * times a particular phone number has voted, ensuring the voter has not exceeded their
+     * allowed number of votes.
+     */
     public final SQLStmt checkVoterStmt = new SQLStmt(
             "SELECT num_votes FROM v_votes_by_phone_number WHERE phone_number = ?;");
 
-    // Checks an area code to retrieve the corresponding state
+    /**
+     * This SQLStmt is used to check the state associated with a given area code.
+     * It selects the state from the area_code_state table where the area code matches the provided parameter.
+     */
     public final SQLStmt checkStateStmt = new SQLStmt(
             "SELECT state FROM area_code_state WHERE area_code = ?;");
 
-    // Records a vote
+    /**
+     * The SQL statement to insert a vote into the 'votes' table.
+     * This statement expects three parameters:
+     * 1. phone_number: The phone number of the voter.
+     * 2. state: The state from which the vote is being cast.
+     * 3. contestant_number: The contestant number for which the vote is being cast.
+     */
     public final SQLStmt insertVoteStmt = new SQLStmt(
             "INSERT INTO votes (phone_number, state, contestant_number) VALUES (?, ?, ?);");
 
+    /**
+     * Records a vote for a specified contestant from a given phone number.
+     *
+     * @param phoneNumber The phone number of the voter.
+     * @param contestantNumber The ID of the contestant being voted for.
+     * @param maxVotesPerPhoneNumber The maximum number of votes allowed per phone number.
+     * @return A constant indicating the result of the voting operation:
+     *         Constants.VOTE_SUCCESSFUL if the vote is recorded successfully,
+     *         Constants.ERR_INVALID_CONTESTANT if the contestant ID is invalid,
+     *         or Constants.ERR_VOTER_OVER_VOTE_LIMIT if the voter has exceeded the allowed number of votes.
+     */
     public long run(long phoneNumber, int contestantNumber, long maxVotesPerPhoneNumber) {
 
         // Queue up validation statements
