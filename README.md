@@ -4,6 +4,7 @@
 `volt-testcontainer` is a project designed to integrate and test with VoltDB using containerized environments. This project includes various integration tests and procedures to ensure reliable and efficient interaction with the VoltDB database.
 
 ## Key Features
+- **VoltDB testcontainer API**: Set of APIs to use a given VoltDB image and load your procedures and test using Junit.
 - **Integration Tests**: A set of integration tests to validate the functionalities of VoltDB in a containerized setup.
 - **Database Procedures**: Custom procedures for initializing and interacting with the VoltDB database.
 - **Schema Management**: Schema definitions and management tailored for VoltDB.
@@ -11,7 +12,7 @@
 
 ## Installation and Setup
 ### Prerequisites
-- **Java Development Kit (JDK) 17**
+- **Minimum Java Development Kit (JDK) 8**
 - **Maven**: For managing project dependencies and builds.
 - **Docker**: Required for containerizing the VoltDB instances.
 

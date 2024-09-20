@@ -16,13 +16,14 @@ pipeline {
     agent {
        label 'gcloud-build--rocky-linux-8--x64'
     }
-    environment {               
-       JAVA_HOME = "/opt/corretto_java17"  
-    }  
+    // We use java 8 for this.
+    // environment {               
+       // JAVA_HOME = "/opt/corretto_java17"  
+    // }  
     stages {
         stage('Build') { 
             steps {
-                sh 'mvn -DskipTests clean package javadoc:javadoc'
+                sh 'mvn -DskipTests clean install javadoc:javadoc'
             }
         }
         stage('Tests') {

@@ -13,14 +13,10 @@
     <artifactId>volt-testcontainer-test</artifactId>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mavenPluginVersion>3.3.0</mavenPluginVersion>
-
-        <volt-registry-url>artifactregistry://us-maven.pkg.dev/voltdb-operator/volt-artifacts-internal</volt-registry-url>
-        <!-- this is registry proxying maven central nad caching artifacts -->
-        <volt-cache-url>artifactregistry://us-maven.pkg.dev/voltdb-operator/voltdb-maven-central-remote</volt-cache-url>
     </properties>
 
     <dependencies>
@@ -143,36 +139,4 @@
             </extension>
         </extensions>
     </build>
-    <distributionManagement>
-        <snapshotRepository>
-            <id>volt-registry</id>
-            <url>${volt-registry-url}</url>
-        </snapshotRepository>
-        <repository>
-            <id>volt-registry</id>
-            <url>${volt-registry-url}</url>
-        </repository>
-    </distributionManagement>
-
-    <repositories>
-        <repository>
-            <!-- override for maven central that caches artifacts in gcloud-->
-            <id>central</id>
-            <url>${volt-cache-url}</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-        </repository>
-        <repository>
-            <id>volt-registry</id>
-            <url>${volt-registry-url}</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
 </project>
