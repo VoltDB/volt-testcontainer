@@ -104,7 +104,7 @@ public class VoltDBCluster {
      * @param licensePath development license for VoltDB
      */
     public VoltDBCluster(String licensePath) {
-        this(licensePath, "voltdb/voltdb-enterprise-dev", 1, 0);
+        this(licensePath, "voltdb/voltdb-enterprise", 1, 0);
     }
 
     /**

@@ -24,7 +24,7 @@ public class IntegrationVoterTest extends TestBase {
 
     @Test
     public void testBasicContainer() {
-        VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise-dev:master--latest");
+        VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise:13.3.0");
         try {
             configureTestContainer(db);
             // Now run benchmark which will invoke all procedures.
@@ -45,7 +45,7 @@ public class IntegrationVoterTest extends TestBase {
     @Test
     public void testBasicContainerWithExternalJars() {
         LocalTime currentTime = LocalTime.now();
-        VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise-dev:master--latest", getExtraLibDirectory());
+        VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise:13.3.0", getExtraLibDirectory());
         try {
             configureTestContainer(db);
             String s = currentTime.toString(ISODateTimeFormat.time());

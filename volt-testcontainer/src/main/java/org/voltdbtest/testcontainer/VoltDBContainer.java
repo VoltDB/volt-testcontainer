@@ -193,11 +193,24 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     @Override
     protected void containerIsStarting(InspectContainerResponse containerInfo) {
         super.containerIsStarting(containerInfo);
+        System.out.println("Container is starting: " + containerInfo.getName());
         String topicPublic = "localhost:" + getMappedPort(9092);
         String drpublic = "localhost:" + getMappedPort(5555);
         // Its twice here because script has a echo.
         String finalScript = String.format(startScript, topicPublic, drpublic);
         copyFileToContainer(Transferable.of(finalScript, 511), "/opt/voltdb/tools/entrypoint.sh");
+    }
+
+    @Override
+    protected void containerIsStopping(InspectContainerResponse containerInfo) {
+        super.containerIsStopping(containerInfo);
+        System.out.println("Container is stopping: " + containerInfo.getName());
+    }
+
+    @Override
+    protected void containerIsStopped(InspectContainerResponse containerInfo) {
+        super.containerIsStopped(containerInfo);
+        System.out.println("Container is stopped: " + containerInfo.getName());
     }
 
     /**
