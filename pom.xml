@@ -36,6 +36,7 @@
 
     <modules>
         <module>volt-testcontainer</module>
+        <module>volt-voter-procedures</module>
         <module>volt-test-container-test</module>
     </modules>
 

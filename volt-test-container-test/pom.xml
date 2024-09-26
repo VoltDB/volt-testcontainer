@@ -31,18 +31,13 @@
             <artifactId>voltdbclient</artifactId>
             <version>13.3.2</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.voltdb/voltdb -->
-        <!-- This should be good enough to compile a VoltProcedure class -->
         <dependency>
             <groupId>org.voltdb</groupId>
-            <artifactId>voltdb</artifactId>
-            <version>10.1.1</version>
+            <artifactId>volt-voter-procedures</artifactId>
+            <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>joda-time</groupId>
-            <artifactId>joda-time</artifactId>
-            <version>2.12.7</version>
-        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.voltdb/voltdb -->
+        <!-- This should be good enough to compile a VoltProcedure class -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>

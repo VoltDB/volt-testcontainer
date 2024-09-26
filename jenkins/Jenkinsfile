@@ -21,12 +21,7 @@ pipeline {
        // JAVA_HOME = "/opt/corretto_java17"  
     // }  
     stages {
-        stage('Build') { 
-            steps {
-                sh 'mvn -DskipTests clean install javadoc:javadoc'
-            }
-        }
-        stage('Tests') {
+        stage('Build') {
             steps {
                 script {
                     startedStage('Tests')
@@ -45,7 +40,7 @@ pipeline {
                     }
 
                     sh '''
-                       mvn test
+                       mvn clean install javadoc:javadoc
                     '''
                 }
             }

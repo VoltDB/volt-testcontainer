@@ -51,13 +51,13 @@ public class TestBase {
 
     protected File @Nullable [] getJars() {
         String relPath = getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
-        File targetDir = new File(relPath + "/../../target");
+        File targetDir = new File(relPath + "/../../../volt-voter-procedures/target");
         FileFilter jarFiles = pathname -> {
             if (pathname.isDirectory()) {
                 return false;
             }
             String name = pathname.getName();
-            if (name.endsWith(".jar") && name.startsWith("volt-test")) {
+            if (name.endsWith(".jar")) {
                 return true;
             }
             return false;
