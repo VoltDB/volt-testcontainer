@@ -57,7 +57,7 @@ public class TestBase {
                 return false;
             }
             String name = pathname.getName();
-            if (name.endsWith(".jar")) {
+            if (name.endsWith(".jar") && !name.startsWith("original")) {
                 return true;
             }
             return false;

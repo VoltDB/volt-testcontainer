@@ -5,16 +5,14 @@
 
 ## Key Features
 - **VoltDB testcontainer API**: Set of APIs to use a given VoltDB image and load your procedures and test using Junit.
+- **Sample Database Procedures**: Custom procedures for initializing and interacting with the VoltDB database.
 - **Integration Tests**: A set of integration tests to validate the functionalities of VoltDB in a containerized setup.
-- **Database Procedures**: Custom procedures for initializing and interacting with the VoltDB database.
-- **Schema Management**: Schema definitions and management tailored for VoltDB.
-- **Utility Classes**: Helper classes for generating data and managing test cases.
 
 ## Installation and Setup
 ### Prerequisites
 - **Minimum Java Development Kit (JDK) 8**
 - **Maven**: For managing project dependencies and builds.
-- **Docker**: Required for containerizing the VoltDB instances.
+- **Docker**: Required for containerizing the VoltDB instances. Access to VoltDB images.
 
 ### Steps
 1. Clone the repository:
@@ -25,13 +23,9 @@
 
 2. Build the project:
     ```sh
-    mvn -DskipTests clean package
+    mvn clean install javadoc:javadoc
     ```
-
-3. Running Tests: To run these tests you must have a VoltDB license to be placed as /tmp/voltdb-license.xml
-    ```sh
-    mvn test
-    ```
+   This will also run the tests provided you have a license in /tmp/voltdb-license.xml if you want to specify alternate license location point VOLTDB_LICENSE environment variable to a license file.
 
 ## Usage
 ### Running VoltDB in a Container
@@ -45,7 +39,7 @@ The project includes several procedures for operations on VoltDB, such as:
 - `Results`
 - `Vote`
 
-These procedures can be found in the `src/main/java/voter/procedures/` directory.
+These procedures can be found in the `volt-voter-procedures/src/main/java/voter/procedures/` directory.
 
 ### Tests
 Integration tests like `IntegrationVoltDBClusterTest`, `IntegrationVoterTest`, etc., demonstrate how to use the framework and validate different scenarios.
