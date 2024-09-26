@@ -9,7 +9,6 @@
 package voter.procedures;
 
 import org.joda.time.LocalTime;
-import org.joda.time.format.ISODateTimeFormat;
 import org.voltdb.SQLStmt;
 import org.voltdb.VoltProcedure;
 
