@@ -13,8 +13,6 @@ import org.voltdb.VoltProcedure;
 import org.voltdb.VoltTable;
 import voter.common.Constants;
 
-import static voter.common.Constants.ERR_INVALID_CONTESTANT;
-
 /**
  * The Vote class represents a stored procedure for casting votes in a
  * voting system. The class extends VoltProcedure and includes methods
