@@ -31,6 +31,11 @@
             <artifactId>voltdbclient</artifactId>
             <version>13.3.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.voltdb</groupId>
+            <artifactId>volt-voter-procedures</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/org.voltdb/voltdb -->
         <!-- This should be good enough to compile a VoltProcedure class -->
         <dependency>
