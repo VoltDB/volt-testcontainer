@@ -264,12 +264,23 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     }
 
     /**
+     * Retrieves a connected client to the VoltDB instance with a default timeout of 120000 milliseconds.
+     *
+     * @return a {@link Client} object representing the connected client.
+     * @throws IOException if an I/O error occurs while attempting to connect to the client.
+     */
+    public Client getConnectedClient() throws IOException {
+        return getConnectedClient(120000);
+    }
+
+    /**
      * <p>getConnectedClient.</p>
      *
+     * @param timeoutMillis time to wait for a client connection
      * @return a {@link org.voltdb.client.Client} object
      * @throws java.io.IOException if any.
      */
-    public Client getConnectedClient() throws IOException {
+    public Client getConnectedClient(int timeoutMillis) throws IOException {
         int mappedPort = getMappedPort(21211);
         ClientConfig config = new ClientConfig(username, password);
         if (tlsEnabled) {
@@ -277,7 +288,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
             config.setTrustStore(trustStorePath, trustStorePassword);
         }
         long st = System.currentTimeMillis();
-        while (System.currentTimeMillis() <  st + 60000) {
+        while (System.currentTimeMillis() <  st + timeoutMillis) {
             client = ClientFactory.createClient(config);
             try {
                 client.createConnection("localhost:" + mappedPort);
