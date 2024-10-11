@@ -16,7 +16,7 @@ public class IntegrationVoltDBClusterTest extends TestCase {
     public void testStart() {
         VoltDBCluster cluster = new VoltDBCluster("/tmp/xxx-voltdb-license.xml", "voltdb/voltdb-enterprise:13.3.0");
         try {
-            cluster.start();
+            cluster.start(60000);
             fail("Cluster should fail to start without license. Most likely you have voltdb-license.xml in your /tmp directory.");
         } catch (Exception e) {
             // We are good.

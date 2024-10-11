@@ -182,6 +182,16 @@ public class VoltDBCluster {
      * @throws java.lang.RuntimeException if an error occurs during the starting process
      */
     public void start() throws IOException {
+        start(120000);
+    }
+
+    /**
+     * Starts the VoltDB containers and waits for them to be ready.
+     *
+     * @param timeoutMillis the amount of time in milliseconds to wait for each container to start
+     * @throws IOException if an I/O error occurs during startup
+     */
+    public void start(int timeoutMillis) throws IOException {
         List<Future> starters = new ArrayList<>();
         for (VoltDBContainer voltDBContainer : containers.values()) {
             starters.add(executorService.submit(new Runnable() {
@@ -199,7 +209,7 @@ public class VoltDBCluster {
             }
         }
         for (VoltDBContainer voltDBContainer : containers.values()) {
-            voltDBContainer.getConnectedClient();
+            voltDBContainer.getConnectedClient(timeoutMillis);
         }
     }
 
