@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Represents a cluster of VoltDB instances.
@@ -193,7 +195,7 @@ public class VoltDBCluster {
      */
     public void start(int timeoutMillis) throws IOException {
         List<Future> starters = new ArrayList<>();
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             starters.add(executorService.submit(new Runnable() {
                 @Override
                 public void run() {
@@ -208,7 +210,7 @@ public class VoltDBCluster {
                 throw new RuntimeException(e);
             }
         }
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.getConnectedClient(timeoutMillis);
         }
     }
@@ -262,7 +264,7 @@ public class VoltDBCluster {
      * @throws org.voltdb.client.ProcCallException if an error occurs during the DDL execution process
      */
     public ClientResponse runDDL(String schema) throws IOException, ProcCallException {
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             if (voltDBContainer.isRunning()) {
                 return voltDBContainer.runDDL(schema);
             }
@@ -279,7 +281,7 @@ public class VoltDBCluster {
      * @throws org.voltdb.client.ProcCallException if an error occurs during the class loading process
      */
     public ClientResponse loadClasses(String jar) throws IOException, ProcCallException {
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             if (voltDBContainer.isRunning()) {
                 return voltDBContainer.loadClasses(jar);
             }
@@ -297,7 +299,7 @@ public class VoltDBCluster {
      * @throws org.voltdb.client.ProcCallException if an error occurs during the class loading process
      */
     public ClientResponse loadClasses(String jar, String classesToDelete) throws IOException, ProcCallException {
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             if (voltDBContainer.isRunning()) {
                 return voltDBContainer.loadClasses(jar, classesToDelete);
             }
@@ -325,7 +327,7 @@ public class VoltDBCluster {
      * @return a int
      */
     public int getFirstMappedPort() {
-        return containers.values().stream().findFirst().get().getFirstMappedPort();
+        return containers().stream().findFirst().get().getFirstMappedPort();
     }
 
     /**
@@ -335,7 +337,7 @@ public class VoltDBCluster {
      * @return a int
      */
     public int getMappedPort(int port) {
-        return containers.values().stream().findFirst().get().getMappedPort(port);
+        return containers().stream().findFirst().get().getMappedPort(port);
     }
 
     /**
@@ -344,7 +346,7 @@ public class VoltDBCluster {
      * @return a {@link java.lang.String} object
      */
     public String getHost() {
-        return containers.values().stream().findFirst().get().getHost();
+        return containers().stream().findFirst().get().getHost();
     }
 
     /**
@@ -363,7 +365,7 @@ public class VoltDBCluster {
      * @throws java.io.IOException if an I/O error occurs while retrieving the client.
      */
     public Client getClient() throws IOException {
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             if (voltDBContainer.isRunning()) {
                 return voltDBContainer.getConnectedClient();
             }
@@ -379,7 +381,7 @@ public class VoltDBCluster {
      * @throws java.io.IOException if an I/O error occurs while retrieving the client.
      */
     public Client getClient(String host) throws IOException {
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             if (voltDBContainer.isRunning() && voltDBContainer.getHostId().equals(host)) {
                 return voltDBContainer.getConnectedClient();
             }
@@ -442,12 +444,20 @@ public class VoltDBCluster {
     }
 
     /**
+     * Get created {@link VoltDBContainer}s IDs
+     * @return list of Docker containers IDs
+     */
+    public List<String> getContainerIds() {
+        return containers.values().stream().map(VoltDBContainer::getContainerId).collect(Collectors.toList());
+    }
+
+    /**
      * Shuts down all the VoltDB instances in the cluster.
      * Waits for each instance to stop before proceeding to the next one.
      * This method blocks until all instances have been shutdown or the timeout is reached.
      */
     public void shutdown() {
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.stop();
             long st = System.currentTimeMillis();
             while (st < System.currentTimeMillis() + 30000) {
@@ -480,7 +490,7 @@ public class VoltDBCluster {
                 "trustStorePassword=" + password + "\n" +
                 "external=true";
 
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.withCopyToContainer(Transferable.of(password, 511), "/etc/ssl/truststore.pswd");
             voltDBContainer.withCopyToContainer(Transferable.of(certificateTxt, 511), "/etc/ssl/certificate.txt");
             voltDBContainer.withClasspathResourceMapping(resourcePath, "/etc/ssl/truststore.jks", BindMode.READ_ONLY);
@@ -501,7 +511,7 @@ public class VoltDBCluster {
      * @return the updated VoltDBCluster object
      */
     public VoltDBCluster withKeystore(String resourcePath, String password) {
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.withClasspathResourceMapping(resourcePath, "/etc/ssl/keystore.jks",
                     BindMode.READ_ONLY);
             voltDBContainer.withCopyToContainer(Transferable.of(password, 511), "/etc/ssl/keystore.pswd");
@@ -522,7 +532,7 @@ public class VoltDBCluster {
      * @return the updated VoltDBCluster object
      */
     public VoltDBCluster withUserNameAndPassword(String username, String password) {
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.setUsername(username);
             voltDBContainer.setPassword(password);
         }
@@ -536,7 +546,7 @@ public class VoltDBCluster {
      * @return the updated VoltDBCluster object
      */
     public VoltDBCluster withDeploymentResource(String fileName) {
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.withCopyToContainer(MountableFile.forClasspathResource(fileName), "/etc/deployment.xml");
         }
         return this;
@@ -549,7 +559,7 @@ public class VoltDBCluster {
      * @return the updated VoltDBCluster object
      */
     public VoltDBCluster withDeploymentContent(String deploymentContent) {
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.withCopyToContainer(Transferable.of(deploymentContent), "/etc/deployment.xml");
         }
         return this;
@@ -563,7 +573,7 @@ public class VoltDBCluster {
      * @return the updated VoltDBCluster object
      */
     public VoltDBCluster withInitialSchema(String resourcePath, String fileName) {
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.withClasspathResourceMapping(resourcePath, "/etc/schemas/" + fileName, BindMode.READ_ONLY);
         }
         return this;
@@ -576,7 +586,7 @@ public class VoltDBCluster {
      * @return the updated VoltDBCluster object
      */
     public VoltDBCluster withInitialSchema(String fileName) {
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.withClasspathResourceMapping(fileName, "/etc/schemas/" + fileName, BindMode.READ_ONLY);
         }
         return this;
@@ -590,7 +600,7 @@ public class VoltDBCluster {
      * @return The updated VoltDBCluster instance.
      */
     public VoltDBCluster withInitialClasses(String jar, String name) {
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.withCopyToContainer(MountableFile.forHostPath(jar), "/etc/classes/" + name);
         }
         return this;
@@ -603,7 +613,7 @@ public class VoltDBCluster {
      * @return the updated VoltDBCluster instance
      */
     public VoltDBCluster withInitialClasses(File[] jars) {
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             for (File file : jars) {
                 for (File jar : jars) {
                     String name = jar.getName();
@@ -621,7 +631,7 @@ public class VoltDBCluster {
      * @return a {@link org.voltdbtest.testcontainer.VoltDBCluster} object
      */
     public VoltDBCluster withKsaftey(int kfactor) {
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.setKfactor(kfactor);
         }
         return this;
@@ -634,10 +644,14 @@ public class VoltDBCluster {
      * @return This VoltDBCluster instance with the specified network set for all containers.
      */
     public VoltDBCluster withNetwork(Network network) {
-        for (VoltDBContainer voltDBContainer : containers.values()) {
+        for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.setNetwork(network);
             voltDBContainer.setNetworkMode(network.getId());
         }
         return this;
+    }
+
+    private Collection<VoltDBContainer> containers() {
+        return containers.values();
     }
 }
