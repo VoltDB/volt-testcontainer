@@ -31,7 +31,7 @@ pipeline {
                 }
 
                 script {
-                    sh 'mvn versions:set -DnewVersion=14.0-${BUILD_DATE} -ntp'
+                    sh 'mvn versions:set -DnewVersion=14.0.${BUILD_NUMBER} -ntp'
                 }
             }
             post {
