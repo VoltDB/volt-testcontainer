@@ -77,4 +77,29 @@
         <tag>@{project.version}</tag>
     </scm>
 
+    <distributionManagement>
+        <repository>
+            <id>volt-internal-artifacts</id>
+            <url>artifactregistry://us-maven.pkg.dev/voltdb-operator/volt-artifacts-internal</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </distributionManagement>
+    <repositories>
+        <repository>
+            <id>volt-internal-artifacts</id>
+            <url>artifactregistry://us-maven.pkg.dev/voltdb-operator/volt-artifacts-internal</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
 </project>
