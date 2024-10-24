@@ -7,8 +7,11 @@
  */
 package org.voltdbtest.testcontainer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.Network;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.utility.MountableFile;
 import org.voltdb.client.Client;
@@ -100,6 +103,7 @@ public class VoltDBCluster {
      * @see VoltDBCluster
      */
     protected String licensePath;
+    private Logger logger = LoggerFactory.getLogger(VoltDBCluster.class);
 
     /**
      * Represents a VoltDB cluster with a single host for testing purposes.
@@ -167,6 +171,7 @@ public class VoltDBCluster {
             String host = String.format("%s-%d", "host", i);
             VoltDBContainer container = new VoltDBContainer(i, licensePath, image, hostCount, kfactor, startCommand, extraLibs);
             container.setKfactor(kfactor);
+            container.withLogConsumer(new Slf4jLogConsumer(logger));
             containers.put(host, container);
             images.put(host, image);
         }
@@ -196,12 +201,7 @@ public class VoltDBCluster {
     public void start(int timeoutMillis) throws IOException {
         List<Future> starters = new ArrayList<>();
         for (VoltDBContainer voltDBContainer : containers()) {
-            starters.add(executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    voltDBContainer.start();
-                }
-            }));
+            starters.add(executorService.submit(voltDBContainer::start));
         }
         for (Future voltDB : starters) {
             try {
@@ -476,6 +476,12 @@ public class VoltDBCluster {
             }
         }
         System.out.println("Done Shutting down VoltDB");
+    }
+
+    public VoltDBCluster withLogConsumer(Logger logger) {
+        this.logger = logger;
+
+        return this;
     }
 
     /**
