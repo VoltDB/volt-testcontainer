@@ -22,16 +22,16 @@ pipeline {
     // }  
     stages {
         stage('Set version') {
-            when {
-                expression { defaultRelease }
-            }
+//             when {
+//                 expression { defaultRelease }
+//             }
             steps {
                 script {
                     startedStage('Set version')
                 }
 
                 script {
-                    sh 'mvn versions:set -DnewVersion=14.0.${BUILD_NUMBER} -ntp'
+                    sh 'mvn versions:set -DnewVersion=14.0.x.${BUILD_NUMBER} -ntp'
                 }
             }
             post {
@@ -72,9 +72,9 @@ pipeline {
         }
         stage('Publish') {
             steps {
-                when {
-                    expression { defaultRelease }
-                }
+//                 when {
+//                     expression { defaultRelease }
+//                 }
                 script {
                     startedStage('Publish')
                 }
