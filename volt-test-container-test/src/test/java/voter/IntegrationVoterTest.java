@@ -10,6 +10,8 @@ package voter;
 import org.joda.time.LocalTime;
 import org.joda.time.format.ISODateTimeFormat;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.voltdb.VoltTable;
 import org.voltdb.client.ClientResponse;
 import org.voltdb.client.ProcCallException;
@@ -21,10 +23,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class IntegrationVoterTest extends TestBase {
+    private static final Logger LOG = LoggerFactory.getLogger(IntegrationVoterTest.class);
 
     @Test
     public void testBasicContainer() {
         VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise:13.3.0");
+        db.withLogConsumer(LOG);
         try {
             configureTestContainer(db);
             // Now run benchmark which will invoke all procedures.
