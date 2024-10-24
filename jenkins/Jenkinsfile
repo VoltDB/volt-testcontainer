@@ -21,6 +21,28 @@ pipeline {
        // JAVA_HOME = "/opt/corretto_java17"  
     // }  
     stages {
+        stage('Set version') {
+            when {
+                expression { defaultRelease }
+            }
+            steps {
+                script {
+                    startedStage('Set version')
+                }
+
+                script {
+                    sh 'mvn versions:set -DnewVersion=14.0-${BUILD_DATE} -ntp'
+                }
+            }
+            post {
+                success {
+                    successfulStage('Set version')
+                }
+                failure {
+                    failedStage('Set version')
+                }
+            }
+        }
         stage('Build') {
             steps {
                 script {
@@ -29,14 +51,6 @@ pipeline {
                 script {
                     withCredentials([string(credentialsId: 'VOLTDB_LICENSE', variable: 'LICENSE')]) {
                         writeFile file: "/tmp/voltdb-license.xml", text: "$LICENSE", encoding: "UTF-8"
-                    }
-
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_CREDS_USR', passwordVariable: 'DOCKER_CREDS_PSW')]) {
-                        sh '''
-                            echo "login to docker..."
-                            echo ${DOCKER_CREDS_PSW} | docker login -u ${DOCKER_CREDS_USR} --password-stdin docker.io
-                            echo "building..."
-                        '''
                     }
 
                     sh '''
@@ -53,6 +67,51 @@ pipeline {
                 }
                 always {
                     junit '**/target/surefire-reports/*.xml'
+                }
+            }
+        }
+        stage('Publish') {
+            steps {
+                when {
+                    expression { defaultRelease }
+                }
+                script {
+                    startedStage('Publish')
+                }
+                script {
+                    env.DEPLOY_PARAMS = ""
+
+                    withCredentials([file(credentialsId: 'maven-repos-dev-write', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                        withCredentials([string(credentialsId: 'GPG_PASSPHRASE', variable: 'GPG_PASSPHRASE')]) {
+                            withCredentials([string(credentialsId: 'NEXUS_USERNAME', variable: 'NEXUS_USERNAME')]) {
+                                withCredentials([string(credentialsId: 'NEXUS_PASSWORD', variable: 'NEXUS_PASSWORD')]) {
+
+                                    if(params.RELEASE) {
+                                        TAG = sh(returnStdout: true,script: "grep appVersion: volt-stream-chart/Chart.yaml | cut -d: -f 2 | tr -d '\"' ").trim()
+                                        env.DEPLOY_PARAMS = "--settings settings.xml -P release -P ossrh -Dtag.name=$TAG -Dtag.name.latest=latest"
+
+                                        withCredentials([file(credentialsId: 'upload-maven-central-private-pgp', variable: 'private_pgp')]) {
+                                            sh """#!/bin/bash -x
+                                                env
+                                                gpg --import --passphrase ${GPG_PASSPHRASE} --batch ${private_pgp}
+                                            """
+                                        }
+                                    }
+                                    sh '''
+                                        mvn deploy -ntp -DskipTests $DEPLOY_PARAMS
+                                    '''
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            post {
+                success {
+                    successfulStage('Publish')
+                }
+                failure {
+                    failedStage('Publish')
                 }
             }
         }
