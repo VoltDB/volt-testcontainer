@@ -9,8 +9,8 @@
       <artifactId>volt-testcontainer-module</artifactId>
       <version>1.0.1-SNAPSHOT</version>
     </parent>
-    <groupId>org.voltdb</groupId>
     <artifactId>volt-testcontainer-test</artifactId>
+    <name>VoltDB TestContainer Tests</name>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>

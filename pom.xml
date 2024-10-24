@@ -29,7 +29,7 @@
     <artifactId>volt-testcontainer-module</artifactId>
     <version>1.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>VoltDB Test Container Core</name>
+    <name>VoltDB Test Container Parent</name>
     <description>
         This project has VoltDB testcontainer module with a sample of how to write unit tests using testcontainer and VoltDB
     </description>

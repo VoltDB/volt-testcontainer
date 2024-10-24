@@ -4,9 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.voltdb</groupId>
+    <parent>
+        <groupId>org.voltdb</groupId>
+        <artifactId>volt-testcontainer-module</artifactId>
+        <version>1.0.1-SNAPSHOT</version>
+    </parent>
     <artifactId>volt-testcontainer</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <name>VoltDB Test Container</name>
+    <description>Provides a volt cluster testcontainer's api to start volt inside docker container</description>
+
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
