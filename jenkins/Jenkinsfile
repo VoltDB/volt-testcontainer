@@ -84,30 +84,10 @@ pipeline {
                     startedStage('Publish')
                 }
                 script {
-                    env.DEPLOY_PARAMS = ""
-
                     withCredentials([file(credentialsId: 'maven-repos-dev-write', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                        withCredentials([string(credentialsId: 'GPG_PASSPHRASE', variable: 'GPG_PASSPHRASE')]) {
-                            withCredentials([string(credentialsId: 'NEXUS_USERNAME', variable: 'NEXUS_USERNAME')]) {
-                                withCredentials([string(credentialsId: 'NEXUS_PASSWORD', variable: 'NEXUS_PASSWORD')]) {
-
-                                    if(params.RELEASE) {
-                                        TAG = sh(returnStdout: true,script: "grep appVersion: volt-stream-chart/Chart.yaml | cut -d: -f 2 | tr -d '\"' ").trim()
-                                        env.DEPLOY_PARAMS = "--settings settings.xml -P release -P ossrh -Dtag.name=$TAG -Dtag.name.latest=latest"
-
-                                        withCredentials([file(credentialsId: 'upload-maven-central-private-pgp', variable: 'private_pgp')]) {
-                                            sh """#!/bin/bash -x
-                                                env
-                                                gpg --import --passphrase ${GPG_PASSPHRASE} --batch ${private_pgp}
-                                            """
-                                        }
-                                    }
-                                    sh '''
-                                        mvn deploy -ntp -DskipTests $DEPLOY_PARAMS
-                                    '''
-                                }
-                            }
-                        }
+                        sh """#!/bin/bash
+                            mvn deploy -ntp -DskipTests
+                        """
                     }
                 }
             }
