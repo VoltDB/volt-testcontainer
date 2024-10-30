@@ -103,6 +103,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     private String trustStorePath = "";
     private int kfactor = 0;
     private int hostcount = 1;
+    private String containerName = "";
 
     /**
      * Creates a VoltDB container with the specified parameters.
@@ -193,7 +194,8 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     @Override
     protected void containerIsStarting(InspectContainerResponse containerInfo) {
         super.containerIsStarting(containerInfo);
-        System.out.println("Container is starting: " + containerInfo.getName());
+        containerName = containerInfo.getName().replace("/", "");
+        System.out.println("Container is starting: " + containerName);
         String topicPublic = "localhost:" + getMappedPort(9092);
         String drpublic = "localhost:" + getMappedPort(5555);
         // Its twice here because script has a echo.
@@ -414,5 +416,13 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         this.kfactor = kfactor;
         String deployment = getDeployment();
         withCopyToContainer(Transferable.of(deployment), "/etc/deployment.xml");
+    }
+
+    public String getContainerName() {
+        return containerName;
+    }
+
+    public String getNetworkId() {
+        return NETWORK.getId();
     }
 }
