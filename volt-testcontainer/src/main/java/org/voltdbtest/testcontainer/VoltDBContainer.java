@@ -206,13 +206,13 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     @Override
     protected void containerIsStopping(InspectContainerResponse containerInfo) {
         super.containerIsStopping(containerInfo);
-        System.out.println("Container is stopping: " + containerInfo.getName());
+        System.out.println("Container is stopping: " + getContainerName());
     }
 
     @Override
     protected void containerIsStopped(InspectContainerResponse containerInfo) {
         super.containerIsStopped(containerInfo);
-        System.out.println("Container is stopped: " + containerInfo.getName());
+        System.out.println("Container is stopped: " + getContainerName());
     }
 
     /**
