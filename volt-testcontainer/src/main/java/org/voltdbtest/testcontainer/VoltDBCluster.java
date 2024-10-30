@@ -452,6 +452,24 @@ public class VoltDBCluster {
     }
 
     /**
+     * Retrieves the names of all containers.
+     *
+     * @return a list of strings, each representing the name of a container
+     */
+    public List<String> getContainerNames() {
+        return containers.values().stream().map(VoltDBContainer::getContainerName).collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieves the network ID of the first container in the collection. Network is shared between the VoltDB containers.
+     *
+     * @return the network ID as a String
+     */
+    public String getNetworkId() {
+        return containers.values().stream().map(VoltDBContainer::getNetworkId).collect(Collectors.toList()).get(0);
+    }
+
+    /**
      * Shuts down all the VoltDB instances in the cluster.
      * Waits for each instance to stop before proceeding to the next one.
      * This method blocks until all instances have been shutdown or the timeout is reached.
