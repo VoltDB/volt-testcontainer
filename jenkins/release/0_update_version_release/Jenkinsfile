@@ -1,4 +1,4 @@
-v@Library('voltdb') _
+@Library('voltdb') _
 
 pipeline {
 
