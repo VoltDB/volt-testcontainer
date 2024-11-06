@@ -27,7 +27,7 @@
 
     <groupId>org.voltdb</groupId>
     <artifactId>volt-testcontainer-module</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>9.9.9</version>
     <packaging>pom</packaging>
     <name>VoltDB Test Container Parent</name>
     <description>

@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.voltdb</groupId>
         <artifactId>volt-testcontainer-module</artifactId>
-        <version>1.0.1-SNAPSHOT</version>
+        <version>9.9.9</version>
     </parent>
     <artifactId>volt-voter-procedures</artifactId>
     <name>VoltDB Procedures</name>
