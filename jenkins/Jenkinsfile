@@ -66,7 +66,7 @@ pipeline {
                         sh """
                             git config --local user.name "voltdbci"
                             git config --local user.email "test@voltdb.com"
-                            git remote set-url origin https://${token}@github.com/VoltDB/volt-stream.git
+                            git remote set-url origin https://${token}@github.com/VoltDB/volt-testcontainer.git
                         """
                         res = sh(script: "git tag -a ${GITHUB_TAG} -m 'Tagging ${GITHUB_TAG} release' HEAD 2>&1", returnStdout: true)
                         if (res.contains("already exists")) {
@@ -139,7 +139,6 @@ pipeline {
 
 
                                     if (params.RELEASE) {
-                                        TAG = sh(returnStdout: true, script: "grep -A 1 '<artifactId>volt-testcontainer-module</artifactId>' pom.xml | grep -o -P '(?<=version>).*(?=</version)' ").trim()
                                         env.DEPLOY_PARAMS = "--settings settings.xml -P release -P ossrh"
 
                                         withCredentials([file(credentialsId: 'upload-maven-central-private-pgp', variable: 'private_pgp')]) {
