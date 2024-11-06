@@ -20,8 +20,15 @@ pipeline {
     // environment {               
        // JAVA_HOME = "/opt/corretto_java17"  
     // }  
+    parameters {
+        booleanParam(name: 'RELEASE', defaultValue: false, description: 'Whether to release to maven central')
+        booleanParam(name: 'TAG_BUILD', defaultValue: false, description: 'If true tag a branch in github')
+    }
     stages {
         stage('Set version') {
+            when {
+                expression { !params.RELEASE }
+            }
             steps {
                 script {
                     startedStage('Set version')
@@ -42,7 +49,7 @@ pipeline {
         }
         stage('Tag branch') {
             when {
-                expression { params.RELEASE}
+                expression { params.RELEASE && params.TAG_BUILD }
             }
             steps {
                 script {
@@ -52,6 +59,8 @@ pipeline {
                 script {
                     TAG = sh(returnStdout: true, script: "grep -A 1 '<artifactId>volt-testcontainer-module</artifactId>' pom.xml | grep -o -P '(?<=version>).*(?=</version) ").trim()
                     GITHUB_TAG = 'v' + TAG
+
+                    sh "echo TAG: $TAG"
 
                     withCredentials([usernamePassword(credentialsId: 'github-token', passwordVariable: 'token', usernameVariable: 'username')]) {
                         sh """
@@ -77,6 +86,9 @@ pipeline {
             }
         }
         stage('Build') {
+            when {
+                expression { !params.RELEASE }
+            }
             steps {
                 script {
                     startedStage('Tests')
@@ -113,7 +125,7 @@ pipeline {
         }
         stage('Publish') {
             when {
-                expression { defaultRelease }
+                expression { defaultRelease || params.RELEASE }
             }
             steps {
                 script {
@@ -121,9 +133,28 @@ pipeline {
                 }
                 script {
                     withCredentials([file(credentialsId: 'maven-repos-dev-write', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                        sh """#!/bin/bash
-                            mvn deploy -ntp -DskipTests
-                        """
+                        withCredentials([string(credentialsId: 'GPG_PASSPHRASE', variable: 'GPG_PASSPHRASE')]) {
+                            withCredentials([string(credentialsId: 'NEXUS_USERNAME', variable: 'NEXUS_USERNAME')]) {
+                                withCredentials([string(credentialsId: 'NEXUS_PASSWORD', variable: 'NEXUS_PASSWORD')]) {
+
+
+                                    if (params.RELEASE) {
+                                        TAG = sh(returnStdout: true, script: "grep -A 1 '<artifactId>volt-testcontainer-module</artifactId>' pom.xml | grep -o -P '(?<=version>).*(?=</version) ").trim()
+                                        env.DEPLOY_PARAMS = "--settings settings.xml -P release -P ossrh"
+
+                                        withCredentials([file(credentialsId: 'upload-maven-central-private-pgp', variable: 'private_pgp')]) {
+                                            sh """#!/bin/bash -x
+                                                env
+                                                gpg --import --passphrase ${GPG_PASSPHRASE} --batch ${private_pgp}
+                                            """
+                                        }
+                                    }
+                                    sh """#!/bin/bash
+                                        mvn clean deploy -ntp -DskipTests $DEPLOY_PARAMS
+                                    """
+                                }
+                            }
+                        }
                     }
                 }
             }
