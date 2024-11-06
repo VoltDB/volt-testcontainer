@@ -40,6 +40,42 @@ pipeline {
                 }
             }
         }
+        stage('Tag branch') {
+            when {
+                expression { params.RELEASE}
+            }
+            steps {
+                script {
+                    startedStage('Tag branch')
+                }
+
+                script {
+                    TAG = sh(returnStdout: true, script: "grep -A 1 '<artifactId>volt-testcontainer-module</artifactId>' pom.xml | grep -o -P '(?<=version>).*(?=</version) ").trim()
+                    GITHUB_TAG = 'v' + TAG
+
+                    withCredentials([usernamePassword(credentialsId: 'github-token', passwordVariable: 'token', usernameVariable: 'username')]) {
+                        sh """
+                            git config --local user.name "voltdbci"
+                            git config --local user.email "test@voltdb.com"
+                            git remote set-url origin https://${token}@github.com/VoltDB/volt-stream.git
+                        """
+                        res = sh(script: "git tag -a ${GITHUB_TAG} -m 'Tagging ${GITHUB_TAG} release' HEAD 2>&1", returnStdout: true)
+                        if (res.contains("already exists")) {
+                            error("ERROR: Build failed! $res ")
+                        }
+                        sh(script: "git push origin ${GITHUB_TAG}", returnStdout: true)
+                    }
+                }
+            }
+            post {
+                success {
+                    successfulStage('Tag branch')
+                }
+                failure {
+                    failedStage('Tag branch')
+                }
+            }
+        }
         stage('Build') {
             steps {
                 script {

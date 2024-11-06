@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.voltdb</groupId>
         <artifactId>volt-testcontainer-module</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>volt-testcontainer</artifactId>
     <name>VoltDB Test Container</name>
@@ -22,6 +22,50 @@
         <dockerjavaVersion>3.4.0</dockerjavaVersion>
         <slf4jVersion>1.7.36</slf4jVersion>
     </properties>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://github.com/git/git-scm.com/blob/main/MIT-LICENSE.txt</url>
+            <distribution>repo</distribution>
+            <comments>A short and simple permissive license</comments>
+        </license>
+    </licenses>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.13</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <dependencies>
         <dependency>
@@ -91,8 +135,37 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-source-plugin</artifactId>
+		<version>2.2.1</version>
+		<executions>
+		    <execution>
+			<id>attach-sources</id>
+			<goals>
+			    <goal>jar-no-fork</goal>
+			</goals>
+		    </execution>
+		</executions>
+            </plugin>		
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.7.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals> 
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+	        </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <configuration>
+                    <serverId>ossrh</serverId>
+		    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                </configuration>
             </plugin>
         </plugins>
     </build>
