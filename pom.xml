@@ -52,7 +52,32 @@
         <testcontainerVersion>1.20.1</testcontainerVersion>
         <dockerjavaVersion>3.4.0</dockerjavaVersion>
         <slf4jVersion>1.7.36</slf4jVersion>
+	<volt-cache-url>artifactregistry://us-maven.pkg.dev/voltdb-operator/voltdb-maven-central-remote</volt-cache-url>
+	<volt-internal-url>artifactregistry://us-maven.pkg.dev/voltdb-operator/volt-artifacts-internal</volt-internal-url>
+	<confluent-registry-url>artifactregistry://us-maven.pkg.dev/voltdb-operator/voltdb-confluent-remote</confluent-registry-url>
     </properties>
+
+    <profiles>
+        <profile>
+            <id>volt-internal-artifacts</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <repo-id>volt-internal-artifacts</repo-id>
+                <repo-url>${volt-internal-url}</repo-url>
+                <repo-snapshots>true</repo-snapshots>
+            </properties>
+        </profile>
+        <profile>
+            <id>ossrh</id>
+            <properties>
+                <repo-id>ossrh</repo-id>
+                <repo-url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</repo-url>
+                <repo-snapshots>false</repo-snapshots>
+            </properties>
+        </profile>
+    </profiles>
 
     <build>
         <extensions>
@@ -68,6 +93,16 @@
                 <artifactId>maven-release-plugin</artifactId>
                 <version>3.1.1</version>
             </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+		<artifactId>nexus-staging-maven-plugin</artifactId>
+		<inherited>false</inherited>
+                <configuration>
+                    <serverId>ossrh</serverId>
+		    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+		    <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <scm>
@@ -79,20 +114,28 @@
 
     <distributionManagement>
         <repository>
-            <id>volt-internal-artifacts</id>
-            <url>artifactregistry://us-maven.pkg.dev/voltdb-operator/volt-artifacts-internal</url>
+            <id>${repo-id}</id>
+            <url>${repo-url}</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
             <snapshots>
-                <enabled>true</enabled>
+                <enabled>${repo-snapshots}</enabled>
             </snapshots>
         </repository>
     </distributionManagement>
     <repositories>
         <repository>
+            <!-- override for maven central that caches artifacts in gcloud-->
+            <id>central</id>
+            <url>${volt-cache-url}</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+	<repository>
             <id>volt-internal-artifacts</id>
-            <url>artifactregistry://us-maven.pkg.dev/voltdb-operator/volt-artifacts-internal</url>
+            <url>${volt-internal-url}</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -100,6 +143,12 @@
                 <enabled>true</enabled>
             </snapshots>
         </repository>
+        <repository>
+            <id>confluent</id>
+            <url>${confluent-registry-url}</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
     </repositories>
-
 </project>
