@@ -57,7 +57,7 @@ pipeline {
                 }
 
                 script {
-                    TAG = sh(returnStdout: true, script: "grep -A 1 '<artifactId>volt-testcontainer-module</artifactId>' pom.xml | grep -o -P '(?<=version>).*(?=</version) ").trim()
+                    TAG = sh(returnStdout: true, script: "grep -A 1 '<artifactId>volt-testcontainer-module</artifactId>' pom.xml | grep -o -P '(?<=version>).*(?=</version)' ").trim()
                     GITHUB_TAG = 'v' + TAG
 
                     sh "echo TAG: $TAG"
@@ -139,7 +139,7 @@ pipeline {
 
 
                                     if (params.RELEASE) {
-                                        TAG = sh(returnStdout: true, script: "grep -A 1 '<artifactId>volt-testcontainer-module</artifactId>' pom.xml | grep -o -P '(?<=version>).*(?=</version) ").trim()
+                                        TAG = sh(returnStdout: true, script: "grep -A 1 '<artifactId>volt-testcontainer-module</artifactId>' pom.xml | grep -o -P '(?<=version>).*(?=</version)' ").trim()
                                         env.DEPLOY_PARAMS = "--settings settings.xml -P release -P ossrh"
 
                                         withCredentials([file(credentialsId: 'upload-maven-central-private-pgp', variable: 'private_pgp')]) {
