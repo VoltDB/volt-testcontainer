@@ -136,8 +136,7 @@ pipeline {
                         withCredentials([string(credentialsId: 'GPG_PASSPHRASE', variable: 'GPG_PASSPHRASE')]) {
                             withCredentials([string(credentialsId: 'NEXUS_USERNAME', variable: 'NEXUS_USERNAME')]) {
                                 withCredentials([string(credentialsId: 'NEXUS_PASSWORD', variable: 'NEXUS_PASSWORD')]) {
-
-
+                                    env.DEPLOY_PARAMS = ""
                                     if (params.RELEASE) {
                                         env.DEPLOY_PARAMS = "--settings settings.xml -P release -P ossrh"
 
