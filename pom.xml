@@ -33,12 +33,31 @@
     <description>
         This project has VoltDB testcontainer module with a sample of how to write unit tests using testcontainer and VoltDB
     </description>
+    <url>https://voltactivedata.com</url>
+
+    <developers>
+        <developer>
+            <id>rmorgenstein</id>
+            <name>Ruth Morgenstein</name>
+            <email>rmorgenstein@voltdb.com</email>
+            <organizationUrl>https://voltactivedata.com</organizationUrl>
+        </developer>
+    </developers>
 
     <modules>
         <module>volt-testcontainer</module>
         <module>volt-voter-procedures</module>
         <module>volt-test-container-test</module>
     </modules>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://github.com/git/git-scm.com/blob/main/MIT-LICENSE.txt</url>
+            <distribution>repo</distribution>
+            <comments>A short and simple permissive license</comments>
+        </license>
+    </licenses>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -77,6 +96,39 @@
                 <repo-snapshots>false</repo-snapshots>
             </properties>
         </profile>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.13</version>
+                        <extensions>true</extensions>
+                        <inherited>false</inherited>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
     <build>
@@ -100,7 +152,6 @@
                 <configuration>
                     <serverId>ossrh</serverId>
 		    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-		    <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
                 </configuration>
             </plugin>
         </plugins>
