@@ -16,10 +16,9 @@ pipeline {
     agent {
        label 'gcloud-build--rocky-linux-8--x64'
     }
-    // We use java 8 for this.
-    // environment {               
-       // JAVA_HOME = "/opt/corretto_java17"  
-    // }  
+    environment {               
+       JAVA_HOME = "/opt/corretto_java17"  
+    }  
     parameters {
         booleanParam(name: 'RELEASE', defaultValue: false, description: 'Whether to release to maven central')
         booleanParam(name: 'TAG_BUILD', defaultValue: false, description: 'If true tag a branch in github')
