@@ -30,6 +30,7 @@
 ## Usage
 ### Running VoltDB in a Container
 Use the provided `VoltDBContainer` class to start and manage a VoltDB instance in a Docker container.
+Refer [Quick Start Guide](HOWTO.md)
 
 ### Procedures
 The project includes several procedures for operations on VoltDB, such as:

@@ -19,17 +19,17 @@ public class KeyValueInsert extends VoltProcedure {
 
    // Get the current key inserted*  
    public final SQLStmt getKey \= new SQLStmt(  
-           "SELECT * from KEYVALUE WHERE KEY \= ?;");
+           "SELECT * from KEYVALUE WHERE KEY = ?;");
 
    // Insert a key and value*  
    public final SQLStmt insertKey \= new SQLStmt(  
            "INSERT INTO KEYVALUE (KEY, VALUE) VALUES (?, ?);");
 
-   public VoltTable\[\] run(int key, int value) {  
+   public VoltTable[] run(int key, int value) {
 
        voltQueueSQL(insertKey, key, value);  
        voltQueueSQL(getKey, key);  
-       VoltTable result\[\] \= voltExecuteSQL();
+       VoltTable result[] = voltExecuteSQL();
        return result;  
    }  
 }
@@ -45,10 +45,17 @@ For unit testing we will need following setup:
 
 Once you have above requirements satisfied you will need to add volt-testcontainer as test dependency to your project like below
 ```
-<dependency\>  
-   <groupId\>org.voltdb</groupId\>  
-   <artifactId\>volt-testcontainer</artifactId\>  
-</dependency\>
+        <!-- This is only required for compiling VoltProcedure classes no need to package them -->
+        <dependency>
+            <groupId>org.voltdb</groupId>
+            <artifactId>voltdb</artifactId>
+            <version>10.1.1</version>
+        </dependency>
+        <!-- Use latest vesion of this dependency from maven central -->
+        <dependency>
+           <groupId>org.voltdb</groupId>
+           <artifactId>volt-testcontainer</artifactId>
+        </dependency>
 ```
 
 Write your unit test as below unit test assumes that your procedures are compiled and put in a jar file and your schema is accessible.
@@ -57,18 +64,18 @@ public class KeyValueTest {
 
    @Test  
    public void testKeyValue() {  
-       VoltDBCluster db \= new VoltDBCluster(“path-to-voltdb-license”, "**voltdb/voltdb-enterprise:13.3.0**")  
-.withInitialSchema("\<path-to-ddl\>")  
-.withInitialClasses("\<path-to-jar\>", "somename");  
+       VoltDBCluster db = new VoltDBCluster(“path-to-voltdb-license”, "voltdb/voltdb-enterprise:14.1.0")
+.withInitialSchema("<path-to-ddl>")
+.withInitialClasses("<path-to-jar>", "somename");
        try {  
-           db.start();  
-           Client client \= db.getClient();  
-           ClientResponse response \= client.callProcedure("KeyValueInsert", 10, 10);  
-           *// Assert*  
+           db.start();
+           Client client = db.getClient();
+           ClientResponse response = client.callProcedure("KeyValueInsert", 10, 10);
+           // Do your validation here
        } catch (Exception e) {  
            fail(e.getMessage());  
        } finally {  
-           if (db \!= null) {  
+           if (db != null) {
                db.shutdown();  
            }  
        }  
