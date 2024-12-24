@@ -15,8 +15,8 @@
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
 
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mavenPluginVersion>3.3.0</mavenPluginVersion>
     </properties>
