@@ -35,7 +35,7 @@ pipeline {
                 }
 
                 script {
-                    sh 'mvn versions:set -DnewVersion=1.0.1-SNAPSHOT -ntp'
+                    sh 'mvn versions:set -DnewVersion=1.2.0-SNAPSHOT -ntp'
                 }
             }
             post {
