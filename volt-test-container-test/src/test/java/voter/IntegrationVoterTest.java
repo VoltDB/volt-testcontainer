@@ -27,7 +27,7 @@ public class IntegrationVoterTest extends TestBase {
 
     @Test
     public void testBasicContainer() {
-        VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise:13.3.0");
+        VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise:14.1.0");
         db.withLogConsumer(LOG);
         try {
             configureTestContainer(db);
