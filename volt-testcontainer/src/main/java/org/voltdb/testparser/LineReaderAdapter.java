@@ -5,7 +5,7 @@
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  */
-package org.voltdbtest.testcontainer;
+package org.voltdb.testparser;
 
 import java.io.BufferedReader;
 import java.io.IOException;

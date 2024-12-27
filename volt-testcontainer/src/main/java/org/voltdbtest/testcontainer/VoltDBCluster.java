@@ -17,6 +17,7 @@ import org.testcontainers.utility.MountableFile;
 import org.voltdb.client.Client;
 import org.voltdb.client.ClientResponse;
 import org.voltdb.client.ProcCallException;
+import org.voltdb.testparser.SQLLoader;
 
 import java.io.File;
 import java.io.IOException;
