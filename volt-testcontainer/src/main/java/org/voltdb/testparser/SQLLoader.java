@@ -5,7 +5,7 @@
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  */
-package org.voltdbtest.testcontainer;
+package org.voltdb.testparser;
 
 import org.voltdb.VoltTable;
 import org.voltdb.VoltType;
@@ -15,11 +15,6 @@ import org.voltdb.client.ClientConfig;
 import org.voltdb.client.ClientFactory;
 import org.voltdb.client.ClientResponse;
 import org.voltdb.client.ProcCallException;
-import org.voltdb.parser.SQLLexer;
-import org.voltdb.parser.SQLParser;
-import org.voltdb.parser.SQLParser.FileInfo;
-import org.voltdb.parser.SQLParser.FileOption;
-import org.voltdb.utils.SplitStmtResults;
 
 import java.io.EOFException;
 import java.io.FileInputStream;
@@ -37,7 +32,7 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class SQLLoader {
+public class SQLLoader {
     private static final String USER_HOME = userHome();
 
     private final boolean m_hasBatchTimeout = true;
@@ -71,7 +66,7 @@ class SQLLoader {
      * <p>
      * Package access for unit tests.
      */
-    void executeScriptFiles(List<FileInfo> filesInfo, SQLCommandLineReader parentLineReader) {
+    void executeScriptFiles(List<SQLParser.FileInfo> filesInfo, SQLCommandLineReader parentLineReader) {
 
         // In non-interactive code, except if we're called from the
         // DDL parser, echo the 'file' command.
@@ -88,12 +83,12 @@ class SQLLoader {
         // statements from each file as we find it).
         StringBuilder batchStmts = new StringBuilder();
         for (int ii = 0; ii < filesInfo.size(); ii++) {
-            FileInfo fileInfo = filesInfo.get(ii);
+            SQLParser.FileInfo fileInfo = filesInfo.get(ii);
             LineReaderAdapter adapter = null;
             SQLCommandLineReader reader = null;
 
             try {
-                if (fileInfo.getOption() == FileOption.INLINEBATCH) {
+                if (fileInfo.getOption() == SQLParser.FileOption.INLINEBATCH) {
                     // File command is a "here document" so pass in the current
                     // input stream.
                     reader = parentLineReader;
@@ -103,7 +98,7 @@ class SQLLoader {
                     reader = adapter = new LineReaderAdapter(new InputStreamReader(fis, m_charset));
 
                     // Batch mode: collect content of this file, and add to the batch
-                    if (fileInfo.getOption() == FileOption.BATCH) {
+                    if (fileInfo.getOption() == SQLParser.FileOption.BATCH) {
                         String line;
                         while ((line = reader.readBatchLine()) != null) {
                             batchStmts.append(line).append('\n');
@@ -153,7 +148,7 @@ class SQLLoader {
      * The 'reader' is expected to have been opened using an
      * appropriate charset for input conversion.
      */
-    private void executeScriptFromReader(FileInfo fileInfo, SQLCommandLineReader reader)
+    private void executeScriptFromReader(SQLParser.FileInfo fileInfo, SQLCommandLineReader reader)
             throws Exception {
         if (reader == null) {
             return; // nothing to see here
@@ -163,7 +158,7 @@ class SQLLoader {
         boolean statementStarted = false;
         StringBuilder batch = fileInfo.isBatch() ? new StringBuilder() : null;
 
-        String delimiter = (fileInfo.getOption() == FileOption.INLINEBATCH) ?
+        String delimiter = (fileInfo.getOption() == SQLParser.FileOption.INLINEBATCH) ?
                 fileInfo.getDelimiter() : null;
 
         // Loop by lines
@@ -224,7 +219,7 @@ class SQLLoader {
                 }
 
                 // Recursively process FILE commands, any failure will cause a recursive failure
-                List<FileInfo> nestedFilesInfo = SQLParser.parseFileStatement(fileInfo, line);
+                List<SQLParser.FileInfo> nestedFilesInfo = SQLParser.parseFileStatement(fileInfo, line);
                 if (nestedFilesInfo != null) {
                     // Guards must be added for FILE Batch containing batches.
                     if (batch != null) {
@@ -677,7 +672,7 @@ class SQLLoader {
         try {
             // Command-line file input; just like a 'FILE file' command
             if (!inputFilePath.isEmpty()) {
-                List<FileInfo> files = Collections.singletonList(new FileInfo(inputFilePath, inputBatch));
+                List<SQLParser.FileInfo> files = Collections.singletonList(new SQLParser.FileInfo(inputFilePath, inputBatch));
                 executeScriptFiles(files, null);
             }
         } catch (Exception ex) {

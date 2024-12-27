@@ -6,7 +6,7 @@
  * https://opensource.org/licenses/MIT.
  */
 
-package org.voltdbtest.testcontainer;
+package org.voltdb.testparser;
 
 import java.io.IOException;
 
