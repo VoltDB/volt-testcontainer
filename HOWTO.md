@@ -11,6 +11,7 @@ Let's look at the following procedure for our example and how we can unit test t
 The procedure:
 
 1. Inserts a key and value and returns a VoltTable  of what was inserted.
+2. Create a maven project with procedure in it.
 
 ```
 package com.mycompany.procs;
@@ -56,6 +57,22 @@ Once you have above requirements satisfied you will need to add volt-testcontain
            <groupId>org.voltdb</groupId>
            <artifactId>volt-testcontainer</artifactId>
         </dependency>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.2</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <argLine>--add-opens=java.base/sun.nio.ch=ALL-UNNAMED</argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+    <build>
 ```
 
 Write your unit test as below unit test assumes that your procedures are compiled and put in a jar file and your schema is accessible.
@@ -86,13 +103,6 @@ public class KeyValueTest {
 # Test your procedures:
 
 Once your code is locally unit tested, integrate with your build to validate and publish your procedures. Flyway or Liquibase support for VoltDB does not exist but for continuous deployment once can easily script loading the schema (if it has changes) and classes using sqlcmd CLI. This way you can promote changes to your production environment.
-
-# References:
-
-The volt-testcontainer and a sample testing code is available here:   
-[https://github.com/VoltDB/volt-testcontainer.git](https://github.com/VoltDB/volt-testcontainer.git)
-
-The repository contains a sample procedure project that packages the procedures and a test project that tests the procedures.
-
-The repository also contains advanced use of testing API such as loading external jars that procedure code depends on.
+To test above example which depends on jar being built and present in target directory use
+> mvn clean compile jar:jar test
 
