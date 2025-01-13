@@ -10,7 +10,7 @@
 
 ## Installation and Setup
 ### Prerequisites
-- **Minimum Java Development Kit (JDK) 8**
+- **Minimum Java Development Kit (JDK) 17**
 - **Maven**: For managing project dependencies and builds.
 - **Docker**: Required for containerizing the VoltDB instances. Access to VoltDB images.
 
