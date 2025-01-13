@@ -1,65 +1,108 @@
-# volt-testcontainer
+# VoltDB and Unit Testing
 
-## Overview
-`volt-testcontainer` is a project designed to integrate and test with VoltDB using containerized environments. This project includes various integration tests and procedures to ensure reliable and efficient interaction with the VoltDB database.
+This document gives an overview of how VoltDB stored procedures can be unit tested before deploying to production.
+VoltDB Stored Procedures allow developers to write business logic inside a single transaction. Traditionally database layers/applications write this on the application side. Since VoltDB does not have externally managed transactions users/developers need to write it in the stored procedures. Procedures are written in Java and have exactly the same semantics of a transaction.
 
-## Key Features
-- **VoltDB testcontainer API**: Set of APIs to use a given VoltDB image and load your procedures and test using Junit.
-- **Sample Database Procedures**: Custom procedures for initializing and interacting with the VoltDB database.
-- **Integration Tests**: A set of integration tests to validate the functionalities of VoltDB in a containerized setup.
+A typical stored procedure has a run() method with input parameters which are provided by application. The method executes your logic which can comprise of many SQL statements and decides if the transaction is successful by simply returning the results. In case the transaction needs to be aborted the method simply throws a VoltAbortException or return error codes that the application can check.
 
-## Installation and Setup
-### Prerequisites
-- **Minimum Java Development Kit (JDK) 8**
-- **Maven**: For managing project dependencies and builds.
-- **Docker**: Required for containerizing the VoltDB instances. Access to VoltDB images.
+# Write Stored Procedure:
 
-### Steps
-1. Clone the repository:
-    ```sh
-    git clone <repository-url>
-    cd volt-testcontainer
-    ```
+Let's look at the following procedure for our example and how we can unit test the procedure.   
+The procedure:
 
-2. Build the project:
-    ```sh
-    mvn clean install javadoc:javadoc
-    ```
-   This will also run the tests provided you have a license in /tmp/voltdb-license.xml if you want to specify alternate license location point VOLTDB_LICENSE environment variable to a license file.
+1. Inserts a key and value and returns a VoltTable  of what was inserted.
+2. Create a maven project with procedure in it.
 
-## Usage
-### Running VoltDB in a Container
-Use the provided `VoltDBContainer` class to start and manage a VoltDB instance in a Docker container.
-Refer [Quick Start Guide](HOWTO.md)
+```
+package com.mycompany.procs;
 
-### Procedures
-The project includes several procedures for operations on VoltDB, such as:
-- `ContestantWinningStates`
-- `Initialize`
-- `JodaTimeInsert`
-- `Results`
-- `Vote`
+public class KeyValueInsert extends VoltProcedure {
 
-These procedures can be found in the `volt-voter-procedures/src/main/java/voter/procedures/` directory.
+   // Get the current key inserted*  
+   public final SQLStmt getKey \= new SQLStmt(  
+           "SELECT * from KEYVALUE WHERE KEY = ?;");
 
-### Tests
-Integration tests like `IntegrationVoltDBClusterTest`, `IntegrationVoterTest`, etc., demonstrate how to use the framework and validate different scenarios.
+   // Insert a key and value*  
+   public final SQLStmt insertKey \= new SQLStmt(  
+           "INSERT INTO KEYVALUE (KEY, VALUE) VALUES (?, ?);");
 
-## Contribution
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix:
-    ```sh
-    git checkout -b feature/your-feature-name
-    ```
-3. Commit your changes:
-    ```sh
-    git commit -m 'Add some feature'
-    ```
-4. Push to the branch:
-    ```sh
-    git push origin feature/your-feature-name
-    ```
-5. Create a new Pull Request.
+   public VoltTable[] run(int key, int value) {
 
-## License
-MIT
+       voltQueueSQL(insertKey, key, value);  
+       voltQueueSQL(getKey, key);  
+       VoltTable result[] = voltExecuteSQL();
+       return result;  
+   }  
+}
+```
+
+# Unit Testing above Stored Procedure:
+
+For unit testing we will need following setup:
+
+1. A docker environment.  
+2. Access to VoltDB images for your target version.  
+3. A developer license.
+
+Once you have above requirements satisfied you will need to add volt-testcontainer as test dependency to your project like below
+```
+        <!-- This is only required for compiling VoltProcedure classes no need to package them -->
+        <dependency>
+            <groupId>org.voltdb</groupId>
+            <artifactId>voltdb</artifactId>
+            <version>10.1.1</version>
+        </dependency>
+        <!-- Use latest vesion of this dependency from maven central -->
+        <dependency>
+           <groupId>org.voltdb</groupId>
+           <artifactId>volt-testcontainer</artifactId>
+        </dependency>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.2</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <argLine>--add-opens=java.base/sun.nio.ch=ALL-UNNAMED</argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+    <build>
+```
+
+Write your unit test as below unit test assumes that your procedures are compiled and put in a jar file and your schema is accessible.
+```
+public class KeyValueTest {
+
+   @Test  
+   public void testKeyValue() {  
+       VoltDBCluster db = new VoltDBCluster(“path-to-voltdb-license”, "voltdb/voltdb-enterprise:14.1.0")
+.withInitialSchema("<path-to-ddl>")
+.withInitialClasses("<path-to-jar>", "somename");
+       try {  
+           db.start();
+           Client client = db.getClient();
+           ClientResponse response = client.callProcedure("KeyValueInsert", 10, 10);
+           // Do your validation here
+       } catch (Exception e) {  
+           fail(e.getMessage());  
+       } finally {  
+           if (db != null) {
+               db.shutdown();  
+           }  
+       }  
+   }  
+}
+```
+
+# Test your procedures:
+
+Once your code is locally unit tested, integrate with your build to validate and publish your procedures. Flyway or Liquibase support for VoltDB does not exist but for continuous deployment once can easily script loading the schema (if it has changes) and classes using sqlcmd CLI. This way you can promote changes to your production environment.
+To test above example which depends on jar being built and present in target directory use
+> mvn clean compile jar:jar test
+
