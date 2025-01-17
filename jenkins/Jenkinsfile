@@ -144,9 +144,10 @@ pipeline {
                             -DarchetypeVersion=${VERSION} \
                             -DgroupId=foobar \
                             -DartifactId=foobar \
-                            -Dversion=1.3.0-SNAPSHOT
+                            -Dversion=1.0.0-SNAPSHOT
                       
                         cd foobar
+                        mvn -ntp -DskipTests=true clean install
                         mvn -ntp test
                     """
                 }
