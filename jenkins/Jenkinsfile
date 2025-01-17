@@ -106,7 +106,7 @@ pipeline {
                     }
 
                     sh '''
-                       mvn clean install javadoc:javadoc
+                       mvn clean install javadoc:javadoc archetype:update-local-catalog
                     '''
                 }
             }
