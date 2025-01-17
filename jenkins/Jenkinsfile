@@ -141,7 +141,7 @@ pipeline {
                         mvn -ntp archetype:generate \
                             -DarchetypeGroupId=org.voltdb \
                             -DarchetypeArtifactId=voltdb-stored-procedures-maven-quickstart \
-                            -DarchetypeVersion=${VERSION} \
+                            -DarchetypeVersion=1.3.0-SNAPSHOT \
                             -DgroupId=foobar \
                             -DartifactId=foobar \
                             -Dversion=1.0.0-SNAPSHOT
