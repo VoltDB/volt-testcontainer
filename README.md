@@ -6,17 +6,20 @@ VoltDB Stored Procedures allow developers to write business logic inside a singl
 A typical stored procedure has a run() method with input parameters which are provided by application. The method executes your logic which can comprise of many SQL statements and decides if the transaction is successful by simply returning the results. In case the transaction needs to be aborted the method simply throws a VoltAbortException or return error codes that the application can check.
 
 # Using quickstart you can create a maven project which has sample schema, procedure and unit tests
-> mvn -B -ntp archetype:generate \
+```shell
+mvn -B -ntp archetype:generate \
     -DarchetypeGroupId=org.voltdb \
     -DarchetypeArtifactId=voltdb-stored-procedures-maven-quickstart \
     -DarchetypeVersion=1.3.0 \
     -DgroupId=foobar \
     -DartifactId=foobar \
     -Dpackage=foobar \
-    -Dversion=1.0.0-SNAPSHOT <br />
-> cd foobar <br />
-> mvn -DskipTests=true clean install <br />
-> mvn surefire:test <br />
+    -Dversion=1.0-SNAPSHOT
+
+cd foobar
+mvn -DskipTests=true clean install
+mvn surefire:test
+```    
 
 # Write Stored Procedure:
 
@@ -26,17 +29,17 @@ The procedure:
 1. Inserts a key and value and returns a VoltTable  of what was inserted.
 2. Create a maven project with procedure in it.
 
-```
+```java
 package com.mycompany.procs;
 
 public class KeyValueInsert extends VoltProcedure {
 
    // Get the current key inserted*  
-   public final SQLStmt getKey \= new SQLStmt(  
+   public final SQLStmt getKey = new SQLStmt(  
            "SELECT * from KEYVALUE WHERE KEY = ?;");
 
    // Insert a key and value*  
-   public final SQLStmt insertKey \= new SQLStmt(  
+   public final SQLStmt insertKey = new SQLStmt(  
            "INSERT INTO KEYVALUE (KEY, VALUE) VALUES (?, ?);");
 
    public VoltTable[] run(int key, int value) {
@@ -58,7 +61,8 @@ For unit testing we will need following setup:
 3. A developer license.
 
 Once you have above requirements satisfied you will need to add volt-testcontainer as test dependency to your project like below
-```
+```xml
+    <dependencies>
         <!-- This is only required for compiling VoltProcedure classes no need to package them -->
         <dependency>
             <groupId>org.voltdb</groupId>
@@ -70,7 +74,11 @@ Once you have above requirements satisfied you will need to add volt-testcontain
            <groupId>org.voltdb</groupId>
            <artifactId>volt-testcontainer</artifactId>
         </dependency>
+        ...
+    </dependencies>
+    <build>
         <plugins>
+            ...
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -89,14 +97,14 @@ Once you have above requirements satisfied you will need to add volt-testcontain
 ```
 
 Write your unit test as below unit test assumes that your procedures are compiled and put in a jar file and your schema is accessible.
-```
+```java
 public class KeyValueTest {
 
    @Test  
    public void testKeyValue() {  
-       VoltDBCluster db = new VoltDBCluster(“path-to-voltdb-license”, "voltdb/voltdb-enterprise:14.1.0")
-.withInitialSchema("<path-to-ddl>")
-.withInitialClasses("<path-to-jar>", "somename");
+       VoltDBCluster db = new VoltDBCluster("path-to-voltdb-license", "voltdb/voltdb-enterprise:14.1.0")
+            .withInitialSchema("<path-to-ddl>")
+            .withInitialClasses("<path-to-jar>", "somename");
        try {  
            db.start();
            Client client = db.getClient();
@@ -117,5 +125,7 @@ public class KeyValueTest {
 
 Once your code is locally unit tested, integrate with your build to validate and publish your procedures. Flyway or Liquibase support for VoltDB does not exist but for continuous deployment once can easily script loading the schema (if it has changes) and classes using sqlcmd CLI. This way you can promote changes to your production environment.
 To test above example which depends on jar being built and present in target directory use
-> mvn -DskipTests=true clean install <br/>
-> mvn surefire:test <br/>
+```shell
+mvn -DskipTests=true clean install
+mvn surefire:test
+```
