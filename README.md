@@ -93,7 +93,7 @@ Once you have above requirements satisfied you will need to add volt-testcontain
                 </configuration>
             </plugin>
         </plugins>
-    <build>
+    </build>
 ```
 
 Write your unit test as below unit test assumes that your procedures are compiled and put in a jar file and your schema is accessible.
