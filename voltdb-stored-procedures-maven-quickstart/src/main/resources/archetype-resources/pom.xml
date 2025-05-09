@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>${groupId}</groupId>
+    <artifactId>${artifactId}</artifactId>
+    <version>${version}</version>
+    <packaging>jar</packaging>
+
+    <name>${artifactId}</name>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <voltClientVersion>14.1.0</voltClientVersion>
+        <junit.version>5.9.3</junit.version>
+        <testcontainerVersion>1.2.0</testcontainerVersion>
+        <dockerjavaVersion>3.4.0</dockerjavaVersion>
+        <slf4jVersion>1.7.36</slf4jVersion>
+        <assertj.version>3.25.2</assertj.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.voltdb</groupId>
+            <artifactId>voltdb</artifactId>
+            <version>10.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.voltdb</groupId>
+            <artifactId>voltdbclient</artifactId>
+            <version>${voltClientVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.voltdb</groupId>
+            <artifactId>volt-testcontainer</artifactId>
+            <version>${testcontainerVersion}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.2</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <argLine>--add-opens=java.base/sun.nio.ch=ALL-UNNAMED</argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
