@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    This file is part of VoltDB.
+
+    Copyright (C) 2023 Volt Active Data, Inc.
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+    You should have received a copy of the GNU Affero General Public License
+    along with VoltDB.  If not, see <http://www.gnu.org/licenses/>.
+
+    This pom is used to:
+    - resolve dependencies from remote repo.
+    - set dependency version properties in one place (see: https://maven.apache.org/pom.html#Inheritance)
+    - set version in one place for all child projects (see: https://maven.apache.org/maven-ci-friendly.html)
+-->
+<project
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.voltdb</groupId>
+    <artifactId>volt-testcontainer-module</artifactId>
+    <version>1.2.0</version>
+    <packaging>pom</packaging>
+    <name>VoltDB Test Container Parent</name>
+    <description>
+        This project has VoltDB testcontainer module with a sample of how to write unit tests using testcontainer and VoltDB
+    </description>
+    <url>https://voltactivedata.com</url>
+
+    <developers>
+        <developer>
+            <id>rmorgenstein</id>
+            <name>Ruth Morgenstein</name>
+            <email>rmorgenstein@voltdb.com</email>
+            <organizationUrl>https://voltactivedata.com</organizationUrl>
+        </developer>
+    </developers>
+
+    <modules>
+        <module>volt-testcontainer</module>
+        <module>volt-voter-procedures</module>
+        <module>volt-test-container-test</module>
+    </modules>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://github.com/git/git-scm.com/blob/main/MIT-LICENSE.txt</url>
+            <distribution>repo</distribution>
+            <comments>A short and simple permissive license</comments>
+        </license>
+    </licenses>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <junit-platform.version>1.9.2</junit-platform.version>
+        <junit.jupiter.version>5.9.2</junit.jupiter.version>
+        <junit5.version>${junit.jupiter.version}</junit5.version>
+        <voltClientVersion>14.1.0</voltClientVersion>
+        <testcontainerVersion>1.20.1</testcontainerVersion>
+        <dockerjavaVersion>3.4.0</dockerjavaVersion>
+        <slf4jVersion>1.7.36</slf4jVersion>
+	<volt-cache-url>artifactregistry://us-maven.pkg.dev/voltdb-operator/voltdb-maven-central-remote</volt-cache-url>
+	<volt-internal-url>artifactregistry://us-maven.pkg.dev/voltdb-operator/volt-artifacts-internal</volt-internal-url>
+	<confluent-registry-url>artifactregistry://us-maven.pkg.dev/voltdb-operator/voltdb-confluent-remote</confluent-registry-url>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>volt-internal-artifacts</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <repo-id>volt-internal-artifacts</repo-id>
+                <repo-url>${volt-internal-url}</repo-url>
+                <repo-snapshots>true</repo-snapshots>
+            </properties>
+        </profile>
+        <profile>
+            <id>ossrh</id>
+            <properties>
+                <repo-id>ossrh</repo-id>
+                <repo-url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</repo-url>
+                <repo-snapshots>false</repo-snapshots>
+            </properties>
+        </profile>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.13</version>
+                        <extensions>true</extensions>
+                        <inherited>false</inherited>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <build>
+        <extensions>
+            <extension>
+                <groupId>com.google.cloud.artifactregistry</groupId>
+                <artifactId>artifactregistry-maven-wagon</artifactId>
+                <version>2.2.0</version>
+            </extension>
+        </extensions>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>3.1.1</version>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+		<artifactId>nexus-staging-maven-plugin</artifactId>
+		<inherited>false</inherited>
+                <configuration>
+                    <serverId>ossrh</serverId>
+		    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <scm>
+        <url>https://github.com/VoltDB/volt-testcontainer.git</url>
+        <connection>scm:git:https://github.com/VoltDB/volt-testcontainer.git</connection>
+        <developerConnection>scm:git:https://github.com/VoltDB/volt-testcontainer.git</developerConnection>
+        <tag>@{project.version}</tag>
+    </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>${repo-id}</id>
+            <url>${repo-url}</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>${repo-snapshots}</enabled>
+            </snapshots>
+        </repository>
+    </distributionManagement>
+    <repositories>
+        <repository>
+            <!-- override for maven central that caches artifacts in gcloud-->
+            <id>central</id>
+            <url>${volt-cache-url}</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+	<repository>
+            <id>volt-internal-artifacts</id>
+            <url>${volt-internal-url}</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>confluent</id>
+            <url>${confluent-registry-url}</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+    </repositories>
+</project>
