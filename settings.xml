@@ -1,0 +1,29 @@
+<!--
+
+    This file is part of Volt Active Data.
+    Copyright (C) 2024 Volt Active Data Inc. All rights reserved.
+
+-->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+              http://maven.apache.org/xsd/settings-1.0.0.xsd">
+    <profiles>
+        <profile>
+            <id>ossrh</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <gpg.passphraseEnvName>GPG_PASSPHRASE</gpg.passphraseEnvName>
+            </properties>
+        </profile>
+    </profiles>
+    <servers>
+        <server>
+            <id>ossrh</id>
+            <username>${env.NEXUS_USERNAME}</username>
+            <password>${env.NEXUS_PASSWORD}</password>
+        </server>
+    </servers>
+</settings>

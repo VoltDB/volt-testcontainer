@@ -1,0 +1,210 @@
+/*
+ * Copyright (C) 2024 Volt Active Data Inc.
+ *
+ * Use of this source code is governed by an MIT
+ * license that can be found in the LICENSE file or at
+ * https://opensource.org/licenses/MIT.
+ */
+
+@Library('voltdb') _
+def defaultRelease = false
+if (BRANCH_NAME == "main") {
+    defaultRelease = true
+}
+
+pipeline {
+    agent {
+       label 'gcloud-build--rocky-linux-8--x64'
+    }
+    environment {               
+       JAVA_HOME = "/opt/corretto_java17"  
+    }  
+    parameters {
+        booleanParam(name: 'RELEASE', defaultValue: false, description: 'Whether to release to maven central')
+        booleanParam(name: 'TAG_BUILD', defaultValue: false, description: 'If true tag a branch in github')
+    }
+    stages {
+        stage('Set version') {
+            when {
+                expression { !params.RELEASE }
+            }
+            steps {
+                script {
+                    startedStage('Set version')
+                }
+
+                script {
+                    sh 'mvn versions:set -DnewVersion=1.3.0-SNAPSHOT -ntp'
+                }
+            }
+            post {
+                success {
+                    successfulStage('Set version')
+                }
+                failure {
+                    failedStage('Set version')
+                }
+            }
+        }
+        stage('Tag branch') {
+            when {
+                expression { params.RELEASE && params.TAG_BUILD }
+            }
+            steps {
+                script {
+                    startedStage('Tag branch')
+                }
+
+                script {
+                    TAG = sh(returnStdout: true, script: "grep -A 1 '<artifactId>volt-testcontainer-module</artifactId>' pom.xml | grep -o -P '(?<=version>).*(?=</version)' ").trim()
+                    GITHUB_TAG = 'v' + TAG
+
+                    sh "echo TAG: $TAG"
+
+                    withCredentials([usernamePassword(credentialsId: 'github-token', passwordVariable: 'token', usernameVariable: 'username')]) {
+                        sh """
+                            git config --local user.name "voltdbci"
+                            git config --local user.email "test@voltdb.com"
+                            git remote set-url origin https://${token}@github.com/VoltDB/volt-testcontainer.git
+                        """
+                        res = sh(script: "git tag -a ${GITHUB_TAG} -m 'Tagging ${GITHUB_TAG} release' HEAD 2>&1", returnStdout: true)
+                        if (res.contains("already exists")) {
+                            error("ERROR: Build failed! $res ")
+                        }
+                        sh(script: "git push origin ${GITHUB_TAG}", returnStdout: true)
+                    }
+                }
+            }
+            post {
+                success {
+                    successfulStage('Tag branch')
+                }
+                failure {
+                    failedStage('Tag branch')
+                }
+            }
+        }
+        stage('Build') {
+            when {
+                expression { !params.RELEASE }
+            }
+            steps {
+                script {
+                    startedStage('Tests')
+                }
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_CREDS_USR', passwordVariable: 'DOCKER_CREDS_PSW')]) {
+                        sh '''
+                            echo "login to docker..."
+                            echo ${DOCKER_CREDS_PSW} | docker login -u ${DOCKER_CREDS_USR} --password-stdin docker.io
+                            echo "building..."
+                        '''
+                    }
+
+                    withCredentials([string(credentialsId: 'VOLTDB_LICENSE', variable: 'LICENSE')]) {
+                        writeFile file: "/tmp/voltdb-license.xml", text: "$LICENSE", encoding: "UTF-8"
+                    }
+
+                    sh '''
+                       mvn clean install javadoc:javadoc archetype:update-local-catalog
+                    '''
+                }
+            }
+            post {
+                success {
+                    successfulStage('Tests')
+                }
+                unsuccessful {
+                    failedStage('Tests')
+                }
+                always {
+                    junit '**/target/surefire-reports/*.xml'
+                }
+            }
+        }
+        stage('Maven Archetype Tests') {
+            when {
+                expression { !params.RELEASE }
+            }
+            steps {
+                script {
+                    startedStage('Maven Archetype Tests')
+                }
+                script {
+                    sh """
+                        export JAVA_HOME=/opt/corretto_java17
+                        export PATH="\${JAVA_HOME}/bin:\$PATH"
+
+                        mkdir target || true
+                        cd target
+                        
+                        mvn -ntp archetype:generate \
+                            -DarchetypeGroupId=org.voltdb \
+                            -DarchetypeArtifactId=voltdb-stored-procedures-maven-quickstart \
+                            -DarchetypeVersion=1.3.0-SNAPSHOT \
+                            -DgroupId=foobar \
+                            -DartifactId=foobar \
+                            -Dversion=1.0.0-SNAPSHOT
+                      
+                        cd foobar
+                        mvn -ntp -DskipTests=true clean install
+                        mvn -ntp test
+                    """
+                }
+            }
+            post {
+                success {
+                    successfulStage('Maven Archetype Tests')
+                }
+                failure {
+                    failedStage('Maven Archetype Tests')
+                }
+                always {
+                    junit testResults: 'target/foobar/target/surefire-reports/*.xml'
+                }
+            }
+        }
+        stage('Publish') {
+            when {
+                expression { defaultRelease || params.RELEASE }
+            }
+            steps {
+                script {
+                    startedStage('Publish')
+                }
+                script {
+                    withCredentials([file(credentialsId: 'maven-repos-dev-write', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                        withCredentials([string(credentialsId: 'GPG_PASSPHRASE', variable: 'GPG_PASSPHRASE')]) {
+                            withCredentials([string(credentialsId: 'NEXUS_USERNAME', variable: 'NEXUS_USERNAME')]) {
+                                withCredentials([string(credentialsId: 'NEXUS_PASSWORD', variable: 'NEXUS_PASSWORD')]) {
+                                    env.DEPLOY_PARAMS = ""
+                                    if (params.RELEASE) {
+                                        env.DEPLOY_PARAMS = "--settings settings.xml -P release -P ossrh"
+
+                                        withCredentials([file(credentialsId: 'upload-maven-central-private-pgp', variable: 'private_pgp')]) {
+                                            sh """#!/bin/bash -x
+                                                env
+                                                gpg --import --passphrase ${GPG_PASSPHRASE} --batch ${private_pgp}
+                                            """
+                                        }
+                                    }
+                                    sh """#!/bin/bash
+                                        mvn clean deploy -ntp -DskipTests $DEPLOY_PARAMS
+                                    """
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            post {
+                success {
+                    successfulStage('Publish')
+                }
+                failure {
+                    failedStage('Publish')
+                }
+            }
+        }
+    }
+}
