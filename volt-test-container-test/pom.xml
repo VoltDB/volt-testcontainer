@@ -31,7 +31,7 @@
         <dependency>
             <groupId>org.voltdb</groupId>
             <artifactId>voltdbclient</artifactId>
-            <version>14.1.0</version>
+            <version>14.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.voltdb</groupId>

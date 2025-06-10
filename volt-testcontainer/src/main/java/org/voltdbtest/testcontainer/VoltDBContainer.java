@@ -8,6 +8,7 @@
 package org.voltdbtest.testcontainer;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.google.common.base.Strings;
 import org.jetbrains.annotations.Nullable;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
@@ -287,7 +288,11 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         ClientConfig config = new ClientConfig(username, password);
         if (tlsEnabled) {
             config.enableSSL();
-            config.setTrustStore(trustStorePath, trustStorePassword);
+            if (Strings.isNullOrEmpty(keyStorePath)) {
+                config.setTrustStore(trustStorePath, trustStorePassword);
+            } else {
+                config.setTrustStoreWithMutualAuth(trustStorePath, trustStorePassword, keyStorePath, keyStorePassword);
+            }
         }
         long st = System.currentTimeMillis();
         while (System.currentTimeMillis() <  st + timeoutMillis) {
