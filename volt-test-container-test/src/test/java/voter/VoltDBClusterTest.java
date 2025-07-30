@@ -139,10 +139,10 @@ public class VoltDBClusterTest extends TestBase {
     
     @Test
     public void testGetClientWithHost() throws IOException {
-        cluster = new VoltDBCluster(validLicensePath, VOLTDB_IMAGE, 2, 0);
+        cluster = new VoltDBCluster(validLicensePath, VOLTDB_IMAGE, 1, 0);
         cluster.start();
         
-        Client client = cluster.getClient("0");
+        Client client = cluster.getClient("host-0");
         assertNotNull("Client should not be null", client);
         // Client object doesn't have isConnected() method, just verify it's not null
     }
