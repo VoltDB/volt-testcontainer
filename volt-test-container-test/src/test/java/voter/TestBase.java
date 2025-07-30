@@ -22,6 +22,21 @@ import static org.junit.Assert.assertTrue;
 
 public class TestBase {
 
+    public static final String VOLTDB_IMAGE = "voltdb/voltdb-enterprise:14.1.0";
+    protected static String validLicensePath;
+    static {
+        validLicensePath = "/tmp/voltdb-license.xml";
+        // Try file from environment variable
+        String elicenseFile = System.getenv("VOLTDB_LICENSE");
+        if (elicenseFile != null) {
+            File file = Paths.get(elicenseFile).toAbsolutePath().toFile();
+            if (file.exists()) {
+                validLicensePath = file.getAbsolutePath();
+            }
+        }
+        System.out.println("License file path is: " + validLicensePath);
+    }
+
     public void configureTestContainer(VoltDBCluster db) {
         try {
             db.start();
@@ -66,17 +81,4 @@ public class TestBase {
         return jars;
     }
 
-    protected String getLicensePath() {
-        String licensePath = "/tmp/voltdb-license.xml";
-        // Try file from environment variable
-        String elicenseFile = System.getenv("VOLTDB_LICENSE");
-        if (elicenseFile != null) {
-            File file = Paths.get(elicenseFile).toAbsolutePath().toFile();
-            if (file.exists()) {
-                licensePath = file.getAbsolutePath();
-            }
-        }
-        System.out.println("License file path is: " + licensePath);
-        return licensePath;
-    }
 }

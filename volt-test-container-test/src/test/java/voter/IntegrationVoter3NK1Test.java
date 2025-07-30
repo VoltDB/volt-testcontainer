@@ -17,7 +17,7 @@ public class IntegrationVoter3NK1Test extends TestBase {
 
     @Test
     public void testBasicContainer() {
-        VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise:14.1.0", 3,1);
+        VoltDBCluster db = new VoltDBCluster(validLicensePath, VOLTDB_IMAGE, 3,1);
         try {
             configureTestContainer(db);
             // Now run benchmark which will invoke all procedures.

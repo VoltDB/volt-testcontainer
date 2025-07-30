@@ -10,11 +10,13 @@ package voter;
 import junit.framework.TestCase;
 import org.voltdbtest.testcontainer.VoltDBCluster;
 
-public class IntegrationVoltDBClusterTest extends TestCase {
+import static org.junit.jupiter.api.Assertions.fail;
+
+public class IntegrationVoltDBClusterTest extends TestBase {
 
     // This test should fail unless you have a valid license.
     public void testStart() {
-        VoltDBCluster cluster = new VoltDBCluster("/tmp/xxx-voltdb-license.xml", "voltdb/voltdb-enterprise:14.1.0");
+        VoltDBCluster cluster = new VoltDBCluster("/tmp/xxx-voltdb-license.xml", VOLTDB_IMAGE);
         try {
             cluster.start(2000);
             fail("Cluster should fail to start without license. Most likely you have voltdb-license.xml in your /tmp directory.");
