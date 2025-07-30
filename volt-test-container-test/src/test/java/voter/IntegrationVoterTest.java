@@ -27,7 +27,7 @@ public class IntegrationVoterTest extends TestBase {
 
     @Test
     public void testBasicContainer() {
-        VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise:14.1.0");
+        VoltDBCluster db = new VoltDBCluster(validLicensePath, "voltdb/voltdb-enterprise:14.1.0");
         db.withLogConsumer(LOG);
         try {
             configureTestContainer(db);
@@ -49,7 +49,7 @@ public class IntegrationVoterTest extends TestBase {
     @Test
     public void testBasicContainerWithExternalJars() {
         LocalTime currentTime = LocalTime.now();
-        VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise:13.3.0", getExtraLibDirectory());
+        VoltDBCluster db = new VoltDBCluster(validLicensePath, VOLTDB_IMAGE, getExtraLibDirectory());
         try {
             configureTestContainer(db);
             String s = currentTime.toString(ISODateTimeFormat.time());

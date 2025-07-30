@@ -572,7 +572,7 @@ public class VoltDBCluster {
      */
     public VoltDBCluster withDeploymentResource(String fileName) {
         for (VoltDBContainer voltDBContainer : containers()) {
-            voltDBContainer.withCopyToContainer(MountableFile.forClasspathResource(fileName), "/etc/deployment.xml");
+            voltDBContainer.withCopyToContainer(MountableFile.forHostPath(fileName), "/etc/deployment.xml");
         }
         return this;
     }
