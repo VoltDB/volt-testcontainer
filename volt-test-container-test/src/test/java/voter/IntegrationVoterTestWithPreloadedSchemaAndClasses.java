@@ -20,7 +20,7 @@ public class IntegrationVoterTestWithPreloadedSchemaAndClasses extends TestBase 
 
     @Test
     public void testBasicContainer() throws Exception {
-        // Create a cluster and load schema and classes at init tile then just run the app.
+        // Create a cluster and load schema and classes at init time then just run the app.
         VoltDBCluster db = new VoltDBCluster(validLicensePath, VOLTDB_IMAGE).
                 withInitialSchema(getResourceFile("schema.ddl").getAbsolutePath(), "schema.ddl").
                 withInitialClasses(getJars());
@@ -51,7 +51,7 @@ public class IntegrationVoterTestWithPreloadedSchemaAndClasses extends TestBase 
 
     @Test
     public void testBasicContainerSchemaClassesAfterConstructed() {
-        // Create a cluster and load schema and classes at init tile then just run the app.
+        // Create a cluster and load schema and classes at init time then just run the app.
         VoltDBCluster db = new VoltDBCluster(validLicensePath, VOLTDB_IMAGE);
         try {
             File schemaFile = null;
