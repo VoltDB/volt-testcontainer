@@ -599,7 +599,7 @@ public class VoltDBCluster {
      */
     public VoltDBCluster withInitialSchema(String resourcePath, String fileName) {
         for (VoltDBContainer voltDBContainer : containers()) {
-            voltDBContainer.withClasspathResourceMapping(resourcePath, "/etc/schemas/" + fileName, BindMode.READ_ONLY);
+            voltDBContainer.withCopyToContainer(MountableFile.forHostPath(resourcePath), "/etc/schemas/" + fileName);
         }
         return this;
     }
@@ -612,7 +612,7 @@ public class VoltDBCluster {
      */
     public VoltDBCluster withInitialSchema(String fileName) {
         for (VoltDBContainer voltDBContainer : containers()) {
-            voltDBContainer.withClasspathResourceMapping(fileName, "/etc/schemas/" + fileName, BindMode.READ_ONLY);
+            voltDBContainer.withCopyToContainer(MountableFile.forHostPath(fileName), "/etc/schemas/" + fileName);
         }
         return this;
     }
