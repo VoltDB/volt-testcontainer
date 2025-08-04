@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.voltdb</groupId>
         <artifactId>volt-testcontainer-module</artifactId>
-        <version>1.3.0-SNAPSHOT</version>
+        <version>1.4.1</version>
     </parent>
     <artifactId>volt-voter-procedures</artifactId>
     <name>VoltDB Procedures</name>
@@ -29,6 +29,7 @@
             <groupId>org.voltdb</groupId>
             <artifactId>voltdb</artifactId>
             <version>10.1.1</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>joda-time</groupId>
@@ -36,6 +37,72 @@
             <version>2.12.7</version>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.7.0</version>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>2.2.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.7.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.8.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>central</serverId>
+                            <deploymentName>${project.artifactId}-${project.version}</deploymentName>
+                            <autoPublish>false</autoPublish>  <!-- or false for manual publishing -->
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <build>
         <extensions>
@@ -48,29 +115,19 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.6.0</version>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.7.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.2.1</version>
                 <executions>
                     <execution>
-                        <phase>package</phase>
+                        <id>attach-sources</id>
                         <goals>
-                            <goal>shade</goal>
+                            <goal>jar-no-fork</goal>
                         </goals>
-                        <configuration>
-                            <relocations>
-                                <relocation>
-                                    <pattern>org.joda</pattern>
-                                    <shadedPattern>org.shaded.joda</shadedPattern>
-                                </relocation>
-                            </relocations>
-                            <artifactSet>
-                                <excludes>
-                                    <exclude>org.voltdb:voltdb</exclude>
-                                    <exclude>io.netty:netty-all</exclude>
-                                    <exclude>io.netty:netty-tcnative-boringssl-static</exclude>
-                                </excludes>
-                            </artifactSet>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -78,6 +135,14 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.7.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
