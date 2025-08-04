@@ -189,7 +189,7 @@ pipeline {
                                         }
                                     }
                                     sh """#!/bin/bash
-                                        mvn clean deploy -ntp -DskipTests $DEPLOY_PARAMS
+                                        mvn clean javadoc:jar source:jar deploy -ntp -DskipTests $DEPLOY_PARAMS
                                     """
                                 }
                             }
