@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Volt Active Data Inc.
+ * Copyright (C) 2024-2025 Volt Active Data Inc.
  *
  * Use of this source code is governed by an MIT
  * license that can be found in the LICENSE file or at
@@ -60,8 +60,16 @@ public class TestBase {
     }
 
     protected String getExtraLibDirectory() {
-        URL schema = getClass().getClassLoader().getResource("schema.ddl");
-        return new File((new File(schema.getFile()).getParent())).getAbsolutePath();
+        // Get the path to the procedures module's target/lib directory
+        String relPath = getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
+        File libDir = new File(relPath + "/../../../volt-voter-procedures/target/lib");
+
+        if (!libDir.exists() || !libDir.isDirectory()) {
+            throw new RuntimeException("Extra lib directory not found: " + libDir.getAbsolutePath() +
+                                       ". Run 'mvn package' on volt-voter-procedures module first.");
+        }
+
+        return libDir.getAbsolutePath();
     }
 
     protected File @Nullable [] getJars() {
@@ -80,5 +88,4 @@ public class TestBase {
         File jars[] = targetDir.listFiles(jarFiles);
         return jars;
     }
-
 }
