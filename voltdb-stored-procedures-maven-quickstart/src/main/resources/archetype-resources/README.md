@@ -20,5 +20,5 @@ Schema needed for Procedures are under src/main/resources <br/>
 
 #### Unit Testing above Stored Procedure:
 > export VOLTDB_LICENSE=<path-to-license> </br>
-> mvn -DskipTest=true clean install </br>
+> mvn -DskipTests=true clean install </br>
 > mvn test </br>
