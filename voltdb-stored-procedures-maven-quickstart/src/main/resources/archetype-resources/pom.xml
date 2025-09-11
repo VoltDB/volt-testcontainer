@@ -17,7 +17,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <voltClientVersion>14.1.0</voltClientVersion>
         <junit.version>5.9.3</junit.version>
-        <testcontainerVersion>1.2.0</testcontainerVersion>
+        <testcontainerVersion>1.4.1</testcontainerVersion>
         <dockerjavaVersion>3.4.0</dockerjavaVersion>
         <slf4jVersion>1.7.36</slf4jVersion>
         <assertj.version>3.25.2</assertj.version>

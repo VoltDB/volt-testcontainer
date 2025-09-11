@@ -10,7 +10,7 @@ A typical stored procedure has a run() method with input parameters which are pr
 mvn -B -ntp archetype:generate \
     -DarchetypeGroupId=org.voltdb \
     -DarchetypeArtifactId=voltdb-stored-procedures-maven-quickstart \
-    -DarchetypeVersion=1.3.0 \
+    -DarchetypeVersion=1.4.1 \
     -DgroupId=foobar \
     -DartifactId=foobar \
     -Dpackage=foobar \
