@@ -15,7 +15,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <voltClientVersion>14.1.0</voltClientVersion>
+        <voltClientVersion>14.3.1</voltClientVersion>
         <junit.version>5.9.3</junit.version>
         <testcontainerVersion>1.4.1</testcontainerVersion>
         <dockerjavaVersion>3.4.0</dockerjavaVersion>
