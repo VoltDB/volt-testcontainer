@@ -14,11 +14,6 @@
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
-
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <mavenPluginVersion>3.3.0</mavenPluginVersion>
     </properties>
 
     <dependencies>
@@ -27,6 +22,7 @@
             <artifactId>volt-testcontainer</artifactId>
             <version>${project.version}</version>
         </dependency>
+
         <!-- we use released client and everything non volt code so that we can build this first -->
         <dependency>
             <groupId>org.voltdb</groupId>
@@ -38,8 +34,11 @@
             <artifactId>volt-voter-procedures</artifactId>
             <version>${project.version}</version>
         </dependency>
+
         <!-- https://mvnrepository.com/artifact/org.voltdb/voltdb -->
         <!-- This should be good enough to compile a VoltProcedure class -->
+
+        <!-- test scope -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
