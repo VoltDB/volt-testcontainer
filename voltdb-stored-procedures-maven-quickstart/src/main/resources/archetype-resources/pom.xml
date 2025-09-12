@@ -15,33 +15,38 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <voltClientVersion>14.3.1</voltClientVersion>
-        <junit.version>5.9.3</junit.version>
-        <testcontainerVersion>1.4.1</testcontainerVersion>
-        <dockerjavaVersion>3.4.0</dockerjavaVersion>
-        <slf4jVersion>1.7.36</slf4jVersion>
-        <assertj.version>3.25.2</assertj.version>
+
+        <voltdb.version>14.3.1</voltdb.version>
+
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.voltdb</groupId>
-            <artifactId>voltdb</artifactId>
-            <version>10.1.1</version>
+            <artifactId>volt-procedure-api</artifactId>
+            <version>15.0.0-rc1</version>
         </dependency>
         <dependency>
             <groupId>org.voltdb</groupId>
             <artifactId>voltdbclient</artifactId>
-            <version>${voltClientVersion}</version>
+            <version>${voltdb.version}</version>
         </dependency>
         <dependency>
             <groupId>org.voltdb</groupId>
             <artifactId>volt-testcontainer</artifactId>
-            <version>${testcontainerVersion}</version>
+            <version>1.4.1</version>
         </dependency>
     </dependencies>
 
     <build>
+
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <filtering>true</filtering>
+            </testResource>
+        </testResources>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
