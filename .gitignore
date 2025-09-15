@@ -25,3 +25,7 @@ replay_pid*
 
 .idea/
 target/
+
+# generated project used to test the archetype
+voltdb-stored-procedures-maven-quickstart/scripts/test-generated-project/
+

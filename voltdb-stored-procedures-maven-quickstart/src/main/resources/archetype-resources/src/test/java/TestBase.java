@@ -27,7 +27,7 @@ public class TestBase {
 
     static {
         // load properties from properties file in resources, which are set by the pom.xml
-        try (InputStream input = VoltDBConfig.class.getClassLoader().getResourceAsStream("test.properties")) {
+        try (InputStream input = TestBase.class.getClassLoader().getResourceAsStream("test.properties")) {
             if (input != null) {
                 props.load(input);
             }
