@@ -5,8 +5,8 @@
 # Archetype Generation & Test Script
 #
 # Prerequisites:
-# 1. First build the parent project:
-#    cd .. && mvn clean package
+# 1. First install the parent project:
+#    cd .. && mvn clean install
 # 2. Then run this script to generate the archetype and run its build and tests
 #    Be sure to set VOLTDB_LICENSE or copy your license file to ~/license.xml
 #
