@@ -14,8 +14,8 @@
 #   ./test-archetype.sh
 #
 # The generated test project will be created in: scripts/test-generated-project/
-# This directory is .gitignore'd and will be cleaned up on subsequent runs.
-# If the test fails, the generated project remains for inspection.
+# which is not deleted to allow for inspection in case the test failed.
+# This directory is .gitignore'd and gets cleaned up on subsequent runs.
 ###############################################################################
 
 set -e  # Exit on any error
@@ -36,7 +36,7 @@ fi
 # Verify archetype is built
 if [ ! -f "../target/classes/META-INF/maven/archetype-metadata.xml" ]; then
     echo "ERROR: Archetype not built. Please run first:"
-    echo "  cd .. && mvn clean package"
+    echo "  cd .. && mvn clean install"
     echo "Then run this script again."
     exit 1
 fi

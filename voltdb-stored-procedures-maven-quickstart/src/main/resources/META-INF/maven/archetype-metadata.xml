@@ -39,7 +39,7 @@
         <fileSet encoding="UTF-8" filtered="true">
             <directory>src/test/resources</directory>
         </fileSet>
-        <fileSet encoding="UTF-8" filtered="true">
+        <fileSet encoding="UTF-8" filtered="true" packaged="false">
             <directory/>
             <includes>
                 <include>README.md</include>

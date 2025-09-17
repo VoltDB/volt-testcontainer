@@ -21,20 +21,26 @@
     </properties>
 
     <dependencies>
+        <!-- for compiling Volt stored procedures -->
         <dependency>
             <groupId>org.voltdb</groupId>
             <artifactId>volt-procedure-api</artifactId>
             <version>15.0.0-rc1</version>
+            <scope>provided</scope>
         </dependency>
+        <!-- provide voltdbclient needed by volt-procedure-api -->
         <dependency>
             <groupId>org.voltdb</groupId>
             <artifactId>voltdbclient</artifactId>
             <version>${voltdb.version}</version>
+            <scope>provided</scope>
         </dependency>
+        <!-- to run VoltDB in a container for tests -->
         <dependency>
             <groupId>org.voltdb</groupId>
             <artifactId>volt-testcontainer</artifactId>
-            <version>1.4.1</version>
+            <version>1.5.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
