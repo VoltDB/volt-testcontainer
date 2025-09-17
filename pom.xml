@@ -21,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.voltdb</groupId>
   <artifactId>volt-testcontainer-module</artifactId>
-  <version>1.4.1</version>
+  <version>1.5.0</version>
   <packaging>pom</packaging>
   <name>VoltDB Test Container Parent</name>
   <description>
@@ -55,10 +55,14 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
+
+    <!-- volt artifact versions - must be published versions -->
+    <volt-procedure-api.version>15.0.0-rc1</volt-procedure-api.version>
+    <voltdbclient.version>14.3.1</voltdbclient.version>
+
     <junit-platform.version>1.9.2</junit-platform.version>
     <junit.jupiter.version>5.9.2</junit.jupiter.version>
     <junit5.version>${junit.jupiter.version}</junit5.version>
-    <voltClientVersion>14.1.0</voltClientVersion>
     <testcontainerVersion>1.20.1</testcontainerVersion>
     <dockerjavaVersion>3.4.0</dockerjavaVersion>
     <slf4jVersion>1.7.36</slf4jVersion>

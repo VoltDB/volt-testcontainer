@@ -7,30 +7,34 @@
     <parent>
         <groupId>org.voltdb</groupId>
         <artifactId>volt-testcontainer-module</artifactId>
-        <version>1.4.1</version>
+        <version>1.5.0</version>
     </parent>
     <artifactId>volt-voter-procedures</artifactId>
     <name>VoltDB Procedures</name>
 
+    <!-- other properties are inherited from parent -->
     <properties>
+        <!-- Don't upload this artifact to any remote repository, it is for internal tests only -->
         <maven.deploy.skip>true</maven.deploy.skip>
-
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <voltClientVersion>14.1.0</voltClientVersion>
-        <testcontainerVersion>1.20.1</testcontainerVersion>
-        <dockerjavaVersion>3.4.0</dockerjavaVersion>
-        <slf4jVersion>1.7.36</slf4jVersion>
     </properties>
 
     <dependencies>
+
+        <!-- Volt dependencies -->
         <dependency>
             <groupId>org.voltdb</groupId>
-            <artifactId>voltdb</artifactId>
-            <version>10.1.1</version>
+            <artifactId>volt-procedure-api</artifactId>
+            <version>${volt-procedure-api.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.voltdb</groupId>
+            <artifactId>voltdbclient</artifactId>
+            <version>${voltdbclient.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Dependencies specific to these example procedures -->
         <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>

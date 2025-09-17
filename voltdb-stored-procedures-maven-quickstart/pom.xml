@@ -6,11 +6,11 @@
     <parent>
         <groupId>org.voltdb</groupId>
         <artifactId>volt-testcontainer-module</artifactId>
-        <version>1.4.1</version>
+        <version>1.5.0</version>
     </parent>
     <groupId>org.voltdb</groupId>
     <artifactId>voltdb-stored-procedures-maven-quickstart</artifactId>
-    <version>1.4.1</version>
+    <version>1.5.0</version>
     <name>voltdb-stored-procedures-maven-quickstart</name>
     <packaging>maven-archetype</packaging>
     <properties>
@@ -67,11 +67,7 @@
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
-                <filtering>false</filtering>
-                <excludes>
-                    <exclude>**/.idea/**</exclude>
-                    <exclude>**/target/**</exclude>
-                </excludes>
+                <filtering>true</filtering>
             </resource>
             <resource>
                 <directory>src/main/resources/META-INF/maven</directory>
@@ -90,6 +86,27 @@
                         <delimiter>@</delimiter>
                     </delimiters>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>copy-readme</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/archetype-resources</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/..</directory>
+                                    <includes>
+                                        <include>README.md</include>
+                                    </includes>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

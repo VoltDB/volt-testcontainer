@@ -16,7 +16,7 @@ public class KeyValueTest extends TestBase {
 
     @Test
     public void testKeyValue() {
-        VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise:14.3.1");
+        VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise:" + getImageVersion());
         try {
             configureTestContainer(db);
             Client client = db.getClient();

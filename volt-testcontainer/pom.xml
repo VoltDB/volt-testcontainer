@@ -7,20 +7,13 @@
     <parent>
         <groupId>org.voltdb</groupId>
         <artifactId>volt-testcontainer-module</artifactId>
-        <version>1.4.1</version>
+        <version>1.5.0</version>
     </parent>
     <artifactId>volt-testcontainer</artifactId>
     <name>VoltDB Test Container</name>
     <description>Provides a volt cluster testcontainer's api to start volt inside docker container</description>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <voltClientVersion>14.2.0</voltClientVersion>
-        <testcontainerVersion>1.20.1</testcontainerVersion>
-        <dockerjavaVersion>3.4.0</dockerjavaVersion>
-        <slf4jVersion>1.7.36</slf4jVersion>
     </properties>
 
     <licenses>
@@ -109,7 +102,7 @@
         <dependency>
             <groupId>org.voltdb</groupId>
             <artifactId>voltdbclient</artifactId>
-            <version>${voltClientVersion}</version>
+            <version>${voltdbclient.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

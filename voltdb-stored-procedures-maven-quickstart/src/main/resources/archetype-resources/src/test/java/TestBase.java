@@ -14,12 +14,31 @@ import org.voltdbtest.testcontainer.VoltDBCluster;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.Properties;
 
 import static org.junit.Assert.assertTrue;
 
 public class TestBase {
+
+    private static final Properties props = new Properties();
+
+    static {
+        // load properties from properties file in resources, which are set by the pom.xml
+        try (InputStream input = TestBase.class.getClassLoader().getResourceAsStream("test.properties")) {
+            if (input != null) {
+                props.load(input);
+            }
+        } catch (IOException e) {
+            // Use default values if properties file is missing
+        }
+    }
+
+    public String getImageVersion() {
+        return props.getProperty("voltdb.image.version", "14.3.1");
+    }
 
     public void configureTestContainer(VoltDBCluster db) {
         try {
@@ -77,4 +96,5 @@ public class TestBase {
         System.out.println("License file path is: " + licensePath);
         return licensePath;
     }
+
 }
