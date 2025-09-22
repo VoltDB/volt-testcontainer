@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Properties;
 
 import static org.junit.Assert.assertTrue;
@@ -55,7 +56,7 @@ public class TestBase {
 
             // Load schema from project root schema directory
             String basedir = System.getProperty("user.dir");
-            File schemaFile = new File(basedir, "schema/schema.ddl");
+            File schemaFile = new File(basedir, "schema/ddl.sql");
             if (schemaFile.exists()) {
                 System.out.println("Loading schema from: " + schemaFile.getAbsolutePath());
                 assertTrue("Schema must get loaded", db.runDDL(schemaFile));
@@ -68,9 +69,17 @@ public class TestBase {
         }
     }
 
+    // If the project produces a target/lib directory with dependency jar files, return the path so the test container can load them
     protected String getExtraLibDirectory() {
-        URL schema = getClass().getClassLoader().getResource("schema.ddl");
-        return new File((new File(schema.getFile()).getParent())).getAbsolutePath();
+        String basedir = System.getProperty("user.dir");
+        File libdir = new File(basedir, "target/lib");
+        if (libdir.exists() && libdir.isDirectory() &&
+            Arrays.stream(libdir.listFiles())
+            .anyMatch(file -> file.getName().toLowerCase().endsWith(".jar"))) {
+            return libdir.getAbsolutePath();
+        } else {
+            return null;
+        }
     }
 
     protected File[] getJars() {
