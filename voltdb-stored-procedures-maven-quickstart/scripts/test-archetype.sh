@@ -68,8 +68,6 @@ mvn archetype:generate \
     -Dversion=$PROJECT_VERSION \
     -DinteractiveMode=false
 
-
 cd $PROJECT_ARTIFACT_ID
-mvn -DskipTests=true clean package
-mvn test
+mvn verify
 cd ..
