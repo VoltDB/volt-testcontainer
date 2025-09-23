@@ -12,11 +12,11 @@ import static org.junit.Assert.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class KeyValueTest extends TestBase {
+public class KeyValueIT extends TestBase {
 
     @Test
     public void testKeyValue() {
-        VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise:" + getImageVersion());
+        VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise:" + getImageVersion(), getExtraLibDirectory());
         try {
             configureTestContainer(db);
             Client client = db.getClient();
