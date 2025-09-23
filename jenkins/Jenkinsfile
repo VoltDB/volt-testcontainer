@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Volt Active Data Inc.
+ * Copyright (C) 2024-2025 Volt Active Data Inc.
  *
  * Use of this source code is governed by an MIT
  * license that can be found in the LICENSE file or at
@@ -24,25 +24,19 @@ pipeline {
         booleanParam(name: 'TAG_BUILD', defaultValue: false, description: 'If true tag a branch in github')
     }
     stages {
-        stage('Set version') {
+        stage('Validate version') {
             when {
                 expression { !params.RELEASE }
             }
             steps {
                 script {
-                    startedStage('Set version')
-                }
+                    def currentVersion = sh(returnStdout: true, script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout").trim()
+                    echo "Building version: ${currentVersion}"
 
-                script {
-                    sh 'mvn versions:set -DnewVersion=1.3.0-SNAPSHOT -ntp'
-                }
-            }
-            post {
-                success {
-                    successfulStage('Set version')
-                }
-                failure {
-                    failedStage('Set version')
+                    // Optionally validate that non-release builds use SNAPSHOT versions
+                    if (!currentVersion.endsWith('-SNAPSHOT')) {
+                        echo "Warning: Building non-release with non-SNAPSHOT version: ${currentVersion}"
+                    }
                 }
             }
         }
@@ -56,10 +50,13 @@ pipeline {
                 }
 
                 script {
-                    TAG = sh(returnStdout: true, script: "grep -A 1 '<artifactId>volt-testcontainer-module</artifactId>' pom.xml | grep -o -P '(?<=version>).*(?=</version)' ").trim()
-                    GITHUB_TAG = 'v' + TAG
+                    // Get current version and remove -SNAPSHOT for tagging
+                    def currentVersion = sh(returnStdout: true, script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout").trim()
+                    def releaseVersion = currentVersion.replace('-SNAPSHOT', '')
+                    def githubTag = 'v' + releaseVersion
 
-                    sh "echo TAG: $TAG"
+                    echo "Tagging version: ${releaseVersion}"
+                    echo "GitHub tag: ${githubTag}"
 
                     withCredentials([usernamePassword(credentialsId: 'github-token', passwordVariable: 'token', usernameVariable: 'username')]) {
                         sh """
@@ -67,11 +64,11 @@ pipeline {
                             git config --local user.email "test@voltdb.com"
                             git remote set-url origin https://${token}@github.com/VoltDB/volt-testcontainer.git
                         """
-                        res = sh(script: "git tag -a ${GITHUB_TAG} -m 'Tagging ${GITHUB_TAG} release' HEAD 2>&1", returnStdout: true)
+                        res = sh(script: "git tag -a ${githubTag} -m 'Tagging ${githubTag} release' HEAD 2>&1", returnStdout: true)
                         if (res.contains("already exists")) {
                             error("ERROR: Build failed! $res ")
                         }
-                        sh(script: "git push origin ${GITHUB_TAG}", returnStdout: true)
+                        sh(script: "git push origin ${githubTag}", returnStdout: true)
                     }
                 }
             }
@@ -84,13 +81,13 @@ pipeline {
                 }
             }
         }
-        stage('Build') {
+        stage('Build and Test') {
             when {
                 expression { !params.RELEASE }
             }
             steps {
                 script {
-                    startedStage('Tests')
+                    startedStage('Build and Test')
                 }
                 script {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_CREDS_USR', passwordVariable: 'DOCKER_CREDS_PSW')]) {
@@ -112,55 +109,14 @@ pipeline {
             }
             post {
                 success {
-                    successfulStage('Tests')
+                    successfulStage('Build and Test')
                 }
                 unsuccessful {
-                    failedStage('Tests')
+                    failedStage('Build and Test')
                 }
                 always {
                     junit '**/target/surefire-reports/*.xml'
-                }
-            }
-        }
-        stage('Maven Archetype Tests') {
-            when {
-                expression { !params.RELEASE }
-            }
-            steps {
-                script {
-                    startedStage('Maven Archetype Tests')
-                }
-                script {
-                    sh """
-                        export JAVA_HOME=/opt/corretto_java17
-                        export PATH="\${JAVA_HOME}/bin:\$PATH"
-
-                        mkdir target || true
-                        cd target
-                        
-                        mvn -ntp archetype:generate \
-                            -DarchetypeGroupId=org.voltdb \
-                            -DarchetypeArtifactId=voltdb-stored-procedures-maven-quickstart \
-                            -DarchetypeVersion=1.3.0-SNAPSHOT \
-                            -DgroupId=foobar \
-                            -DartifactId=foobar \
-                            -Dversion=1.0.0-SNAPSHOT
-                      
-                        cd foobar
-                        mvn -ntp -DskipTests=true clean install
-                        mvn -ntp test
-                    """
-                }
-            }
-            post {
-                success {
-                    successfulStage('Maven Archetype Tests')
-                }
-                failure {
-                    failedStage('Maven Archetype Tests')
-                }
-                always {
-                    junit testResults: 'target/foobar/target/surefire-reports/*.xml'
+                    junit '**/target/failsafe-reports/*.xml'
                 }
             }
         }
@@ -179,6 +135,12 @@ pipeline {
                                 withCredentials([string(credentialsId: 'NEXUS_PASSWORD', variable: 'NEXUS_PASSWORD')]) {
                                     env.DEPLOY_PARAMS = ""
                                     if (params.RELEASE) {
+                                        // Remove -SNAPSHOT for release
+                                        def currentVersion = sh(returnStdout: true, script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout").trim()
+                                        def releaseVersion = currentVersion.replace('-SNAPSHOT', '')
+                                        sh "mvn versions:set -DnewVersion=${releaseVersion} -ntp"
+                                        echo "Publishing release version: ${releaseVersion}"
+
                                         env.DEPLOY_PARAMS = "--settings settings.xml -P release -P ossrh"
 
                                         withCredentials([file(credentialsId: 'upload-maven-central-private-pgp', variable: 'private_pgp')]) {
@@ -187,6 +149,9 @@ pipeline {
                                                 gpg --import --passphrase ${GPG_PASSPHRASE} --batch ${private_pgp}
                                             """
                                         }
+                                    } else {
+                                        def currentVersion = sh(returnStdout: true, script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout").trim()
+                                        echo "Publishing snapshot version: ${currentVersion}"
                                     }
                                     sh """#!/bin/bash
                                         mvn clean javadoc:jar source:jar deploy -ntp -DskipTests $DEPLOY_PARAMS
