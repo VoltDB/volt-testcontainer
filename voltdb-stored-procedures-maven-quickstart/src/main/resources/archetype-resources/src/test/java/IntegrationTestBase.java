@@ -20,15 +20,16 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Properties;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestBase {
+public class IntegrationTestBase {
 
     private static final Properties props = new Properties();
 
     static {
         // load properties from properties file in resources, which are set by the pom.xml
-        try (InputStream input = TestBase.class.getClassLoader().getResourceAsStream("test.properties")) {
+        try (InputStream input = IntegrationTestBase.class.getClassLoader().getResourceAsStream("test.properties")) {
             if (input != null) {
                 props.load(input);
             }
@@ -50,7 +51,7 @@ public class TestBase {
                 for (File jarToLoad : jars) {
                     System.out.println("Loading classes from: " + jarToLoad);
                     response = db.loadClasses(jarToLoad.getAbsolutePath());
-                    assertTrue("Load classes must pass", response.getStatus() == ClientResponse.SUCCESS);
+                    assertEquals(ClientResponse.SUCCESS, response.getStatus(), "Load classes must pass");
                 }
             }
 
@@ -59,7 +60,7 @@ public class TestBase {
             File schemaFile = new File(basedir, "schema/ddl.sql");
             if (schemaFile.exists()) {
                 System.out.println("Loading schema from: " + schemaFile.getAbsolutePath());
-                assertTrue("Schema must get loaded", db.runDDL(schemaFile));
+                assertTrue(db.runDDL(schemaFile), "Schema must get loaded");
             } else {
                 System.err.println("Schema file not found at: " + schemaFile.getAbsolutePath());
             }
