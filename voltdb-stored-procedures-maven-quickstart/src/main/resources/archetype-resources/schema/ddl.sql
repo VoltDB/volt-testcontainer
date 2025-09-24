@@ -14,5 +14,6 @@ PARTITION TABLE KEYVALUE ON COLUMN KEYNAME;
 -- Create the procedure from classes you just wrote
 CREATE PROCEDURE FROM CLASS ${package}.Put;
 CREATE PROCEDURE FROM CLASS ${package}.Get;
+CREATE PROCEDURE FROM CLASS ${package}.CapitalizeAndPut;
 
 END_OF_BATCH

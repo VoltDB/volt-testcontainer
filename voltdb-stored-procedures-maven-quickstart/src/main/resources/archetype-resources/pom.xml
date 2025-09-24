@@ -21,25 +21,46 @@
     </properties>
 
     <dependencies>
-        <!-- for compiling Volt stored procedures -->
+
+        <!-- This dependency is part of the example, used by CapitalizeAndPut.java.
+             The dependency plugin puts a copy of the jar file for all runtime dependencies
+             in the target/lib directory, then IntegrationTestBase.java loads any jars in
+             that directory into the test container so it is available within the VoltDB
+             database used in the integration test.
+        -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>1.14.0</version>
+        </dependency>
+
+        <!-- Provided scope (because VoltDB contains these classes) used here for compilation only.
+             - volt-procedure-api provides VoltProcedure and depends on voltdbclient
+             - voltdbclient provides VoltTable -->
         <dependency>
             <groupId>org.voltdb</groupId>
             <artifactId>volt-procedure-api</artifactId>
             <version>15.0.0-rc2</version>
             <scope>provided</scope>
         </dependency>
-        <!-- provide voltdbclient needed by volt-procedure-api -->
         <dependency>
             <groupId>org.voltdb</groupId>
             <artifactId>voltdbclient</artifactId>
             <version>${voltdb.version}</version>
             <scope>provided</scope>
         </dependency>
-        <!-- to run VoltDB in a container for tests -->
+
+        <!-- test scope -->
         <dependency>
             <groupId>org.voltdb</groupId>
             <artifactId>volt-testcontainer</artifactId>
             <version>@project.version@</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -49,7 +70,14 @@
         <testResources>
             <testResource>
                 <directory>src/test/resources</directory>
-                <filtering>true</filtering>
+                <filtering>false</filtering> <!-- default for most test resources -->
+            </testResource>
+            <testResource>
+                <directory>src/test/resources/integration</directory>
+                <filtering>true</filtering> <!-- filter integration test properties -->
+                <includes>
+                    <include>**/*.properties</include>
+                </includes>
             </testResource>
         </testResources>
 
@@ -74,42 +102,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <!-- For integration tests -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.4.0</version>
-                <executions>
-                    <execution>
-                        <id>add-integration-test-sources</id>
-                        <phase>generate-test-sources</phase>
-                        <goals>
-                            <goal>add-test-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>src/integration-test/java</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>add-integration-test-resources</id>
-                        <phase>generate-test-resources</phase>
-                        <goals>
-                            <goal>add-test-resource</goal>
-                        </goals>
-                        <configuration>
-                            <resources>
-                                <resource>
-                                    <directory>src/integration-test/resources</directory>
-                                    <filtering>true</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -121,6 +113,12 @@
                 <version>3.2.5</version>
                 <configuration>
                     <argLine>--add-opens=java.base/sun.nio.ch=ALL-UNNAMED</argLine>
+                    <includes>
+                        <include>**/*Test.java</include>
+                    </includes>
+                    <excludes>
+                        <exclude>**/*IT.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
             <plugin>
@@ -130,7 +128,6 @@
                 <configuration>
                     <includes>
                         <include>**/*IT.java</include>
-                        <include>**/*IntegrationTest.java</include>
                     </includes>
                 </configuration>
                 <executions>
@@ -144,5 +141,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

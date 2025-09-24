@@ -39,12 +39,6 @@
                 <include>**/*.java</include>
             </includes>
         </fileSet>
-        <fileSet encoding="UTF-8" filtered="true" packaged="true">
-            <directory>src/integration-test/java</directory>
-             <includes>
-                <include>**/*.java</include>
-            </includes>
-        </fileSet>
         <fileSet encoding="UTF-8" filtered="true">
             <directory>src/main/resources</directory>
             <includes>
@@ -53,12 +47,6 @@
         </fileSet>
         <fileSet encoding="UTF-8" filtered="true">
             <directory>src/test/resources</directory>
-            <includes>
-                <include>**/*</include>
-            </includes>
-        </fileSet>
-        <fileSet encoding="UTF-8" filtered="true">
-            <directory>src/integration-test/resources</directory>
             <includes>
                 <include>**/*</include>
             </includes>
