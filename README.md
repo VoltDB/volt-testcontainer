@@ -15,25 +15,24 @@ Testing VoltDB procedures traditionally required a mix of manual and scripted st
 
 
 
-# Generate a maven project with sample schema, procedures, and Junit tests
+# Generate a maven project with sample schema, procedures, and tests
 ```shell
 mvn -B -ntp archetype:generate \
     -DarchetypeGroupId=org.voltdb \
     -DarchetypeArtifactId=voltdb-stored-procedures-maven-quickstart \
     -DarchetypeVersion=1.5.0 \
     -DgroupId=org.example.test \
-    -DartifactId=voltdb-procedures \
+    -DartifactId=my-voltdb-procedures \
     -Dpackage=org.example.procedures \
     -Dversion=1.0-SNAPSHOT
 ```
-This uses a maven archetype to generate your own project that starts you off with a simple example schema, a few simple procedures, and passing Junit tests.
+This uses a maven archetype to generate your own project that starts you off with a simple example schema, a few simple procedures, and passing Junit and Integration tests.
 
-Then, use maven to install the project and run tests.
+To build the project and run the tests, you can use a single maven command.
 
 ```shell
-cd voltdb-procedures
-mvn -DskipTests=true clean install
-mvn test
+cd my-voltdb-procedures
+mvn verify
 ```
 You can then replace the schema, procedures, and tests with your own, and expand the project to cover your business requirements.
 
@@ -70,37 +69,40 @@ public class KeyValueInsert extends VoltProcedure {
 ```
 For more information about writing stored procedures, see Using VoltDB: [Chapter 5. Designing Stored Procedures](https://docs.voltactivedata.com/UsingVoltDB/DesignProc.php)
 
+The project includes one example unit test, CapitalizeTest.java, which tests the correctness of a helper method used in a procedure. You may write your own unit tests, but they may be very limited in scope since they cannot test SQL execution. 
 
-# Add a Unit Test:
+The vast majority of your tests will be integration tests, since they load the VoltDB test container with the procedure jar file, which maven hasn't generated yet in the (unit) 'test' stage. Integration tests run after package in the maven lifecycle, so they can load the jar file and test any SQL functionality.
 
-For unit testing we will need following setup:
+# Add an Integration Test:
+
+For integration tests we will need following setup:
 
 1. A docker environment.
 2. Access to VoltDB images for your target version.
 3. A developer license.
 
 
-Once you have above requirements satisfied, you can use the project you generated from the quickstart archetype to develop procedures, build a procedure jar file, and develop and run unit tests.
+Once you have above requirements satisfied, you can use the project you generated from the quickstart archetype to develop procedures, build a procedure jar file, and develop and run integration tests.
 
-Write your unit test to call one or more of your procedures, passing in test data, and validating that the procedure functioned as expected. Your test class must extend the TestBase class, which handles configuring the test container (including loading the packaged jar file and schema.ddl file). Different VoltDBCluster constructors can be used to test using a single node or multi-node cluster (See the Javadoc for volt-testcontainer).
+Write your integration test to call one or more of your procedures, passing in test data, and validating that the procedure functioned as expected. Your test class must be named *IT (which is a naming convention for integration tests) and must extend the IntegrationTestBase class, which handles configuring the test container (including loading the packaged jar file, additional jar files for any declared dependencies, and the schema/ddl.sql file). Different VoltDBCluster constructors can be used to test using a single node or multi-node cluster (See the Javadoc for volt-testcontainer).
 
 ```java
-public class KeyValueTest extends TestBase {
+public class KeyValueIT extends IntegrationTestBase {
 
     @Test
     public void testKeyValue() {
-        VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise:" + getImageVersion());
+        VoltDBCluster db = new VoltDBCluster(getLicensePath(), "voltdb/voltdb-enterprise:" + getImageVersion(), getExtraLibDirectory());
         try {
             configureTestContainer(db);
             Client client = db.getClient();
             ClientResponse response = client.callProcedure("Put", 10, "Hello");
-            assertTrue(response.getStatus() == ClientResponse.SUCCESS);
+            assertEquals(ClientResponse.SUCCESS, response.getStatus());
             response = client.callProcedure("Get", 10);
             VoltTable table = response.getResults()[0];
             // Advance to first row
             table.advanceRow();
             String val = table.getString(0);
-            assertTrue(val.equals("Hello"));
+            assertEquals("Hello", val);
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
@@ -114,13 +116,9 @@ public class KeyValueTest extends TestBase {
 
 # Test your procedures:
 
-To test the above example, first the jar needs to be built and present in the target directory:
+Since this is an integration test, the procedure classes are compiled, unit tests are run, and the jar is created, then the integration test runs, since it depends on loading the procedure jar. To run all of these stages, you can use a single maven command.
 ```shell
-mvn -DskipTests=true clean install
-```
-Then, you can run the unit test:
-```shell
-mvn test
+mvn clean verify
 ```
 
-With your stored procedure successfully unit tested, you can now integrate this build process to validate and package your procedures for production. 
+With your stored procedure successfully tested, you can integrate the procedures and schema into your testing environment to prepare for migration to production.
