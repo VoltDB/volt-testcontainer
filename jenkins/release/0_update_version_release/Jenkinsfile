@@ -1,9 +1,14 @@
+/*
+ * Copyright (C) 2024-2025 Volt Active Data Inc.
+ *
+ * Use of this source code is governed by an MIT
+ * license that can be found in the LICENSE file or at
+ * https://opensource.org/licenses/MIT.
+ */
+
 @Library('voltdb') _
 
 pipeline {
-
-    //    description 'Checkout, update version and docker repo for Volt Test Container product'
-
     agent {
         label 'gcloud-build--rocky-linux-8--x64'
     }
@@ -13,129 +18,190 @@ pipeline {
         timeout(time: 30, unit: 'MINUTES')
         skipDefaultCheckout()
         disableConcurrentBuilds(abortPrevious: true)
-        githubProjectProperty(projectUrlStr: 'git@github.com:VoltDB/volt-testcontainer.git')
+        buildDiscarder(logRotator(numToKeepStr: '20'))
     }
 
     parameters {
-        string(name: 'VERSION',
-               description: 'Jar container version. Empty equals no change')
+        string(
+            name: 'VERSION',
+            description: 'New version to set (e.g., 1.2.3-SNAPSHOT)',
+            trim: true
+        )
+        string(
+            name: 'BASE_BRANCH',
+            defaultValue: 'main',
+            description: 'Base branch to create update branch from',
+            trim: true
+        )
     }
 
+    environment {
+        REPO_DIR = 'volt-testcontainer'
+        NEW_BRANCH = "update-version-${params.BASE_BRANCH}-${BUILD_NUMBER}"
+    }
 
     stages {
+        stage('Validate Parameters') {
+            steps {
+                script {
+                    if (!params.VERSION?.trim()) {
+                        error('ERROR: VERSION parameter is required')
+                    }
+                    echo "Setting version to: ${params.VERSION}"
+                    echo "Base branch: ${params.BASE_BRANCH}"
+
+                    currentBuild.displayName = "#${BUILD_NUMBER}: ${params.VERSION}"
+                }
+            }
+        }
+
         stage('Checkout') {
             steps {
                 script {
-                    dir('volt-testcontainer') {
-                        checkoutTestContainer()
+                    dir(env.REPO_DIR) {
+                        def scmVars = checkout(
+                            scmGit(
+                                extensions: [
+                                    [$class: 'CheckoutOption', timeout: 20],
+                                    [$class: 'CleanBeforeCheckout'],
+                                    [$class: 'CloneOption', shallow: true]
+                                ],
+                                branches: [[name: params.BASE_BRANCH]],
+                                userRemoteConfigs: [[
+                                    credentialsId: 'jenkins-for-devs-github-ssh-key',
+                                    url: 'git@github.com:VoltDB/volt-testcontainer.git'
+                                ]]
+                            )
+                        )
+                        env.GIT_COMMIT = scmVars.GIT_COMMIT
+                        echo "Checked out commit: ${env.GIT_COMMIT}"
                     }
-                }
-            }   
-            post {
-                failure {
-                    error('ERROR: Checkout failed')
                 }
             }
         }
 
-        stage('Setup') {
+        stage('Create Branch') {
             steps {
                 script {
-                    dir('volt-testcontainer') {
-                        NEW_BRANCH = "update-version--${params.BRANCH}--${BUILD_NUMBER}--notest"
+                    dir(env.REPO_DIR) {
                         sh """
-                            echo PWD: $PWD
-                            ls -FC .
                             git status
-                            git branch -l
-
-                            git checkout -b ${NEW_BRANCH}
+                            git checkout -b ${env.NEW_BRANCH}
+                            echo "✓ Created branch: ${env.NEW_BRANCH}"
                         """
                     }
-                    currentBuild.displayName = "S:" + params.VERSION
-
-                }
-            }
-            post {
-                failure {
-                    error('ERROR: Setup failed')
                 }
             }
         }
 
-        stage('Set version and docker repo') {
+        stage('Set Version') {
             steps {
                 script {
-                    dir('volt-testcontainer') {
-                        sh "mvn versions:set -DnewVersion=${VERSION} -ntp"
+                    dir(env.REPO_DIR) {
+                        sh """
+                            echo "Setting version in all modules..."
+                            mvn versions:set -DnewVersion=${params.VERSION} -DgenerateBackupPoms=false -ntp
+
+                            echo "Verifying version change..."
+                            NEW_VERSION=\$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+                            echo "✓ Version set to: \$NEW_VERSION"
+
+                            echo ""
+                            echo "Changed files:"
+                            git diff --name-only
+                        """
                     }
                 }
             }
-            post {
-                failure {
-                    error('ERROR: Set version failed')
-                }
-            }
         }
 
-        stage('commit') {
+        stage('Commit and Push') {
             steps {
                 script {
-                    dir('volt-testcontainer') {
-                        sh '''
-                            git diff
+                    dir(env.REPO_DIR) {
+                        sh """
+                            echo "Diff summary:"
+                            git diff --stat
+
                             git config --local user.name "voltdbci"
                             git config --local user.email "test@voltdb.com"
-                            fname=\$(mktemp commit-message.XXXXXX)
-                            echo 'Jenkins VoltDB_Test_Container_UpdateVersion' > \$fname
-                            echo '' >> \$fname
 
-                            [ -n "${VERSION}" ] && echo ". set jar version to ${VERSION}" >> \$fname
-                            echo '' >> \$fname
-                            echo 'Co-authored-by: Jenkins CI <test@voltdb.com>' >> \$fname
-                            git commit --all --file=\$fname
-                        '''
-                    }
-                }
-            }
-            post {
-                failure {
-                    error('ERROR: commit failed')
-                }
-            }
-        }
+                            cat > commit-message.txt << 'EOF'
+Set version to ${params.VERSION}
 
-        stage('push') {
-            steps {
-                script {
-                    dir('volt-testcontainer') {
-                        withCredentials([usernamePassword(credentialsId: 'github-token', passwordVariable: 'token', usernameVariable: 'username')]) {
-                            sh "git remote set-url origin https://${token}@github.com/VoltDB/volt-testcontainer.git"
-                            def pushOutput = sh(returnStdout: true, script: "git push origin $NEW_BRANCH 2>&1")
-                            def pmatch = pushOutput =~ /(?s)remote:\s+(https:.*\/VoltDB\/volt-testcontainer\/pull\S+)/
-                            if (!pmatch)
-                                error('git push output did not contain pull request URL')
+Updated version across all modules using mvn versions:set
 
-                            currentBuild.description = '<a href="' + pmatch[0][1] + '">Create pull request</a>'
+Co-authored-by: Jenkins CI <test@voltdb.com>
+EOF
+
+                            git commit --all --file=commit-message.txt
+                            echo "✓ Committed changes"
+                        """
+
+                        withCredentials([usernamePassword(
+                            credentialsId: 'github-token',
+                            passwordVariable: 'token',
+                            usernameVariable: 'username'
+                        )]) {
+                            script {
+                                sh "git remote set-url origin https://${token}@github.com/VoltDB/volt-testcontainer.git"
+
+                                def pushOutput = sh(
+                                    returnStdout: true,
+                                    script: "git push origin ${env.NEW_BRANCH} 2>&1"
+                                )
+
+                                echo pushOutput
+
+                                // Extract PR creation URL from push output
+                                def matcher = pushOutput =~ /(?s)remote:\s+(https:.*\/pull\/new\/[^\s]+)/
+                                if (matcher) {
+                                    def prUrl = matcher[0][1]
+                                    currentBuild.description = """
+                                        <strong>Version:</strong> ${params.VERSION}<br/>
+                                        <strong>Base Branch:</strong> ${params.BASE_BRANCH}<br/>
+                                        <strong>New Branch:</strong> ${env.NEW_BRANCH}<br/>
+                                        <br/>
+                                        <a href="${prUrl}" style="font-weight:bold; font-size:14px;">→ Create Pull Request</a>
+                                    """.stripIndent()
+                                    echo "✅ PR creation URL available in build description"
+                                } else {
+                                    echo "⚠️  Could not extract PR URL from git push output"
+                                    currentBuild.description = """
+                                        <strong>Version:</strong> ${params.VERSION}<br/>
+                                        <strong>Base Branch:</strong> ${params.BASE_BRANCH}<br/>
+                                        <strong>New Branch:</strong> ${env.NEW_BRANCH}<br/>
+                                        <br/>
+                                        Branch pushed successfully. <a href="https://github.com/VoltDB/volt-testcontainer/pulls">Create PR manually</a>
+                                    """.stripIndent()
+                                }
+                            }
                         }
                     }
                 }
             }
-            post {
-                failure {
-                    error('ERROR: push failed')
-                }
-            }
         }
-
     }
+
     post {
-        always {
-            cleanWs()
+        success {
+            echo """
+                ════════════════════════════════════════════════════════
+                ✅ SUCCESS
+                ════════════════════════════════════════════════════════
+                Version:     ${params.VERSION}
+                Base Branch: ${params.BASE_BRANCH}
+                New Branch:  ${env.NEW_BRANCH}
+
+                Next step: Create and merge the pull request
+                ════════════════════════════════════════════════════════
+            """
         }
         failure {
-            error('ERROR: Update release branch failed')
-            // slackBuildStatus(false)
+            echo "❌ Failed to update version"
+        }
+        always {
+            cleanWs()
         }
     }
 }
