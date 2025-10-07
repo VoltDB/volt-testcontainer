@@ -13,10 +13,12 @@ pipeline {
        label 'gcloud-build--rocky-linux-8--x64'
     }
     environment {               
-       JAVA_HOME = "/opt/corretto_java17"  
+       JAVA_HOME = "/opt/corretto_java17"
+       CURRENT_VERSION = ""
     }  
     parameters {
         string(name: 'TAG', defaultValue: '', description: 'Git tag to checkout and release (e.g., v1.0.0). Required.')
+        booleanParam(name: 'DRY_RUN', defaultValue: true, description: 'If checked, skip the publish stage (dry run mode)')
     }
     stages {
         stage('Validate Parameters') {
@@ -29,6 +31,7 @@ pipeline {
                     }
                     
                     echo "Release will be built from tag: ${params.TAG}"
+                    echo "Dry run mode: ${params.DRY_RUN}"
                 }
             }
             post {
@@ -73,7 +76,17 @@ pipeline {
                     startedStage('Validate Version')
                     
                     def currentVersion = sh(returnStdout: true, script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout").trim()
+                    env.CURRENT_VERSION = currentVersion
                     echo "Version in pom.xml: ${currentVersion}"
+
+                    // Update build name and description
+                    def runMode = params.DRY_RUN ? "DRY RUN" : "PUBLISHED"
+                    currentBuild.displayName = "#${env.BUILD_NUMBER} - ${params.TAG} - ${runMode}"
+                    currentBuild.description = """
+                        <b>Tag:</b> ${params.TAG}<br/>
+                        <b>Version:</b> ${currentVersion}<br/>
+                        <b>Mode:</b> ${runMode}
+                    """.stripIndent().trim()
 
                     // Fail if version contains -SNAPSHOT
                     if (currentVersion.endsWith('-SNAPSHOT')) {
@@ -133,12 +146,14 @@ pipeline {
         }
         
         stage('Publish to Maven Central') {
+            when {
+                expression { return !params.DRY_RUN }
+            }
             steps {
                 script {
                     startedStage('Publish to Maven Central')
                     
-                    def currentVersion = sh(returnStdout: true, script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout").trim()
-                    echo "Publishing release version: ${currentVersion}"
+                    echo "Publishing release version: ${env.CURRENT_VERSION}"
                 }
                 
                 script {
@@ -176,11 +191,23 @@ pipeline {
     
     post {
         success {
-            echo "✓ Release completed successfully!"
-            echo "Tag: ${params.TAG}"
+            script {
+                if (params.DRY_RUN) {
+                    echo "✓ Dry run completed successfully!"
+                    echo "Tag: ${params.TAG}"
+                    echo "Version: ${env.CURRENT_VERSION}"
+                    echo "NOTE: Publish stage was SKIPPED (dry run mode)"
+                } else {
+                    echo "✓ Release completed successfully!"
+                    echo "Tag: ${params.TAG}"
+                    echo "Version: ${env.CURRENT_VERSION}"
+                    echo "Published to Maven Central"
+                }
+            }
         }
         failure {
             echo "✗ Release failed!"
+            echo "Tag: ${params.TAG}"
         }
     }
 }
