@@ -1,0 +1,186 @@
+/*
+ * Copyright (C) 2024-2025 Volt Active Data Inc.
+ *
+ * Use of this source code is governed by an MIT
+ * license that can be found in the LICENSE file or at
+ * https://opensource.org/licenses/MIT.
+ */
+
+@Library('voltdb') _
+
+pipeline {
+    agent {
+       label 'gcloud-build--rocky-linux-8--x64'
+    }
+    environment {               
+       JAVA_HOME = "/opt/corretto_java17"  
+    }  
+    parameters {
+        string(name: 'TAG', defaultValue: '', description: 'Git tag to checkout and release (e.g., v1.0.0). Required.')
+    }
+    stages {
+        stage('Validate Parameters') {
+            steps {
+                script {
+                    startedStage('Validate Parameters')
+                    
+                    if (!params.TAG || params.TAG.trim().isEmpty()) {
+                        error("ERROR: TAG parameter is required. Please specify a git tag to release.")
+                    }
+                    
+                    echo "Release will be built from tag: ${params.TAG}"
+                }
+            }
+            post {
+                success {
+                    successfulStage('Validate Parameters')
+                }
+                failure {
+                    failedStage('Validate Parameters')
+                }
+            }
+        }
+        
+        stage('Checkout Tag') {
+            steps {
+                script {
+                    startedStage('Checkout Tag')
+                }
+                
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: "refs/tags/${params.TAG}"]],
+                    extensions: [],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/VoltDB/volt-testcontainer.git',
+                        credentialsId: 'github-token'
+                    ]]
+                ])
+            }
+            post {
+                success {
+                    successfulStage('Checkout Tag')
+                }
+                failure {
+                    failedStage('Checkout Tag')
+                }
+            }
+        }
+        
+        stage('Validate Version') {
+            steps {
+                script {
+                    startedStage('Validate Version')
+                    
+                    def currentVersion = sh(returnStdout: true, script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout").trim()
+                    echo "Version in pom.xml: ${currentVersion}"
+
+                    // Fail if version contains -SNAPSHOT
+                    if (currentVersion.endsWith('-SNAPSHOT')) {
+                        error("ERROR: Cannot release a SNAPSHOT version! Current version is: ${currentVersion}\n" +
+                              "Please update the pom.xml to a release version (e.g., 1.0.0) before creating the tag.")
+                    }
+                    
+                    echo "✓ Version validation passed: ${currentVersion}"
+                }
+            }
+            post {
+                success {
+                    successfulStage('Validate Version')
+                }
+                failure {
+                    failedStage('Validate Version')
+                }
+            }
+        }
+        
+        stage('Build and Test') {
+            steps {
+                script {
+                    startedStage('Build and Test')
+                }
+                
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_CREDS_USR', passwordVariable: 'DOCKER_CREDS_PSW')]) {
+                        sh '''
+                            echo "login to docker..."
+                            echo ${DOCKER_CREDS_PSW} | docker login -u ${DOCKER_CREDS_USR} --password-stdin docker.io
+                            echo "building..."
+                        '''
+                    }
+
+                    withCredentials([string(credentialsId: 'VOLTDB_LICENSE', variable: 'LICENSE')]) {
+                        writeFile file: "/tmp/voltdb-license.xml", text: "$LICENSE", encoding: "UTF-8"
+                    }
+
+                    sh '''
+                       mvn clean install javadoc:javadoc archetype:update-local-catalog
+                    '''
+                }
+            }
+            post {
+                success {
+                    successfulStage('Build and Test')
+                }
+                unsuccessful {
+                    failedStage('Build and Test')
+                }
+                always {
+                    junit '**/target/surefire-reports/*.xml'
+                    junit '**/target/failsafe-reports/*.xml'
+                }
+            }
+        }
+        
+        stage('Publish to Maven Central') {
+            steps {
+                script {
+                    startedStage('Publish to Maven Central')
+                    
+                    def currentVersion = sh(returnStdout: true, script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout").trim()
+                    echo "Publishing release version: ${currentVersion}"
+                }
+                
+                script {
+                    withCredentials([file(credentialsId: 'maven-repos-dev-write', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                        withCredentials([string(credentialsId: 'GPG_PASSPHRASE', variable: 'GPG_PASSPHRASE')]) {
+                            withCredentials([string(credentialsId: 'NEXUS_USERNAME', variable: 'NEXUS_USERNAME')]) {
+                                withCredentials([string(credentialsId: 'NEXUS_PASSWORD', variable: 'NEXUS_PASSWORD')]) {
+                                    withCredentials([file(credentialsId: 'upload-maven-central-private-pgp', variable: 'private_pgp')]) {
+                                        sh """#!/bin/bash -x
+                                            env
+                                            gpg --import --passphrase ${GPG_PASSPHRASE} --batch ${private_pgp}
+                                            
+                                            # Deploy only specified modules
+                                            mvn clean javadoc:jar source:jar deploy -ntp -DskipTests --settings settings.xml -P release -P ossrh \
+                                              -pl volt-testcontainer,voltdb-stored-procedures-maven-quickstart \
+                                              --also-make-dependents
+                                        """
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            post {
+                success {
+                    successfulStage('Publish to Maven Central')
+                }
+                failure {
+                    failedStage('Publish to Maven Central')
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo "✓ Release completed successfully!"
+            echo "Tag: ${params.TAG}"
+        }
+        failure {
+            echo "✗ Release failed!"
+        }
+    }
+}
