@@ -77,7 +77,7 @@ pipeline {
 
                     // Run Maven build and tests
                     sh '''
-                       mvn clean verify javadoc:javadoc archetype:update-local-catalog
+                       mvn clean install javadoc:javadoc archetype:update-local-catalog
                     '''
                 }
             }
