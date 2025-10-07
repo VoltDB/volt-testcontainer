@@ -7,101 +7,75 @@
  */
 
 @Library('voltdb') _
-def defaultRelease = false
-if (BRANCH_NAME == "main") {
-    defaultRelease = true
-}
 
 pipeline {
     agent {
        label 'gcloud-build--rocky-linux-8--x64'
     }
-    environment {               
-       JAVA_HOME = "/opt/corretto_java17"  
-    }  
-    parameters {
-        booleanParam(name: 'RELEASE', defaultValue: false, description: 'Whether to release to maven central')
-        booleanParam(name: 'TAG_BUILD', defaultValue: false, description: 'If true tag a branch in github')
+
+    environment {
+       JAVA_HOME = "/opt/corretto_java17"
     }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 60, unit: 'MINUTES')
+    }
+
     stages {
-        stage('Validate version') {
-            when {
-                expression { !params.RELEASE }
-            }
+        stage('Validate Version') {
             steps {
                 script {
-                    def currentVersion = sh(returnStdout: true, script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout").trim()
+                    startedStage('Validate Version')
+
+                    def currentVersion = sh(
+                        returnStdout: true,
+                        script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout"
+                    ).trim()
+
                     echo "Building version: ${currentVersion}"
 
-                    // Optionally validate that non-release builds use SNAPSHOT versions
+                    // Validate that CI builds use SNAPSHOT versions
                     if (!currentVersion.endsWith('-SNAPSHOT')) {
-                        echo "Warning: Building non-release with non-SNAPSHOT version: ${currentVersion}"
-                    }
-                }
-            }
-        }
-        stage('Tag branch') {
-            when {
-                expression { params.RELEASE && params.TAG_BUILD }
-            }
-            steps {
-                script {
-                    startedStage('Tag branch')
-                }
-
-                script {
-                    // Get current version and remove -SNAPSHOT for tagging
-                    def currentVersion = sh(returnStdout: true, script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout").trim()
-                    def releaseVersion = currentVersion.replace('-SNAPSHOT', '')
-                    def githubTag = 'v' + releaseVersion
-
-                    echo "Tagging version: ${releaseVersion}"
-                    echo "GitHub tag: ${githubTag}"
-
-                    withCredentials([usernamePassword(credentialsId: 'github-token', passwordVariable: 'token', usernameVariable: 'username')]) {
-                        sh """
-                            git config --local user.name "voltdbci"
-                            git config --local user.email "test@voltdb.com"
-                            git remote set-url origin https://${token}@github.com/VoltDB/volt-testcontainer.git
-                        """
-                        res = sh(script: "git tag -a ${githubTag} -m 'Tagging ${githubTag} release' HEAD 2>&1", returnStdout: true)
-                        if (res.contains("already exists")) {
-                            error("ERROR: Build failed! $res ")
-                        }
-                        sh(script: "git push origin ${githubTag}", returnStdout: true)
+                        echo "Warning: Building with non-SNAPSHOT version: ${currentVersion}"
                     }
                 }
             }
             post {
                 success {
-                    successfulStage('Tag branch')
+                    successfulStage('Validate Version')
                 }
                 failure {
-                    failedStage('Tag branch')
+                    failedStage('Validate Version')
                 }
             }
         }
+
         stage('Build and Test') {
-            when {
-                expression { !params.RELEASE }
-            }
             steps {
                 script {
                     startedStage('Build and Test')
                 }
+
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_CREDS_USR', passwordVariable: 'DOCKER_CREDS_PSW')]) {
+                    // Login to Docker Hub for pulling test images
+                    withCredentials([usernamePassword(
+                        credentialsId: 'dockerhub',
+                        usernameVariable: 'DOCKER_CREDS_USR',
+                        passwordVariable: 'DOCKER_CREDS_PSW'
+                    )]) {
                         sh '''
-                            echo "login to docker..."
+                            echo "Logging in to Docker..."
                             echo ${DOCKER_CREDS_PSW} | docker login -u ${DOCKER_CREDS_USR} --password-stdin docker.io
-                            echo "building..."
                         '''
                     }
 
+                    // Write VoltDB license for tests
                     withCredentials([string(credentialsId: 'VOLTDB_LICENSE', variable: 'LICENSE')]) {
                         writeFile file: "/tmp/voltdb-license.xml", text: "$LICENSE", encoding: "UTF-8"
                     }
 
+                    // Run Maven build and tests
                     sh '''
                        mvn clean install javadoc:javadoc archetype:update-local-catalog
                     '''
@@ -115,61 +89,20 @@ pipeline {
                     failedStage('Build and Test')
                 }
                 always {
-                    junit '**/target/surefire-reports/*.xml'
-                    junit '**/target/failsafe-reports/*.xml'
+                    // Publish test results
+                    junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+                    junit allowEmptyResults: true, testResults: '**/target/failsafe-reports/*.xml'
                 }
             }
         }
-        stage('Publish') {
-            when {
-                expression { defaultRelease || params.RELEASE }
-            }
-            steps {
-                script {
-                    startedStage('Publish')
-                }
-                script {
-                    withCredentials([file(credentialsId: 'maven-repos-dev-write', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                        withCredentials([string(credentialsId: 'GPG_PASSPHRASE', variable: 'GPG_PASSPHRASE')]) {
-                            withCredentials([string(credentialsId: 'NEXUS_USERNAME', variable: 'NEXUS_USERNAME')]) {
-                                withCredentials([string(credentialsId: 'NEXUS_PASSWORD', variable: 'NEXUS_PASSWORD')]) {
-                                    env.DEPLOY_PARAMS = ""
-                                    if (params.RELEASE) {
-                                        // Remove -SNAPSHOT for release
-                                        def currentVersion = sh(returnStdout: true, script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout").trim()
-                                        def releaseVersion = currentVersion.replace('-SNAPSHOT', '')
-                                        sh "mvn versions:set -DnewVersion=${releaseVersion} -ntp"
-                                        echo "Publishing release version: ${releaseVersion}"
+    }
 
-                                        env.DEPLOY_PARAMS = "--settings settings.xml -P release -P ossrh"
-
-                                        withCredentials([file(credentialsId: 'upload-maven-central-private-pgp', variable: 'private_pgp')]) {
-                                            sh """#!/bin/bash -x
-                                                env
-                                                gpg --import --passphrase ${GPG_PASSPHRASE} --batch ${private_pgp}
-                                            """
-                                        }
-                                    } else {
-                                        def currentVersion = sh(returnStdout: true, script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout").trim()
-                                        echo "Publishing snapshot version: ${currentVersion}"
-                                    }
-                                    sh """#!/bin/bash
-                                        mvn clean javadoc:jar source:jar deploy -ntp -DskipTests $DEPLOY_PARAMS
-                                    """
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            post {
-                success {
-                    successfulStage('Publish')
-                }
-                failure {
-                    failedStage('Publish')
-                }
-            }
+    post {
+        success {
+            echo "✅ Build successful on branch ${env.BRANCH_NAME}"
+        }
+        failure {
+            echo "❌ Build failed on branch ${env.BRANCH_NAME}"
         }
     }
 }

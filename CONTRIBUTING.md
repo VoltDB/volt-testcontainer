@@ -3,10 +3,19 @@
 ## Overview
 `volt-testcontainer` is a project designed to integrate and test with VoltDB using containerized environments. This project includes various integration tests and procedures to ensure reliable and efficient interaction with the VoltDB database.
 
-## Key Features
-- **VoltDB testcontainer API**: Set of APIs to use a given VoltDB image and load your procedures and test using Junit.
-- **Sample Database Procedures**: Custom procedures for initializing and interacting with the VoltDB database.
-- **Integration Tests**: A set of integration tests to validate the functionalities of VoltDB in a containerized setup.
+## Modules
+- **volt-testcontainer**: a set of classes that enable running tests inside VoltDB test containers.
+- **voltdb-stored-procedures-maven-quickstart**: a maven archetype customers can use to generate a fully configured project that includes a small sample schema, stored procedures, a unit test, and integration tests that use volt-testcontainer
+- **volt-voter-procedures**: a procedure-only maven project that compiles and packages a set of stored procedures into a jar file.
+- **volt-test-container-test**: a test-only module that includes a ddl file that goes with volt-voter-procedures, some client code, and tests.
+
+
+
+To build and test you can run a single mvn command:
+
+    mvn install
+
+This will take about 5-6 minutes, mainly for the volt-test-container-test test stage which includes several voter test runs.
 
 ## Installation and Setup
 ### Prerequisites
@@ -23,33 +32,16 @@
 
 2. Build the project:
     ```sh
-    mvn clean install javadoc:javadoc
+    mvn clean install
     ```
    This will also run the tests provided you have a license in /tmp/voltdb-license.xml if you want to specify alternate license location point VOLTDB_LICENSE environment variable to a license file.
 
-## Usage
-### Running VoltDB in a Container
-Use the provided `VoltDBContainer` class to start and manage a VoltDB instance in a Docker container.
-Refer [Quick Start Guide](HOWTO.md)
-
-### Procedures
-The project includes several procedures for operations on VoltDB, such as:
-- `ContestantWinningStates`
-- `Initialize`
-- `JodaTimeInsert`
-- `Results`
-- `Vote`
-
-These procedures can be found in the `volt-voter-procedures/src/main/java/voter/procedures/` directory.
-
-### Tests
-Integration tests like `IntegrationVoltDBClusterTest`, `IntegrationVoterTest`, etc., demonstrate how to use the framework and validate different scenarios.
 
 ## Contribution
 1. Fork the repository.
 2. Create a new branch for your feature or bug fix:
     ```sh
-    git checkout -b feature/your-feature-name
+    git checkout -b your-feature-name
     ```
 3. Commit your changes:
     ```sh
@@ -57,7 +49,7 @@ Integration tests like `IntegrationVoltDBClusterTest`, `IntegrationVoterTest`, e
     ```
 4. Push to the branch:
     ```sh
-    git push origin feature/your-feature-name
+    git push origin your-feature-name
     ```
 5. Create a new Pull Request.
 

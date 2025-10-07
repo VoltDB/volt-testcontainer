@@ -58,7 +58,7 @@
 
     <!-- volt artifact versions - must be published versions -->
     <volt-procedure-api.version>15.0.0-rc2</volt-procedure-api.version>
-    <voltdbclient.version>14.3.1</voltdbclient.version>
+    <voltdbclient.version>15.0.0</voltdbclient.version>
 
     <junit-platform.version>1.9.2</junit-platform.version>
     <junit.jupiter.version>5.9.2</junit.jupiter.version>
