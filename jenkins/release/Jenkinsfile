@@ -167,9 +167,7 @@ pipeline {
                                             gpg --import --passphrase ${GPG_PASSPHRASE} --batch ${private_pgp}
                                             
                                             # Deploy only specified modules
-                                            mvn clean deploy -ntp -DskipTests --settings settings.xml -P release -P ossrh \
-                                              -pl volt-testcontainer,voltdb-stored-procedures-maven-quickstart \
-                                              --also-make-dependents
+                                            mvn clean deploy -ntp -DskipTests --settings settings.xml -P release -P ossrh
                                         """
                                     }
                                 }
