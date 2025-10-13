@@ -578,6 +578,18 @@ public class VoltDBCluster {
     }
 
     /**
+     * Sets the deployment resource for all VoltDB containers in the cluster from deployment on classpath
+     * @param fileName this is deployment.xml specified in resource path.
+     * @return the updated VoltDBCluster object
+     */
+    public VoltDBCluster withDeploymentClasspathResource(String fileName) {
+        for (VoltDBContainer voltDBContainer : containers()) {
+            voltDBContainer.withCopyToContainer(MountableFile.forClasspathResource(fileName), "/etc/deployment.xml");
+        }
+        return this;
+    }
+
+    /**
      * Sets the deployment content for all VoltDB containers in the cluster.
      *
      * @param deploymentContent the deployment content to set for the containers
@@ -605,14 +617,44 @@ public class VoltDBCluster {
     }
 
     /**
+     * Sets the initial schema for all VoltDB containers in the cluster by executing the given DDL schema file from classpath resource
+     * @param resourcePath the path to the folder containing the DDL schema file
+     * @param fileName this is the name of the DDL schema file specified in resource path.
+     * @return the updated VoltDBCluster object
+     */
+    public VoltDBCluster withInitialSchemaFromClasspathResource(String resourcePath, String fileName) {
+        for (VoltDBContainer voltDBContainer : containers()) {
+            voltDBContainer.withClasspathResourceMapping(resourcePath, "/etc/schemas/" + fileName, BindMode.READ_ONLY);
+        }
+        return this;
+    }
+
+    /**
      * Configures the initial schema for the VoltDB cluster by mapping a schema file to each container in the cluster.
      *
      * @param fileName the name of the schema file to be mapped
      * @return the updated VoltDBCluster object
      */
     public VoltDBCluster withInitialSchema(String fileName) {
+        File file = new File(fileName);
+        String fname = fileName;
+        if (file.isAbsolute()) {
+            fname = file.getName();
+        }
         for (VoltDBContainer voltDBContainer : containers()) {
-            voltDBContainer.withCopyToContainer(MountableFile.forHostPath(fileName), "/etc/schemas/" + fileName);
+            voltDBContainer.withCopyToContainer(MountableFile.forHostPath(fileName), "/etc/schemas/" + fname);
+        }
+        return this;
+    }
+
+    /**
+     * Configures the initial schema for the VoltDB cluster by mapping a schema file to each container in the cluster from classpath resource.
+     * @param fileName the name of the schema file to be mapped.
+     * @return the updated VoltDBCluster object.
+     */
+    public VoltDBCluster withInitialSchemaFromClasspathResource(String fileName) {
+        for (VoltDBContainer voltDBContainer : containers()) {
+            voltDBContainer.withClasspathResourceMapping(fileName, "/etc/schemas/" + fileName, BindMode.READ_ONLY);
         }
         return this;
     }
