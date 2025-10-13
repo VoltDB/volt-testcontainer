@@ -570,7 +570,7 @@ public class VoltDBCluster {
      * @param fileName the file name of the deployment resource
      * @return the updated VoltDBCluster object
      */
-    public VoltDBCluster withDeploymentResource(String fileName) {
+    public VoltDBCluster withDeploymentResourceFromHostPath(String fileName) {
         for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.withCopyToContainer(MountableFile.forHostPath(fileName), "/etc/deployment.xml");
         }
@@ -582,7 +582,7 @@ public class VoltDBCluster {
      * @param fileName this is deployment.xml specified in resource path.
      * @return the updated VoltDBCluster object
      */
-    public VoltDBCluster withDeploymentClasspathResource(String fileName) {
+    public VoltDBCluster withDeployment(String fileName) {
         for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.withCopyToContainer(MountableFile.forClasspathResource(fileName), "/etc/deployment.xml");
         }
@@ -609,7 +609,7 @@ public class VoltDBCluster {
      * @param fileName     the name of the DDL schema file
      * @return the updated VoltDBCluster object
      */
-    public VoltDBCluster withInitialSchema(String resourcePath, String fileName) {
+    public VoltDBCluster withInitialSchemaFromHostPath(String resourcePath, String fileName) {
         for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.withCopyToContainer(MountableFile.forHostPath(resourcePath), "/etc/schemas/" + fileName);
         }
@@ -622,7 +622,7 @@ public class VoltDBCluster {
      * @param fileName this is the name of the DDL schema file specified in resource path.
      * @return the updated VoltDBCluster object
      */
-    public VoltDBCluster withInitialSchemaFromClasspathResource(String resourcePath, String fileName) {
+    public VoltDBCluster withInitialSchema(String resourcePath, String fileName) {
         for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.withClasspathResourceMapping(resourcePath, "/etc/schemas/" + fileName, BindMode.READ_ONLY);
         }
@@ -635,7 +635,7 @@ public class VoltDBCluster {
      * @param fileName the name of the schema file to be mapped
      * @return the updated VoltDBCluster object
      */
-    public VoltDBCluster withInitialSchema(String fileName) {
+    public VoltDBCluster withInitialSchemaFromHostPath(String fileName) {
         File file = new File(fileName);
         String fname = fileName;
         if (file.isAbsolute()) {
@@ -652,7 +652,7 @@ public class VoltDBCluster {
      * @param fileName the name of the schema file to be mapped.
      * @return the updated VoltDBCluster object.
      */
-    public VoltDBCluster withInitialSchemaFromClasspathResource(String fileName) {
+    public VoltDBCluster withInitialSchema(String fileName) {
         for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.withClasspathResourceMapping(fileName, "/etc/schemas/" + fileName, BindMode.READ_ONLY);
         }
