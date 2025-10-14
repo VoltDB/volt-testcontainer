@@ -22,7 +22,7 @@ public class IntegrationVoterTestWithPreloadedSchemaAndClasses extends TestBase 
     public void testBasicContainer() throws Exception {
         // Create a cluster and load schema and classes at init time then just run the app.
         VoltDBCluster db = new VoltDBCluster(validLicensePath, VOLTDB_IMAGE).
-                withInitialSchema(getResourceFile("schema.ddl").getAbsolutePath(), "schema.ddl").
+                withInitialSchemaFromHostPath(getResourceFile("schema.ddl").getAbsolutePath(), "schema.ddl").
                 withInitialClasses(getJars());
         try {
             db.start();
@@ -61,7 +61,7 @@ public class IntegrationVoterTestWithPreloadedSchemaAndClasses extends TestBase 
                 throw new RuntimeException(e);
             }
 
-            db.withInitialSchema(schemaFile.getAbsolutePath(), "schema.ddl");
+            db.withInitialSchemaFromHostPath(schemaFile.getAbsolutePath(), "schema.ddl");
             db.withInitialClasses(getJars());
             db.start();
             // Now run benchmark which will invoke all procedures.
