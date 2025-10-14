@@ -579,12 +579,12 @@ public class VoltDBCluster {
 
     /**
      * Sets the deployment resource for all VoltDB containers in the cluster from deployment on classpath
-     * @param fileName this is deployment.xml specified in resource path.
+     * @param resourcePath this is deployment.xml specified in resource path.
      * @return the updated VoltDBCluster object
      */
-    public VoltDBCluster withDeployment(String fileName) {
+    public VoltDBCluster withDeployment(String resourcePath) {
         for (VoltDBContainer voltDBContainer : containers()) {
-            voltDBContainer.withCopyToContainer(MountableFile.forClasspathResource(fileName), "/etc/deployment.xml");
+            voltDBContainer.withCopyToContainer(MountableFile.forClasspathResource(resourcePath), "/etc/deployment.xml");
         }
         return this;
     }
