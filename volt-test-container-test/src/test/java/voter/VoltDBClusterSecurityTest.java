@@ -48,7 +48,7 @@ public class VoltDBClusterSecurityTest extends TestBase {
         }
         
         try {
-            VoltDBCluster result = cluster.withDeploymentResource(tempDeployment.toAbsolutePath().toString());
+            VoltDBCluster result = cluster.withDeploymentResourceFromHostPath(tempDeployment.toAbsolutePath().toString());
             assertSame("Should return same cluster instance", cluster, result);
         } catch (Exception e) {
             throw new RuntimeException(e);

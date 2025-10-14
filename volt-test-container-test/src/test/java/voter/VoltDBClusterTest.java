@@ -288,7 +288,7 @@ public class VoltDBClusterTest extends TestBase {
         cluster = new VoltDBCluster(validLicensePath, VOLTDB_IMAGE);
         String resourcePath = "/tmp";
         String fileName = "test_schema.sql";
-        VoltDBCluster result = cluster.withInitialSchema(resourcePath, fileName);
+        VoltDBCluster result = cluster.withInitialSchemaFromHostPath(resourcePath, fileName);
         assertSame("Should return same cluster instance", cluster, result);
     }
     
@@ -296,7 +296,7 @@ public class VoltDBClusterTest extends TestBase {
     public void testWithInitialSchemaFileName() {
         cluster = new VoltDBCluster(validLicensePath, VOLTDB_IMAGE);
         String fileName = "/tmp/test_schema.sql";
-        VoltDBCluster result = cluster.withInitialSchema(fileName);
+        VoltDBCluster result = cluster.withInitialSchemaFromHostPath(fileName);
         assertSame("Should return same cluster instance", cluster, result);
     }
     
