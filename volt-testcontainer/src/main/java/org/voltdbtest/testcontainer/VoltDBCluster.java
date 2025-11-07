@@ -718,6 +718,28 @@ public class VoltDBCluster {
         return this;
     }
 
+    /**
+     * Controls how public interfaces of the VoltDB server are configured. Both DR and Topics
+     * protocols must be aware of the public interfaces used to communicate with the VoltDB instance.
+     * If the network type is {@code NetworkType.DOCKER} then we assume all communication is within
+     * a docker network and these interfaces advertise container ports (e.g., 9092 for topics).
+     * If the network type is {@code NetworkType.HOST} then we assume all communication is from
+     * the host machine and these interfaces advertise mapped (external) ports.
+     * <p>
+     * Hostnames can be set separately using #setTopicPublicInterface or #setDrPublicInterface. I case
+     * of {@code NetworkType.HOST} default is "localhost" and in case of {@code NetworkType.DOCKER} we search
+     * for network aliases and settle for container id if none were found.
+     * <p>
+     * The default network type is HOST.
+     */
+    public VoltDBCluster setNetworkType(VoltDBContainer.NetworkType networkType) {
+        for (VoltDBContainer voltDBContainer : containers()) {
+            voltDBContainer.setNetworkType(networkType);
+        }
+
+        return this;
+    }
+
     private Collection<VoltDBContainer> containers() {
         return containers.values();
     }

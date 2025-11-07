@@ -63,6 +63,7 @@
     <junit-platform.version>1.9.2</junit-platform.version>
     <junit.jupiter.version>5.9.2</junit.jupiter.version>
     <junit5.version>${junit.jupiter.version}</junit5.version>
+    <assertj.version>3.27.4</assertj.version>
     <testcontainerVersion>1.20.1</testcontainerVersion>
     <dockerjavaVersion>3.4.0</dockerjavaVersion>
     <slf4jVersion>1.7.36</slf4jVersion>
