@@ -136,43 +136,4 @@ public class NetworkTypeTest extends TestBase {
         assertThat(publicHosts).containsOnly("foobar");
         assertThat(publicPorts).containsExactly(9092);
     }
-
-    @Test
-    public void testUsePublicInterfaceInHostMode() throws IOException, ProcCallException {
-        Network network = Network.newNetwork();
-
-        container = new VoltDBContainer(0, validLicensePath, VOLTDB_IMAGE, 1, 0,
-                "--ignore=thp --count=1", null);
-        container.withNetwork(network);
-        container.setNetworkType(VoltDBContainer.NetworkType.HOST);
-        container.setTopicPublicInterface("docker.internal.host");
-        container.withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(NetworkTypeTest.class)));
-
-        container.start(); // 60 seconds timeout
-        await().until(container::isRunning);
-
-        Client client = container.getConnectedClient();
-        ClientResponse clientResponse = client.callProcedure("@SystemInformation", "OVERVIEW");
-
-        Set<String> publicHosts = new HashSet<>();
-        Set<Integer> publicPorts = new HashSet<>();
-
-        VoltTable[] tables = clientResponse.getResults();
-        for (VoltTable table : tables) {
-            while (table.advanceRow()) {
-                switch (table.getString("KEY")) {
-                    case "TOPICSPUBLICINTERFACE":
-                        publicHosts.add(table.getString("VALUE"));
-                        break;
-                    case "TOPICSPUBLICPORT":
-                        publicPorts.add(Integer.parseInt(table.getString("VALUE")));
-                        break;
-                }
-            }
-
-        }
-
-        assertThat(publicHosts).contains("docker.internal.host");
-        assertThat(publicPorts).containsExactly(container.getMappedPort(9092));
-    }
 }

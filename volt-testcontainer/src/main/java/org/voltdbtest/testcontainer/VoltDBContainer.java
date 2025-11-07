@@ -43,58 +43,58 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     private static final Network NETWORK = Network.newNetwork();
 
     String startScript = "#!/bin/sh\n" +
-            "# This file is part of VoltDB.\n" +
-            "# Copyright (C) 2022 Volt Active Data Inc.\n" +
-            "#\n" +
-            "# A simple script to (optionally) initialize a voltdb directory and start\n" +
-            "# a voltdb instance.  Suitable for simple container testing\n" +
-            "#\n" +
-            "# Assumes license is mounted at /etc/voltdb-license.xml, otherwise\n" +
-            "# set VOLTDB_LICENSE environment variable\n" +
-            "\n" +
-            ": ${VOLTDB_START_CONFIG:=}\n" +
-            ": ${VOLTDB_DIR:=$(pwd)}\n" +
-            ": ${VOLTDB_CONFIG:=}\n" +
-            ": ${VOLTDB_LICENSE:=/etc/voltdb-license.xml}\n" +
-            ": ${VOLTDB_SCHEMA:=/etc/schemas}\n" +
-            ": ${VOLTDB_CLASSES:=/etc/classes}\n" +
-            "\n" +
-            "s=\"\"\n" +
-            "if [ -n \"${VOLTDB_SCHEMA}\" -a -e \"${VOLTDB_SCHEMA}\" ] ; then\n" +
-            "  s=`ls ${VOLTDB_SCHEMA}/*.ddl ${VOLTDB_SCHEMA}/*.sql | tr '\\n' ',' | sed 's/,$/\\n/'`\n" +
-            "fi\n" +
-            "\n" +
-            "j=\"\"\n" +
-            "if [ -n \"${VOLTDB_CLASSES}\" -a -e \"${VOLTDB_CLASSES}\" ] ; then\n" +
-            "  j=`ls ${VOLTDB_CLASSES}/*.jar | tr '\\n' ',' | sed 's/,$/\\n/'`\n" +
-            "fi\n" +
-            "\n" +
-            "echo \"Schemas requested to load: \" $s\n" +
-            "echo \"Classes requested to load: \" $j\n" +
-            "\n" +
-            "if [ ! -e ${VOLTDB_DIR}/voltdbroot ] ; then\n" +
-            "    if [ -n \"${VOLTDB_CONFIG}\" -a -e \"${VOLTDB_CONFIG}\" ] ; then\n" +
-            "        INIT_CMD=\"voltdb init -C ${VOLTDB_CONFIG} -D ${VOLTDB_DIR} --license=${VOLTDB_LICENSE}\"\n" +
-            "    else\n" +
-            "        INIT_CMD=\"voltdb init -D ${VOLTDB_DIR} --license=${VOLTDB_LICENSE}\"\n" +
-            "    fi\n" +
-            "    if [ ! -z $s ] ; then\n" +
-            "        INIT_CMD=\"$INIT_CMD -s $s\"\n" +
-            "    fi\n" +
-            "    if [ ! -z $j ] ; then\n" +
-            "        INIT_CMD=\"$INIT_CMD -j $j\"\n" +
-            "    fi\n" +
-            "    echo $INIT_CMD\n" +
-            "    eval $INIT_CMD\n" +
-            "fi\n" +
-            "\n" +
-            "exec voltdb start -D ${VOLTDB_DIR} ${VOLTDB_START_CONFIG} --topicspublic=%s --drpublic=%s \"$@\"\n";
+                         "# This file is part of VoltDB.\n" +
+                         "# Copyright (C) 2022 Volt Active Data Inc.\n" +
+                         "#\n" +
+                         "# A simple script to (optionally) initialize a voltdb directory and start\n" +
+                         "# a voltdb instance.  Suitable for simple container testing\n" +
+                         "#\n" +
+                         "# Assumes license is mounted at /etc/voltdb-license.xml, otherwise\n" +
+                         "# set VOLTDB_LICENSE environment variable\n" +
+                         "\n" +
+                         ": ${VOLTDB_START_CONFIG:=}\n" +
+                         ": ${VOLTDB_DIR:=$(pwd)}\n" +
+                         ": ${VOLTDB_CONFIG:=}\n" +
+                         ": ${VOLTDB_LICENSE:=/etc/voltdb-license.xml}\n" +
+                         ": ${VOLTDB_SCHEMA:=/etc/schemas}\n" +
+                         ": ${VOLTDB_CLASSES:=/etc/classes}\n" +
+                         "\n" +
+                         "s=\"\"\n" +
+                         "if [ -n \"${VOLTDB_SCHEMA}\" -a -e \"${VOLTDB_SCHEMA}\" ] ; then\n" +
+                         "  s=`ls ${VOLTDB_SCHEMA}/*.ddl ${VOLTDB_SCHEMA}/*.sql | tr '\\n' ',' | sed 's/,$/\\n/'`\n" +
+                         "fi\n" +
+                         "\n" +
+                         "j=\"\"\n" +
+                         "if [ -n \"${VOLTDB_CLASSES}\" -a -e \"${VOLTDB_CLASSES}\" ] ; then\n" +
+                         "  j=`ls ${VOLTDB_CLASSES}/*.jar | tr '\\n' ',' | sed 's/,$/\\n/'`\n" +
+                         "fi\n" +
+                         "\n" +
+                         "echo \"Schemas requested to load: \" $s\n" +
+                         "echo \"Classes requested to load: \" $j\n" +
+                         "\n" +
+                         "if [ ! -e ${VOLTDB_DIR}/voltdbroot ] ; then\n" +
+                         "    if [ -n \"${VOLTDB_CONFIG}\" -a -e \"${VOLTDB_CONFIG}\" ] ; then\n" +
+                         "        INIT_CMD=\"voltdb init -C ${VOLTDB_CONFIG} -D ${VOLTDB_DIR} --license=${VOLTDB_LICENSE}\"\n" +
+                         "    else\n" +
+                         "        INIT_CMD=\"voltdb init -D ${VOLTDB_DIR} --license=${VOLTDB_LICENSE}\"\n" +
+                         "    fi\n" +
+                         "    if [ ! -z $s ] ; then\n" +
+                         "        INIT_CMD=\"$INIT_CMD -s $s\"\n" +
+                         "    fi\n" +
+                         "    if [ ! -z $j ] ; then\n" +
+                         "        INIT_CMD=\"$INIT_CMD -j $j\"\n" +
+                         "    fi\n" +
+                         "    echo $INIT_CMD\n" +
+                         "    eval $INIT_CMD\n" +
+                         "fi\n" +
+                         "\n" +
+                         "exec voltdb start -D ${VOLTDB_DIR} ${VOLTDB_START_CONFIG} --topicspublic=%s --drpublic=%s \"$@\"\n";
 
     String deploymentTemplate = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
-            "<deployment>\n" +
-            "    <cluster hostcount=\"%d\" sitesperhost=\"8\" kfactor=\"%d\"/>\n" +
-            "    <metrics enabled=\"true\" interval=\"60s\" maxbuffersize=\"200\" />\n" +
-            "</deployment>\n";
+                                "<deployment>\n" +
+                                "    <cluster hostcount=\"%d\" sitesperhost=\"8\" kfactor=\"%d\"/>\n" +
+                                "    <metrics enabled=\"true\" interval=\"60s\" maxbuffersize=\"200\" />\n" +
+                                "</deployment>\n";
 
     public enum NetworkType {HOST, DOCKER}
 
@@ -156,8 +156,8 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         withEnv("VOLTDB_CONFIG", "/etc/deployment.xml");
         withEnv("VOLTDB_OPTS",
                 "-Dlog4j.configuration=file:///opt/voltdb/tools/kubernetes/console-log4j.xml "
-                        + " --add-opens=java.base/java.net=ALL-UNNAMED"
-                        + " --add-opens=java.base/java.lang.reflect=ALL-UNNAMED");
+                + " --add-opens=java.base/java.net=ALL-UNNAMED"
+                + " --add-opens=java.base/java.lang.reflect=ALL-UNNAMED");
         withNetworkMode(NETWORK.getId());
         withNetwork(NETWORK);
         withNetworkAliases(hostId);
@@ -200,7 +200,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         // START_SCRIPT waiter
         this.withCommand("/bin/bash", "-c",
                 "while [ ! -f /opt/voltdb/tools/entrypoint.sh ]; " +
-                        "do sleep 1; done; /opt/voltdb/tools/entrypoint.sh"
+                "do sleep 1; done; /opt/voltdb/tools/entrypoint.sh"
         );
     }
 
@@ -224,9 +224,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
 
         if (networkType == NetworkType.HOST) {
             actualPort = getMappedPort(port);
-            if (maybePublicInterface == null) {
-                publicInterface = "localhost";
-            }
+            publicInterface = "localhost";
         } else {
             actualPort = port;
             if (maybePublicInterface == null) {
@@ -478,9 +476,9 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
      * If the network type is {@code NetworkType.HOST} then we assume all communication is from
      * the host machine and these interfaces advertise mapped (external) ports.
      * <p>
-     * Hostnames can be set separately using #setTopicPublicInterface or #setDrPublicInterface. I case
-     * of {@code NetworkType.HOST} default is "localhost" and in case of {@code NetworkType.DOCKER} we search
-     * for network aliases and settle for container id if none were found.
+     * For {@code NetworkType.DOCKER} mode hostnames can be set separately using
+     * #setTopicPublicInterface or #setDrPublicInterface. In case of {@code NetworkType.HOST} "localhost" is assumed.
+     * In case of {@code NetworkType.DOCKER} we search for network aliases and settle for container id if none were found.
      * <p>
      * The default network type is HOST.
      */
