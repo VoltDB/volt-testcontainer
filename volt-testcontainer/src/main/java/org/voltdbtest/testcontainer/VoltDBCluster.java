@@ -44,11 +44,13 @@ import java.util.stream.Collectors;
 public class VoltDBCluster {
 
     private final ExecutorService executorService = getSingleThreadExecutor("VoltDB Starter");
+
     /**
      * A container class that holds VoltDB containers in a map.
      * The map is used to store VoltDBContainer objects with their corresponding names as keys.
      */
     protected final Map<String, VoltDBContainer> containers = new HashMap<>();
+
     /**
      * The images variable is a protected final Map that stores image names for the VoltDB instances.
      * The keys are strings representing the image names, and the values are also strings representing the image paths.
@@ -62,12 +64,14 @@ public class VoltDBCluster {
      * This variable is only accessible within the class and its subclasses.
      */
     protected final Map<String, String> images = new HashMap<>();
+
     /**
      * This variable represents a map of stopped nodes in the VoltDB cluster.
      * Each entry in the map consists of a node name as the key and its corresponding status as the value.
      * The map is initialized as an empty HashMap and is marked as final to prevent reassignment.
      */
     protected final Map<String, String> stoppedNodes = new HashMap<>();
+
     /**
      * Represents the count of hosts in a VoltDB cluster.
      * This variable is used to specify the number of hosts in the cluster when creating a new instance of the VoltDBCluster class.
@@ -75,6 +79,7 @@ public class VoltDBCluster {
      * It can be accessed and modified by the subclasses of the VoltDBCluster class.
      */
     protected int hostCount;
+
     /**
      * The kfactor value of the VoltDB cluster.
      * <p>
@@ -83,6 +88,7 @@ public class VoltDBCluster {
      * means each partition has one replica.
      */
     protected int kfactor;
+
     /**
      * The licensePath variable represents the path of the license file used by the VoltDBCluster class.
      *
@@ -104,10 +110,12 @@ public class VoltDBCluster {
      * @see VoltDBCluster
      */
     protected String licensePath;
+
     private Logger logger = LoggerFactory.getLogger(VoltDBCluster.class);
 
     /**
      * Represents a VoltDB cluster with a single host for testing purposes.
+     *
      * @param licensePath development license for VoltDB
      */
     public VoltDBCluster(String licensePath) {
@@ -118,7 +126,7 @@ public class VoltDBCluster {
      * Represents a VoltDB cluster with a single host for testing purposes.
      *
      * @param licensePath development license for VoltDB
-     * @param image the image name of the VoltDB instance to use
+     * @param image       the image name of the VoltDB instance to use
      */
     public VoltDBCluster(String licensePath, String image) {
         this(licensePath, image, null);
@@ -128,8 +136,8 @@ public class VoltDBCluster {
      * Creates a VoltDBCluster with the specified number of hosts, kfactor value, and image name.
      *
      * @param licensePath development license for VoltDB
-     * @param image     the image name of the VoltDB instance to use
-     * @param extraLibs Folder from where extra jars needs to be added to server extension directory
+     * @param image       the image name of the VoltDB instance to use
+     * @param extraLibs   Folder from where extra jars needs to be added to server extension directory
      * @throws java.lang.RuntimeException if the license file is not found or the VOLTDB_LICENSE environment variable is not set correctly
      */
     public VoltDBCluster(String licensePath, String image, String extraLibs) {
@@ -140,9 +148,9 @@ public class VoltDBCluster {
      * Creates a VoltDBCluster with the specified number of hosts, kfactor value, and image name.
      *
      * @param licensePath development license for VoltDB
-     * @param image     the image name of the VoltDB instance to use
-     * @param hostCount the number of hosts in the cluster
-     * @param kfactor   kfactor of voltdb cluster.
+     * @param image       the image name of the VoltDB instance to use
+     * @param hostCount   the number of hosts in the cluster
+     * @param kfactor     kfactor of voltdb cluster.
      * @throws java.lang.RuntimeException if the license file is not found or the VOLTDB_LICENSE environment variable is not set correctly
      */
     public VoltDBCluster(String licensePath, String image, int hostCount, int kfactor) {
@@ -151,33 +159,30 @@ public class VoltDBCluster {
 
     /**
      * Creates a VoltDBCluster with the specified number of hosts, kfactor value, and image name.
-     * The license file is picked by
-     * - env variable VOLTDB_LICENSE pointing to a license file
-     * - or $HOME/license.xml
-     * - or /tmp/voltdb-license.xml
      *
-     * @param licensePath development license for VoltDB
-     * @param image         the image name of the VoltDB instance to use
-     * @param hostCount     the number of hosts in the cluster
-     * @param kfactor       kfactor of voltdb cluster.
-     * @param extraLibs     Folder from where extra jars needs to be added to server extension directory
-     * @throws java.lang.RuntimeException if the license file is not found or the VOLTDB_LICENSE environment variable is not set correctly
+     * The licensethe VOLTDB_LICENSE environment variable is not set correctly
+     *
+     * @param licensePath  development license for VoltDB, if null then default search paths will be used.
+     * @param image        the image name of the VoltDB instance to use
+     * @param hostCount    the number of hosts in the cluster
+     * @param kfactor      kfactor of voltdb cluster.
+     * @param extraJarsDir Folder from where extra jars need to be added to the server extension directory.
+     * @throws IllegalArgumentException if the provided license file is not found, or if none of the default search paths contain one.
      */
-    public VoltDBCluster(String licensePath, String image, int hostCount, int kfactor, String extraLibs) {
+    public VoltDBCluster(String licensePath, String image, int hostCount, int kfactor, String extraJarsDir) {
         this.licensePath = licensePath;
         this.hostCount = hostCount;
         this.kfactor = kfactor;
         String startCommand = getStartCommand(hostCount);
         for (int i = 0; i < hostCount; i++) {
             String host = String.format("%s-%d", "host", i);
-            VoltDBContainer container = new VoltDBContainer(i, licensePath, image, hostCount, kfactor, startCommand, extraLibs);
+            VoltDBContainer container = new VoltDBContainer(i, licensePath, image, hostCount, kfactor, startCommand, extraJarsDir);
             container.setKfactor(kfactor);
             container.withLogConsumer(new Slf4jLogConsumer(logger));
             containers.put(host, container);
             images.put(host, image);
         }
     }
-
 
     private static ExecutorService getSingleThreadExecutor(String name) {
         return new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue());
@@ -401,7 +406,7 @@ public class VoltDBCluster {
         return home;
     }
 
-    private String[] getHostList(int hostcount) {
+    private static String[] getHostList(int hostcount) {
         List<String> hosts = new ArrayList<>();
         for (int i = 0; i < hostcount; i++) {
             hosts.add("host-" + i);
@@ -418,7 +423,7 @@ public class VoltDBCluster {
      */
     protected String getJoinCommand() {
         String startAction = "--ignore=thp --count=" + (hostCount + kfactor + 1) + " --host=" +
-                containers.keySet().stream().findFirst().get() + " --add";
+                             containers.keySet().stream().findFirst().get() + " --add";
         return startAction;
     }
 
@@ -428,7 +433,7 @@ public class VoltDBCluster {
      * @param hostcount a int
      * @return a {@link java.lang.String} object
      */
-    protected String getStartCommand(int hostcount) {
+    public static String getStartCommand(int hostcount) {
         return "--ignore=thp --count=" + hostcount + " --host=" + String.join(",", getHostList(hostcount));
     }
 
@@ -446,6 +451,7 @@ public class VoltDBCluster {
 
     /**
      * Get created {@link VoltDBContainer}s IDs
+     *
      * @return list of Docker containers IDs
      */
     public List<String> getContainerIds() {
@@ -512,8 +518,8 @@ public class VoltDBCluster {
      */
     public VoltDBCluster withTruststore(String resourcePath, String password) {
         String certificateTxt = "trustStore=" + "/etc/ssl/truststore.jks" + "\n" +
-                "trustStorePassword=" + password + "\n" +
-                "external=true";
+                                "trustStorePassword=" + password + "\n" +
+                                "external=true";
 
         for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.withCopyToContainer(Transferable.of(password, 511), "/etc/ssl/truststore.pswd");
@@ -579,6 +585,7 @@ public class VoltDBCluster {
 
     /**
      * Sets the deployment resource for all VoltDB containers in the cluster from deployment on classpath
+     *
      * @param resourcePath this is deployment.xml specified in resource path.
      * @return the updated VoltDBCluster object
      */
@@ -618,8 +625,9 @@ public class VoltDBCluster {
 
     /**
      * Sets the initial schema for all VoltDB containers in the cluster by executing the given DDL schema file from classpath resource
+     *
      * @param resourcePath the path to the folder containing the DDL schema file
-     * @param fileName this is the name of the DDL schema file specified in resource path.
+     * @param fileName     this is the name of the DDL schema file specified in resource path.
      * @return the updated VoltDBCluster object
      */
     public VoltDBCluster withInitialSchema(String resourcePath, String fileName) {
@@ -649,6 +657,7 @@ public class VoltDBCluster {
 
     /**
      * Configures the initial schema for the VoltDB cluster by mapping a schema file to each container in the cluster from classpath resource.
+     *
      * @param fileName the name of the schema file to be mapped.
      * @return the updated VoltDBCluster object.
      */
