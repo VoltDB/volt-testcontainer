@@ -20,7 +20,7 @@ Testing VoltDB procedures traditionally required a mix of manual and scripted st
 mvn -B -ntp archetype:generate \
     -DarchetypeGroupId=org.voltdb \
     -DarchetypeArtifactId=voltdb-stored-procedures-maven-quickstart \
-    -DarchetypeVersion=1.5.0 \
+    -DarchetypeVersion=1.6.0 \
     -DgroupId=org.example.test \
     -DartifactId=my-voltdb-procedures \
     -Dpackage=org.example.procedures \
@@ -75,14 +75,14 @@ The vast majority of your tests will be integration tests, since they load the V
 
 # Add an Integration Test:
 
-For integration tests we will need following setup:
+For integration tests we will need the following setup:
 
 1. A docker environment.
 2. Access to VoltDB images for your target version.
 3. A developer license.
 
 
-Once you have above requirements satisfied, you can use the project you generated from the quickstart archetype to develop procedures, build a procedure jar file, and develop and run integration tests.
+Once you have the above requirements satisfied, you can use the project you generated from the quickstart archetype to develop procedures, build a procedure jar file, and develop and run integration tests.
 
 Write your integration test to call one or more of your procedures, passing in test data, and validating that the procedure functioned as expected. Your test class must be named *IT (which is a naming convention for integration tests) and must extend the IntegrationTestBase class, which handles configuring the test container (including loading the packaged jar file, additional jar files for any declared dependencies, and the schema/ddl.sql file). Different VoltDBCluster constructors can be used to test using a single node or multi-node cluster (See the Javadoc for volt-testcontainer).
 
@@ -106,9 +106,7 @@ public class KeyValueIT extends IntegrationTestBase {
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
-            if (db != null) {
-                db.shutdown();
-            }
+            db.shutdown();
         }
     }
 }
