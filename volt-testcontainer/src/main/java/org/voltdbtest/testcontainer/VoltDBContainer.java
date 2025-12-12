@@ -9,12 +9,9 @@ package org.voltdbtest.testcontainer;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.model.ContainerNetwork;
-import com.google.common.base.Strings;
-import org.jetbrains.annotations.Nullable;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.images.PullPolicy;
 import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
@@ -27,6 +24,8 @@ import org.voltdb.client.ProcCallException;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
@@ -39,7 +38,11 @@ import java.util.Objects;
  * @author akhanzode
  * @version $Id: $Id
  */
+@SuppressWarnings("resource")
 public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
+
+    public static final String DEV_IMAGE = "voltactivedata/volt-developer-edition:14.1.0_voltdb";
+
     private static final Network NETWORK = Network.newNetwork();
 
     String startScript = "#!/bin/sh\n" +
@@ -116,18 +119,59 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     private String containerName = "";
 
     /**
+     * Creates a VoltDB container using a public, free Developer Edition container.
+     * <p>
+     * Does not add any jars to its extension directory.
+     * Assumes the license file is named "license.xml" and placed in the user home directory or system temp directory.
+     */
+    public static VoltDBContainer withDevImage() {
+        return withImage(DEV_IMAGE, null);
+    }
+
+    /**
+     * Creates a VoltDB container using a public, free Developer Edition container.
+     * <p>
+     * Assumes the license file is named "license.xml" and placed in the user home directory or system temp directory.
+     *
+     * @param extraJarsDir folder from where extra jars need to be added to the server extension directory.
+     */
+    public static VoltDBContainer withDevImage(String extraJarsDir) {
+        return withImage(DEV_IMAGE, extraJarsDir);
+    }
+
+    /**
+     * Creates a VoltDB container using a specified container image.
+     * <p>
+     * Assumes the license file is named "license.xml" and placed in the user home directory or system temp directory.
+     *
+     * @param image        the image name of the Docker container
+     * @param extraJarsDir folder from where extra jars need to be added to the server extension directory. Can be null.
+     */
+    public static VoltDBContainer withImage(String image, String extraJarsDir) {
+        return new VoltDBContainer(
+                0,
+                "",
+                image,
+                1,
+                0,
+                VoltDBCluster.getStartCommand(1),
+                extraJarsDir
+        );
+    }
+
+    /**
      * Creates a VoltDB container with the specified parameters.
      *
      * @param id           the ID of the container
      * @param image        the image name of the Docker container
-     * @param licensePath  the path to the license file
-     * @param hostcount    the number of hosts in the cluster
+     * @param licensePath  the path to the license file. If null, then the home directory and system temp directory will be searched for the "license.xml" file.
+     * @param hostCount    the number of hosts in the cluster
      * @param kfactor      kfactor of voltdb cluster.
      * @param startCommand the start command for the VoltDB container
-     * @param extraLibs    folder from where extra jars need to be added to server extension directory
+     * @param extraJarsDir folder from where extra jars need to be added to the server extension directory. Can be null.
      */
-    public VoltDBContainer(int id, String licensePath, String image, int hostcount, int kfactor, String startCommand, String extraLibs) {
-        this(id, licensePath, image, hostcount, kfactor, null, startCommand, extraLibs);
+    public VoltDBContainer(int id, String licensePath, String image, int hostCount, int kfactor, String startCommand, String extraJarsDir) {
+        this(id, licensePath, image, hostCount, kfactor, null, startCommand, extraJarsDir);
     }
 
     private String startCommand;
@@ -142,47 +186,67 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
      * @param kfactor      kfactor of voltdb cluster.
      * @param deployment   the deployment information (optional, if null, it will be generated based on hostcount and kfactor)
      * @param startCommand the start command for the VoltDB container
-     * @param extraLibs    folder from where extra jars need to be added to the server extension directory
+     * @param extraJarsDir folder from where extra jars need to be added to the server extension directory. Can be null.
      */
-    public VoltDBContainer(int id, String licensePath, String image, int hostcount, int kfactor, String deployment, String startCommand, String extraLibs) {
+    public VoltDBContainer(int id, String licensePath, String image, int hostcount, int kfactor, String deployment, String startCommand, String extraJarsDir) {
         super(DockerImageName.parse(image));
         this.hostcount = hostcount;
         this.kfactor = kfactor;
-        hostId = "host-" + id;
+        this.hostId = "host-" + id;
+
         if (deployment == null) {
             deployment = getDeployment();
         }
+
         GenericContainer container = withEnv("VOLTDB_START_CONFIG", startCommand);
         withEnv("VOLTDB_CONFIG", "/etc/deployment.xml");
         withEnv("VOLTDB_OPTS",
                 "-Dlog4j.configuration=file:///opt/voltdb/tools/kubernetes/console-log4j.xml "
                 + " --add-opens=java.base/java.net=ALL-UNNAMED"
                 + " --add-opens=java.base/java.lang.reflect=ALL-UNNAMED");
+
         withNetworkMode(NETWORK.getId());
         withNetwork(NETWORK);
         withNetworkAliases(hostId);
         topicPublicInterface = hostId;
         drPublicInterface = hostId;
 
-        withImagePullPolicy(PullPolicy.defaultPolicy());
-        withCopyToContainer(MountableFile.forHostPath(licensePath), "/etc/voltdb-license.xml");
+        handleLicenseSetup(licensePath);
+
         withCopyToContainer(Transferable.of(deployment), "/etc/deployment.xml");
         withExposedPorts(21212, 21211, 9092, 5555);
-        setWaitStrategy(Wait.forSuccessfulCommand("echo")
-                .withStartupTimeout(Duration.ofSeconds(120L)));
         withCreateContainerCmdModifier(cmd -> cmd.withHostName(hostId));
         withReuse(true);
-        // If requested to copy jars do it here.
-        if (extraLibs != null) {
-            File[] jars = getJars(extraLibs);
+
+        setWaitStrategy(Wait.forSuccessfulCommand("echo")
+                .withStartupTimeout(Duration.ofSeconds(120L)));
+
+        if (extraJarsDir != null) {
+            File[] jars = getJars(extraJarsDir);
             for (File jar : jars) {
                 String name = jar.getName();
-                container.withCopyToContainer(MountableFile.forHostPath(jar.getAbsolutePath()), "/opt/voltdb/lib/extension/" + name);
+                container.withCopyToContainer(
+                        MountableFile.forHostPath(jar.getAbsolutePath()),
+                        "/opt/voltdb/lib/extension/" + name
+                );
             }
         }
     }
 
-    private File @Nullable [] getJars(String path) {
+    private void handleLicenseSetup(String licensePath) {
+        if (licensePath == null || licensePath.isEmpty()) {
+            licensePath = LicenseHelper.getLicenseFromStandardLocationOrFail();
+        } else {
+            if (!Files.exists(Path.of(licensePath))) {
+                throw new IllegalArgumentException(
+                        "The provided license file does not exist: " + licensePath
+                );
+            }
+        }
+        withCopyToContainer(MountableFile.forHostPath(licensePath), "/etc/voltdb-license.xml");
+    }
+
+    private File[] getJars(String path) {
         File targetDir = new File(path);
         FileFilter jarFiles = pathname -> {
             if (pathname.isDirectory()) {
@@ -191,8 +255,13 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
             String name = pathname.getName();
             return name.endsWith(".jar");
         };
-        File[] jars = targetDir.listFiles(jarFiles);
-        return jars;
+
+        File[] result = targetDir.listFiles(jarFiles);
+        if (result == null) {
+            return new File[0];
+        }
+
+        return result;
     }
 
     @Override
@@ -325,7 +394,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         ClientConfig config = new ClientConfig(username, password);
         if (tlsEnabled) {
             config.enableSSL();
-            if (Strings.isNullOrEmpty(keyStorePath)) {
+            if (keyStorePath == null || keyStorePath.isEmpty()) {
                 config.setTrustStore(trustStorePath, trustStorePassword);
             } else {
                 config.setTrustStoreWithMutualAuth(trustStorePath, trustStorePassword, keyStorePath, keyStorePassword);

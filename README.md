@@ -81,7 +81,6 @@ For integration tests we will need the following setup:
 2. Access to VoltDB images for your target version.
 3. A developer license.
 
-
 Once you have the above requirements satisfied, you can use the project you generated from the quickstart archetype to develop procedures, build a procedure jar file, and develop and run integration tests.
 
 Write your integration test to call one or more of your procedures, passing in test data, and validating that the procedure functioned as expected. Your test class must be named *IT (which is a naming convention for integration tests) and must extend the IntegrationTestBase class, which handles configuring the test container (including loading the packaged jar file, additional jar files for any declared dependencies, and the schema/ddl.sql file). Different VoltDBCluster constructors can be used to test using a single node or multi-node cluster (See the Javadoc for volt-testcontainer).
@@ -111,6 +110,16 @@ public class KeyValueIT extends IntegrationTestBase {
     }
 }
 ```
+
+## License search path
+
+You can provide a path to your VoltDB license file via the constructor. If the path is not provided, the container class will try to load it from the following search path:
+- If `VOLTDB_LICENSE` environment variable is set it will use that value.
+- `license.xml` in the user home directory if it exists.
+- `license.xml` in the system temp directory if it exists.
+
+If the license file cannot be found, the container will throw an exception. The validity of the license if verified
+by the actual VoltDB server process upo startup.
 
 # Test your procedures:
 
