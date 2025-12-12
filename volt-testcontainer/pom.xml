@@ -9,12 +9,13 @@
         <artifactId>volt-testcontainer-module</artifactId>
         <version>1.6.0-SNAPSHOT</version>
     </parent>
-    <artifactId>volt-testcontainer</artifactId>
-    <name>VoltDB Test Container</name>
-    <description>Provides a volt cluster testcontainer's api to start volt inside docker container</description>
 
-    <properties>
-    </properties>
+    <artifactId>volt-testcontainer</artifactId>
+
+    <name>VoltDB Test Container</name>
+    <description>Provides a volt cluster testcontainer's api to start volt inside docker
+        container
+    </description>
 
     <licenses>
         <license>
@@ -25,95 +26,17 @@
         </license>
     </licenses>
 
-    <profiles>
-        <profile>
-            <id>release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                      <groupId>org.sonatype.central</groupId>
-                      <artifactId>central-publishing-maven-plugin</artifactId>
-                      <version>0.8.0</version>
-                      <extensions>true</extensions>
-                      <configuration>
-                        <serverId>central</serverId>
-                        <deploymentName>${project.artifactId}-${project.version}</deploymentName>
-                        <autoPublish>false</autoPublish>  <!-- or false for manual publishing -->
-                      </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>3.2.6</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
     <dependencies>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
             <version>${testcontainerVersion}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-api</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-simple</artifactId>
-                    </exclusion>
-                </exclusions>
         </dependency>
-        <dependency>
-            <groupId>com.github.docker-java</groupId>
-            <artifactId>docker-java</artifactId>
-            <version>${dockerjavaVersion}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-simple</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-compress</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpclient</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+
         <dependency>
             <groupId>org.voltdb</groupId>
             <artifactId>voltdbclient</artifactId>
             <version>${voltdbclient.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4jVersion}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>${slf4jVersion}</version>
         </dependency>
     </dependencies>
 
@@ -158,4 +81,40 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.8.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>central</serverId>
+                            <deploymentName>${project.artifactId}-${project.version}
+                            </deploymentName>
+                            <autoPublish>false
+                            </autoPublish>  <!-- or false for manual publishing -->
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

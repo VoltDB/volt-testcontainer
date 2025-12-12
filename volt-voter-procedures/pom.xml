@@ -9,6 +9,7 @@
         <artifactId>volt-testcontainer-module</artifactId>
         <version>1.6.0-SNAPSHOT</version>
     </parent>
+
     <artifactId>volt-voter-procedures</artifactId>
     <name>VoltDB Procedures</name>
 
@@ -19,7 +20,6 @@
     </properties>
 
     <dependencies>
-
         <!-- Volt dependencies -->
         <dependency>
             <groupId>org.voltdb</groupId>
@@ -109,7 +109,6 @@
     </profiles>
 
     <build>
-
         <extensions>
             <extension>
                 <groupId>com.google.cloud.artifactregistry</groupId>
@@ -119,12 +118,6 @@
         </extensions>
 
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.7.0</version>
-            </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -166,14 +159,13 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <outputDirectory>${project.build.directory}/lib
+                            </outputDirectory>
                             <includeScope>runtime</includeScope>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
-
 </project>
