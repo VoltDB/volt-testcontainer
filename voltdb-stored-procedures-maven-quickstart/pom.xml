@@ -1,18 +1,30 @@
 <?xml version="1.0"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
-         xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>org.voltdb</groupId>
         <artifactId>volt-testcontainer-module</artifactId>
         <version>1.6.0-SNAPSHOT</version>
     </parent>
-    <groupId>org.voltdb</groupId>
+
     <artifactId>voltdb-stored-procedures-maven-quickstart</artifactId>
-    <version>1.6.0-SNAPSHOT</version>
-    <name>voltdb-stored-procedures-maven-quickstart</name>
     <packaging>maven-archetype</packaging>
+
+    <name>voltdb-stored-procedures-maven-quickstart</name>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://github.com/git/git-scm.com/blob/main/MIT-LICENSE.txt</url>
+            <distribution>repo</distribution>
+            <comments>A short and simple permissive license</comments>
+        </license>
+    </licenses>
+
     <properties>
         <archetype.encoding>UTF-8</archetype.encoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -26,15 +38,15 @@
             <build>
                 <plugins>
                     <plugin>
-                      <groupId>org.sonatype.central</groupId>
-                      <artifactId>central-publishing-maven-plugin</artifactId>
-                      <version>0.8.0</version>
-                      <extensions>true</extensions>
-                      <configuration>
-                        <serverId>central</serverId>
-                        <deploymentName>${project.artifactId}-${project.version}</deploymentName>
-                        <autoPublish>false</autoPublish>  <!-- or false for manual publishing -->
-                      </configuration>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.8.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>central</serverId>
+                            <deploymentName>${project.artifactId}-${project.version}</deploymentName>
+                            <autoPublish>false</autoPublish>  <!-- or false for manual publishing -->
+                        </configuration>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -55,18 +67,7 @@
         </profile>
     </profiles>
 
-    <licenses>
-        <license>
-            <name>MIT License</name>
-            <url>https://github.com/git/git-scm.com/blob/main/MIT-LICENSE.txt</url>
-            <distribution>repo</distribution>
-            <comments>A short and simple permissive license</comments>
-        </license>
-    </licenses>
-
     <build>
-
-        <!-- Use latest Maven 3.9.x compatible plugins -->
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -98,6 +99,7 @@
                 <filtering>true</filtering>
             </resource>
         </resources>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -117,7 +119,9 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.outputDirectory}/archetype-resources</outputDirectory>
+                            <outputDirectory>
+                                ${project.build.outputDirectory}/archetype-resources
+                            </outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${project.basedir}/..</directory>
@@ -145,6 +149,7 @@
                 </executions>
             </plugin>
         </plugins>
+
         <extensions>
             <extension>
                 <groupId>org.apache.maven.archetype</groupId>

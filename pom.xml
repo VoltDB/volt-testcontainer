@@ -17,158 +17,178 @@
     - resolve dependencies from remote repo.
     - set dependency version properties in one place (see: https://maven.apache.org/pom.html#Inheritance)
     - set version in one place for all child projects (see: https://maven.apache.org/maven-ci-friendly.html)
---><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.voltdb</groupId>
-  <artifactId>volt-testcontainer-module</artifactId>
-  <version>1.6.0-SNAPSHOT</version>
-  <packaging>pom</packaging>
-  <name>VoltDB Test Container Parent</name>
-  <description>
-        This project has VoltDB testcontainer module with a sample of how to write unit tests using testcontainer and VoltDB
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.voltdb</groupId>
+    <artifactId>volt-testcontainer-module</artifactId>
+    <version>1.6.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>VoltDB Test Container Parent</name>
+    <description>
+        This project has VoltDB testcontainer module with a sample of how to write unit
+        tests using testcontainer and VoltDB
     </description>
-  <url>https://voltactivedata.com</url>
-  <developers>
-    <developer>
-      <id>rmorgenstein</id>
-      <name>Ruth Morgenstein</name>
-      <email>rmorgenstein@voltdb.com</email>
-      <organizationUrl>https://voltactivedata.com</organizationUrl>
-    </developer>
-  </developers>
-  <modules>
-    <module>volt-voter-procedures</module>
-    <module>volt-testcontainer</module>
-    <module>volt-test-container-test</module>
-    <module>voltdb-stored-procedures-maven-quickstart</module>
-  </modules>
-  <licenses>
-    <license>
-      <name>MIT License</name>
-      <url>https://github.com/git/git-scm.com/blob/main/MIT-LICENSE.txt</url>
-      <distribution>repo</distribution>
-      <comments>A short and simple permissive license</comments>
-    </license>
-  </licenses>
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
 
-    <!-- volt artifact versions - must be published versions -->
-    <volt-procedure-api.version>15.0.0</volt-procedure-api.version>
-    <voltdbclient.version>15.0.0</voltdbclient.version>
+    <url>https://voltactivedata.com</url>
+    <scm>
+        <url>https://github.com/VoltDB/volt-testcontainer.git</url>
+        <connection>scm:git:https://github.com/VoltDB/volt-testcontainer.git</connection>
+        <developerConnection>scm:git:https://github.com/VoltDB/volt-testcontainer.git
+        </developerConnection>
+        <tag>@{project.version}</tag>
+    </scm>
 
-    <junit-platform.version>1.9.2</junit-platform.version>
-    <junit.jupiter.version>5.9.2</junit.jupiter.version>
-    <junit5.version>${junit.jupiter.version}</junit5.version>
-    <assertj.version>3.27.4</assertj.version>
-    <testcontainerVersion>1.20.1</testcontainerVersion>
-    <dockerjavaVersion>3.4.0</dockerjavaVersion>
-    <slf4jVersion>1.7.36</slf4jVersion>
-  </properties>
-  <profiles>
-    <profile>
-      <id>ossrh</id>
-      <properties>
-        <repo-id>central</repo-id>
-        <repo-url>https://central.sonatype.com/api/v1/publisher/deployments/bundle</repo-url>
-        <repo-snapshots>false</repo-snapshots>
-      </properties>
-    </profile>
-    <profile>
-      <id>release</id>
-      <build>
+    <developers>
+        <developer>
+            <id>rmorgenstein</id>
+            <name>Ruth Morgenstein</name>
+            <email>rmorgenstein@voltdb.com</email>
+            <organizationUrl>https://voltactivedata.com</organizationUrl>
+        </developer>
+    </developers>
+
+    <modules>
+        <module>volt-voter-procedures</module>
+        <module>volt-testcontainer</module>
+        <module>volt-test-container-test</module>
+        <module>voltdb-stored-procedures-maven-quickstart</module>
+    </modules>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://github.com/git/git-scm.com/blob/main/MIT-LICENSE.txt</url>
+            <distribution>repo</distribution>
+            <comments>A short and simple permissive license</comments>
+        </license>
+    </licenses>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+
+        <!-- volt artifact versions - must be published versions -->
+        <volt-procedure-api.version>15.0.0</volt-procedure-api.version>
+        <voltdbclient.version>15.0.0</voltdbclient.version>
+
+        <junit-platform.version>1.9.2</junit-platform.version>
+        <junit.jupiter.version>5.9.2</junit.jupiter.version>
+        <junit5.version>${junit.jupiter.version}</junit5.version>
+        <assertj.version>3.27.4</assertj.version>
+        <testcontainerVersion>1.21.3</testcontainerVersion>
+        <dockerjavaVersion>3.4.0</dockerjavaVersion>
+        <slf4jVersion>1.7.36</slf4jVersion>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>ossrh</id>
+            <properties>
+                <repo-id>central</repo-id>
+                <repo-url>
+                    https://central.sonatype.com/api/v1/publisher/deployments/bundle
+                </repo-url>
+                <repo-snapshots>false</repo-snapshots>
+            </properties>
+        </profile>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.8.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>central</serverId>
+                            <deploymentName>${project.artifactId}-${project.version}
+                            </deploymentName>
+                            <autoPublish>false
+                            </autoPublish>  <!-- or false for manual publishing -->
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <build>
+        <extensions>
+            <extension>
+                <groupId>com.google.cloud.artifactregistry</groupId>
+                <artifactId>artifactregistry-maven-wagon</artifactId>
+                <version>2.2.0</version>
+            </extension>
+        </extensions>
+
         <plugins>
-          <plugin>
-            <groupId>org.sonatype.central</groupId>
-            <artifactId>central-publishing-maven-plugin</artifactId>
-            <version>0.8.0</version>
-            <extensions>true</extensions>
-            <configuration>
-              <serverId>central</serverId>
-              <deploymentName>${project.artifactId}-${project.version}</deploymentName>
-              <autoPublish>false</autoPublish>  <!-- or false for manual publishing -->
-            </configuration>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <version>3.2.6</version>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>3.1.1</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.7.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
-      </build>
-    </profile>
-  </profiles>
-  <build>
-    <extensions>
-      <extension>
-        <groupId>com.google.cloud.artifactregistry</groupId>
-        <artifactId>artifactregistry-maven-wagon</artifactId>
-        <version>2.2.0</version>
-      </extension>
-    </extensions>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>3.1.1</version>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>2.2.1</version>
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <goals>
-              <goal>jar-no-fork</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.7.0</version>
-        <executions>
-          <execution>
-            <id>attach-javadocs</id>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+    </build>
 
-    </plugins>
-  </build>
-  <scm>
-    <url>https://github.com/VoltDB/volt-testcontainer.git</url>
-    <connection>scm:git:https://github.com/VoltDB/volt-testcontainer.git</connection>
-    <developerConnection>scm:git:https://github.com/VoltDB/volt-testcontainer.git</developerConnection>
-    <tag>@{project.version}</tag>
-  </scm>
-  <distributionManagement>
-    <repository>
-      <id>${repo-id}</id>
-      <url>${repo-url}</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>${repo-snapshots}</enabled>
-      </snapshots>
-    </repository>
-  </distributionManagement>
+    <distributionManagement>
+        <repository>
+            <id>${repo-id}</id>
+            <url>${repo-url}</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>${repo-snapshots}</enabled>
+            </snapshots>
+        </repository>
+    </distributionManagement>
 </project>
