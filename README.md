@@ -14,7 +14,6 @@ VoltDB Stored Procedures implement a run() method with:
 Testing VoltDB procedures traditionally required a mix of manual and scripted steps to initialize a VoltDB database instance, start the server process, load the schema SQL file and procedure jar, load some data, run some sequence of procedure invocations, and validate the results. Now, tests can be run using Junit in a maven project, leveraging VoltDB test docker containers to run the database and validate the results in seconds. This enables VoltDB users to develop more robust tests with less effort, to catch potential problems quickly without requiring complex setup or infrastructure resources.
 
 # Pre-requisites
-- make sure your Maven ~/.m2/settings.xml (or project-level settings and pom) do not overwrite the 'centra' Maven repository
 - have a valid Volt license.xml file; assuming it is in ~/license.xml - set the env var:
 ```shell
 export VOLTDB_LICENSE=~/license.xml
