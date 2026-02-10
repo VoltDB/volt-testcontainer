@@ -91,6 +91,45 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <id>enforce-voltdb-license</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <rules>
+                                <evaluateBeanshell>
+                                    <condition>
+                                        String license = System.getenv("VOLTDB_LICENSE");
+                                        if (license != null &amp;&amp; !license.isEmpty() &amp;&amp; new java.io.File(license).exists()) {
+                                            return true;
+                                        }
+                                        return new java.io.File("/tmp/voltdb-license.xml").exists();
+                                    </condition>
+                                    <message>
+========================================
+VoltDB License Required!
+========================================
+No license file found. Please either:
+  1. Set VOLTDB_LICENSE environment variable to your license.xml path, OR
+  2. Place license file at: /tmp/voltdb-license.xml
+
+See README.md for more details.
+========================================
+                                    </message>
+                                </evaluateBeanshell>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <!-- Separates the unit tests from the integration tests. -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
