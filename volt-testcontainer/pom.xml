@@ -38,6 +38,13 @@
             <artifactId>voltdbclient</artifactId>
             <version>${voltdbclient.version}</version>
         </dependency>
+
+        <!-- VoltDB 15.1.0 requires Guava at runtime -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>33.0.0-jre</version>
+        </dependency>
     </dependencies>
 
     <build>
