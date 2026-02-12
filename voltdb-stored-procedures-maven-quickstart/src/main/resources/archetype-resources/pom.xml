@@ -101,15 +101,20 @@
                                         if (license != null &amp;&amp; !license.isEmpty() &amp;&amp; new java.io.File(license).exists()) {
                                             return true;
                                         }
-                                        return new java.io.File("/tmp/voltdb-license.xml").exists();
+                                        String home = System.getProperty("user.home");
+                                        if (new java.io.File(home, "license.xml").exists()) {
+                                            return true;
+                                        }
+                                        return new java.io.File("/tmp/license.xml").exists();
                                     </condition>
                                     <message>
 ========================================
 VoltDB License Required!
 ========================================
-No license file found. Please either:
+No license file found. Please use one of:
   1. Set VOLTDB_LICENSE environment variable to your license.xml path, OR
-  2. Place license file at: /tmp/voltdb-license.xml
+  2. Place license.xml in your home directory: ${user.home}/license.xml, OR
+  3. Place license file at: /tmp/license.xml
 
 See README.md for more details.
 ========================================

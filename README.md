@@ -117,15 +117,19 @@ public class KeyValueIT extends IntegrationTestBase {
 
 ## License Requirement
 
-To run the VoltDB testcontainer, you will need a VoltDB license. You should set the environment variable 'VOLTDB_LICENSE' to the full path to the license file. Otherwise, the container class will try to load it from /tmp/voltdb-license.xml, if that exists.
+To run the VoltDB testcontainer, you will need a VoltDB license. The container class will search for a license file in the following locations (in order):
 
-If the license file cannot be found or is invalid, the container will throw an exception and the tests will fail. The validity of the license is verified by the actual VoltDB server process upon startup.
+1. The path specified by the `VOLTDB_LICENSE` environment variable
+2. `~/license.xml` (in your home directory)
+3. `/tmp/license.xml`
+
+If the license file cannot be found or is invalid, the tests will fail.
 
 # Test your procedures:
 
-Since this is an integration test, the procedure classes are compiled, unit tests are run, and the jar is created, then the integration test runs, since it depends on loading the procedure jar. To run all of these stages, you can use a single maven command. This time the command should include 'clean' so that it picks up all of your changes.
+Integration tests run after the package phase because they load the compiled procedure jar file. The `mvn verify` command executes all build phases: compile, test (unit tests), package (jar creation), integration-test, and verify.
 ```shell
-mvn clean verify
+mvn verify
 ```
 
-With your stored procedure successfully tested, you can integrate the procedures and schema into your testing environment to prepare for migration to production.
+With your stored procedures successfully tested, you can integrate the procedures and schema into your testing environment to prepare for migration to production. 

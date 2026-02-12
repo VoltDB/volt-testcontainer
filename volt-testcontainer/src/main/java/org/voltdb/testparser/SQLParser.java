@@ -17,7 +17,6 @@
 
 package org.voltdb.testparser;
 
-import com.google_voltpatches.common.collect.ImmutableMap;
 import org.voltdb.types.GeographyPointValue;
 import org.voltdb.types.GeographyValue;
 import org.voltdb.types.TimestampType;
@@ -994,12 +993,11 @@ public class SQLParser extends SQLPatternFactory
     private static final Pattern Unquote = Pattern.compile("^'|'$", Pattern.MULTILINE);
 
     private static final Map<String, String> FRIENDLY_TYPE_NAMES =
-            ImmutableMap.<String, String>builder().put("tinyint", "byte numeric")
-                                                  .put("smallint", "short numeric")
-                                                  .put("int", "numeric")
-                                                  .put("integer", "numeric")
-                                                  .put("bigint", "long numeric")
-                                                  .build();
+            Map.of("tinyint", "byte numeric",
+                   "smallint", "short numeric",
+                   "int", "numeric",
+                   "integer", "numeric",
+                   "bigint", "long numeric");
 
     // The argument capture group for LOAD/REMOVE CLASSES loosely captures everything
     // through the trailing semicolon. It relies on post-parsing code to make sure

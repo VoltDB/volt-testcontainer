@@ -41,6 +41,7 @@ import java.util.Objects;
 @SuppressWarnings("resource")
 public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
 
+    /** Default VoltDB developer edition image. */
     public static final String DEV_IMAGE = "voltactivedata/volt-developer-edition:14.1.0_voltdb";
 
     private static final Network NETWORK = Network.newNetwork();
@@ -99,7 +100,13 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
                                 "    <metrics enabled=\"true\" interval=\"60s\" maxbuffersize=\"200\" />\n" +
                                 "</deployment>\n";
 
-    public enum NetworkType {HOST, DOCKER}
+    /** Network mode for the VoltDB container. */
+    public enum NetworkType {
+        /** Use host networking mode. */
+        HOST,
+        /** Use Docker bridge networking mode. */
+        DOCKER
+    }
 
     // This client is created automatically when cluster is up, dont close this its used for internal healthcheck.
     Client client;
@@ -123,6 +130,8 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
      * <p>
      * Does not add any jars to its extension directory.
      * Assumes the license file is named "license.xml" and placed in the user home directory or system temp directory.
+     *
+     * @return a new VoltDB container instance
      */
     public static VoltDBContainer withDevImage() {
         return withImage(DEV_IMAGE, null);
@@ -134,6 +143,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
      * Assumes the license file is named "license.xml" and placed in the user home directory or system temp directory.
      *
      * @param extraJarsDir folder from where extra jars need to be added to the server extension directory.
+     * @return a new VoltDB container instance
      */
     public static VoltDBContainer withDevImage(String extraJarsDir) {
         return withImage(DEV_IMAGE, extraJarsDir);
@@ -146,6 +156,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
      *
      * @param image        the image name of the Docker container
      * @param extraJarsDir folder from where extra jars need to be added to the server extension directory. Can be null.
+     * @return a new VoltDB container instance
      */
     public static VoltDBContainer withImage(String image, String extraJarsDir) {
         return new VoltDBContainer(
@@ -533,6 +544,11 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         return containerName;
     }
 
+    /**
+     * Returns the network ID used by this container.
+     *
+     * @return the Docker network ID
+     */
     public String getNetworkId() {
         return NETWORK.getId();
     }
@@ -550,15 +566,27 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
      * In case of {@code NetworkType.DOCKER} we search for network aliases and settle for container id if none were found.
      * <p>
      * The default network type is HOST.
+     *
+     * @param networkType the network type to use
      */
     public void setNetworkType(NetworkType networkType) {
         this.networkType = networkType;
     }
 
+    /**
+     * Sets the public interface hostname for Kafka topics communication.
+     *
+     * @param topicPublicInterface the hostname to use for topics
+     */
     public void setTopicPublicInterface(String topicPublicInterface) {
         this.topicPublicInterface = topicPublicInterface;
     }
 
+    /**
+     * Sets the public interface hostname for DR (Database Replication) communication.
+     *
+     * @param drPublicInterface the hostname to use for DR
+     */
     public void setDrPublicInterface(String drPublicInterface) {
         this.drPublicInterface = drPublicInterface;
     }

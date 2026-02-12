@@ -503,6 +503,12 @@ public class VoltDBCluster {
         System.out.println("Done Shutting down VoltDB");
     }
 
+    /**
+     * Configures a logger to consume container logs.
+     *
+     * @param logger the logger to use for container output
+     * @return the updated VoltDBCluster object
+     */
     public VoltDBCluster withLogConsumer(Logger logger) {
         this.logger = logger;
 
@@ -740,6 +746,9 @@ public class VoltDBCluster {
      * for network aliases and settle for container id if none were found.
      * <p>
      * The default network type is HOST.
+     *
+     * @param networkType the network type to use
+     * @return the updated VoltDBCluster object
      */
     public VoltDBCluster setNetworkType(VoltDBContainer.NetworkType networkType) {
         for (VoltDBContainer voltDBContainer : containers()) {
