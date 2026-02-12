@@ -32,8 +32,12 @@ mvn -B -ntp archetype:generate \
 ```
 This uses a maven archetype to generate your own project that starts you off with a simple example schema, a few simple procedures, and passing Junit and Integration tests.
 
-To build the project and run the tests, you can use a single maven command.
+To build the project and run the tests, you can use a single maven command. First you need to specify the path to your VoltDB license file.
+```shell
+export VOLTDB_LICENSE=~/license.xml
+```
 
+Now you can build the project and run the tests.
 ```shell
 cd my-voltdb-procedures
 mvn clean verify
@@ -115,21 +119,21 @@ public class KeyValueIT extends IntegrationTestBase {
 }
 ```
 
-## License search path
+## License Requirement
 
-You can provide a path to your VoltDB license file via the constructor. If the path is not provided, the container class will try to load it from the following search path:
-- If `VOLTDB_LICENSE` environment variable is set it will use that value.
-- `license.xml` in the user home directory if it exists.
-- `license.xml` in the system temp directory if it exists.
+To run the VoltDB testcontainer, you will need a VoltDB license. The container class will search for a license file in the following locations (in order):
 
-If the license file cannot be found, the container will throw an exception. The validity of the license if verified
-by the actual VoltDB server process upo startup.
+1. The path specified by the `VOLTDB_LICENSE` environment variable
+2. `~/license.xml` (in your home directory)
+3. `/tmp/license.xml`
+
+If the license file cannot be found or is invalid, the tests will fail.
 
 # Test your procedures:
 
-Since this is an integration test, the procedure classes are compiled, unit tests are run, and the jar is created, then the integration test runs, since it depends on loading the procedure jar. To run all of these stages, you can use a single maven command.
+Integration tests run after the package phase because they load the compiled procedure jar file. The `mvn verify` command executes all build phases: compile, test (unit tests), package (jar creation), integration-test, and verify.
 ```shell
-mvn clean verify
+mvn verify
 ```
 
-With your stored procedure successfully tested, you can integrate the procedures and schema into your testing environment to prepare for migration to production.
+With your stored procedures successfully tested, you can integrate the procedures and schema into your testing environment to prepare for migration to production. 

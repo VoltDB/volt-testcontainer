@@ -25,7 +25,7 @@ public class TestBase {
     public static final String VOLTDB_IMAGE = "voltdb/voltdb-enterprise:14.1.0";
     protected static String validLicensePath;
     static {
-        validLicensePath = "/tmp/voltdb-license.xml";
+        validLicensePath = "/tmp/license.xml";
         // Try file from environment variable
         String elicenseFile = System.getenv("VOLTDB_LICENSE");
         if (elicenseFile != null) {

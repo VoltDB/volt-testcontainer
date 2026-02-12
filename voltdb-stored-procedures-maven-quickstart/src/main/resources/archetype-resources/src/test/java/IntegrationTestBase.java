@@ -101,7 +101,7 @@ public class IntegrationTestBase {
     }
 
     protected String getLicensePath() {
-        String licensePath = "/tmp/voltdb-license.xml";
+        String licensePath = "/tmp/license.xml";
         // Try file from environment variable
         String elicenseFile = System.getenv("VOLTDB_LICENSE");
         if (elicenseFile != null) {

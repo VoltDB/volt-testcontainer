@@ -9,10 +9,20 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 
+/**
+ * Helper class to locate VoltDB license files from standard locations.
+ */
 public class LicenseHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LicenseHelper.class);
 
+    /**
+     * Searches for a VoltDB license file in standard locations and returns the path.
+     * Checks in order: VOLTDB_LICENSE environment variable, user home directory, temp directory.
+     *
+     * @return the absolute path to the license file
+     * @throws IllegalArgumentException if no license file is found in any standard location
+     */
     public static String getLicenseFromStandardLocationOrFail() {
         String licenseFromEnv = System.getenv("VOLTDB_LICENSE");
         File licenseInUserHomeDir = new File(System.getProperty("user.home"), "license.xml");
