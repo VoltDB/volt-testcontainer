@@ -72,7 +72,7 @@ pipeline {
 
                     // Write VoltDB license for tests
                     withCredentials([string(credentialsId: 'VOLTDB_LICENSE', variable: 'LICENSE')]) {
-                        writeFile file: "/tmp/voltdb-license.xml", text: "$LICENSE", encoding: "UTF-8"
+                        writeFile file: "/tmp/license.xml", text: "$LICENSE", encoding: "UTF-8"
                     }
 
                     // Run Maven build and tests

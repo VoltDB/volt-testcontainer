@@ -123,7 +123,7 @@ pipeline {
                     }
 
                     withCredentials([string(credentialsId: 'VOLTDB_LICENSE', variable: 'LICENSE')]) {
-                        writeFile file: "/tmp/voltdb-license.xml", text: "$LICENSE", encoding: "UTF-8"
+                        writeFile file: "/tmp/license.xml", text: "$LICENSE", encoding: "UTF-8"
                     }
 
                     sh '''
