@@ -80,3 +80,4 @@ public class IntegrationVoterTestWithPreloadedSchemaAndClasses extends TestBase 
     }
 
 }
+
