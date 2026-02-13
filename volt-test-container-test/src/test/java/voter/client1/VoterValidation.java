@@ -6,17 +6,21 @@
  * https://opensource.org/licenses/MIT.
  */
 
-package voter;
+package voter.client1;
 
 import org.junit.Assert;
 import org.voltdb.CLIConfig;
 import org.voltdb.VoltTable;
-import org.voltdb.client.Client2;
+import org.voltdb.client.Client;
 import org.voltdb.client.ClientResponse;
+import org.voltdb.client.ClientStats;
+import org.voltdb.client.ClientStatsContext;
+import org.voltdb.client.NullCallback;
 import org.voltdb.client.ProcCallException;
+import org.voltdb.client.ProcedureCallback;
+import voter.PhoneCallGenerator;
 import voter.common.Constants;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class VoterValidation {
@@ -35,9 +39,11 @@ public class VoterValidation {
     // validated command line configuration
     final VoterConfig config;
     // Reference to the database connection we will use
-    final Client2 client;
+    final Client client;
     // Phone number generator
     PhoneCallGenerator switchboard;
+    // Statistics manager objects from the client
+    final ClientStatsContext fullStatsContext;
 
     // voter benchmark state
     AtomicLong acceptedVotes = new AtomicLong(0);
@@ -73,9 +79,10 @@ public class VoterValidation {
      *
      * @param config Parsed & validated CLI options.
      */
-    public VoterValidation(Client2 client, VoterConfig config) {
+    public VoterValidation(Client client, VoterConfig config) {
         this.config = config;
         this.client = client;
+        fullStatsContext = client.createStatsContext();
 
         switchboard = new PhoneCallGenerator(config.contestants);
     }
@@ -87,8 +94,7 @@ public class VoterValidation {
      * @throws Exception if anything unexpected happens.
      */
     public synchronized void printResults() throws Exception {
-        long totalVotes = acceptedVotes.get() + badContestantVotes.get()
-                + badVoteCountVotes.get() + failedVotes.get();
+        ClientStats stats = fullStatsContext.fetch().getStats();
 
         // 1. Voting Board statistics, Voting results and performance statistics
         String display = "\n" +
@@ -100,12 +106,12 @@ public class VoterValidation {
                          " - %,9d Rejected (Invalid Contestant)\n" +
                          " - %,9d Rejected (Maximum Vote Count Reached)\n" +
                          " - %,9d Failed (Transaction Error)\n\n";
-        System.out.printf(display, totalVotes,
+        System.out.printf(display, stats.getInvocationsCompleted(),
                 acceptedVotes.get(), badContestantVotes.get(),
                 badVoteCountVotes.get(), failedVotes.get());
 
         // 2. Voting results
-        VoltTable result = client.callProcedureSync("Results").getResults()[0];
+        VoltTable result = client.callProcedure("Results").getResults()[0];
 
         System.out.println("Contestant Name\t\tVotes Received");
         while(result.advanceRow()) {
@@ -117,6 +123,33 @@ public class VoterValidation {
     }
 
     /**
+     * Callback to handle the response to a stored procedure call.
+     * Tracks response types.
+     *
+     */
+    class VoterCallback implements ProcedureCallback {
+        @Override
+        public void clientCallback(ClientResponse response) throws Exception {
+            if (response.getStatus() == ClientResponse.SUCCESS) {
+                long resultCode = response.getResults()[0].fetchRow(0).getLong(0);
+                if (resultCode == Constants.ERR_INVALID_CONTESTANT) {
+                    badContestantVotes.incrementAndGet();
+                }
+                else if (resultCode == Constants.ERR_VOTER_OVER_VOTE_LIMIT) {
+                    badVoteCountVotes.incrementAndGet();
+                }
+                else {
+                    assert(resultCode == Constants.VOTE_SUCCESSFUL);
+                    acceptedVotes.incrementAndGet();
+                }
+            }
+            else {
+                failedVotes.incrementAndGet();
+            }
+        }
+    }
+
+    /**
      * Core benchmark code.
      * Connect. Initialize. Run the loop. Cleanup. Print Results.
      *
@@ -125,8 +158,7 @@ public class VoterValidation {
     public void runBenchmark() throws Exception {
         // initialize using synchronous call
         System.out.println("\nRunning procedure invocations\n");
-        client.callProcedureSync("Initialize", config.contestants, CONTESTANT_NAMES_CSV);
-
+        client.callProcedure("Initialize", config.contestants, CONTESTANT_NAMES_CSV);
         // Run the benchmark loop for the requested warmup time
         // The throughput may be throttled depending on client configuration
         final long warmupEndTime = System.currentTimeMillis() + (1000l * config.warmup);
@@ -134,11 +166,12 @@ public class VoterValidation {
             // Get the next phone call
             PhoneCallGenerator.PhoneCall call = switchboard.receive();
 
-            // asynchronously call the "Vote" procedure (fire and forget during warmup)
-            client.callProcedureAsync("Vote",
-                                      call.phoneNumber,
-                                      call.contestantNumber,
-                                      config.maxvotes);
+            // asynchronously call the "Vote" procedure
+            client.callProcedure(new NullCallback(),
+                                 "Vote",
+                                 call.phoneNumber,
+                                 call.contestantNumber,
+                                 config.maxvotes);
         }
 
         // Run the benchmark loop for the requested duration
@@ -149,28 +182,11 @@ public class VoterValidation {
             PhoneCallGenerator.PhoneCall call = switchboard.receive();
 
             // asynchronously call the "Vote" procedure
-            CompletableFuture<ClientResponse> future = client.callProcedureAsync("Vote",
-                                      call.phoneNumber,
-                                      call.contestantNumber,
-                                      config.maxvotes);
-            future.thenAccept(response -> {
-                if (response.getStatus() == ClientResponse.SUCCESS) {
-                    long resultCode = response.getResults()[0].fetchRow(0).getLong(0);
-                    if (resultCode == Constants.ERR_INVALID_CONTESTANT) {
-                        badContestantVotes.incrementAndGet();
-                    }
-                    else if (resultCode == Constants.ERR_VOTER_OVER_VOTE_LIMIT) {
-                        badVoteCountVotes.incrementAndGet();
-                    }
-                    else {
-                        assert(resultCode == Constants.VOTE_SUCCESSFUL);
-                        acceptedVotes.incrementAndGet();
-                    }
-                }
-                else {
-                    failedVotes.incrementAndGet();
-                }
-            });
+            client.callProcedure(new VoterCallback(),
+                                 "Vote",
+                                 call.phoneNumber,
+                                 call.contestantNumber,
+                                 config.maxvotes);
         }
 
         // block until all outstanding txns return
@@ -193,7 +209,7 @@ public class VoterValidation {
      * @throws Exception if anything goes wrong.
      * @see {@link VoterConfig}
      */
-    public static void run(Client2 client) throws Exception {
+    public static void run(Client client) throws Exception {
         // create a configuration from the arguments
         VoterConfig config = new VoterConfig();
 

@@ -15,6 +15,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.utility.MountableFile;
 import org.voltdb.client.Client;
+import org.voltdb.client.Client2;
 import org.voltdb.client.ClientResponse;
 import org.voltdb.client.ProcCallException;
 import org.voltdb.testparser.SQLLoader;
@@ -390,6 +391,37 @@ public class VoltDBCluster {
         for (VoltDBContainer voltDBContainer : containers()) {
             if (voltDBContainer.isRunning() && voltDBContainer.getHostId().equals(host)) {
                 return voltDBContainer.getConnectedClient();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Retrieves a VoltDB Client2 from the cluster instance.
+     *
+     * @return The VoltDB Client2 associated with the running instance, or null if no running instance is found.
+     * @throws java.io.IOException if an I/O error occurs while retrieving the client.
+     */
+    public Client2 getClient2() throws IOException {
+        for (VoltDBContainer voltDBContainer : containers()) {
+            if (voltDBContainer.isRunning()) {
+                return voltDBContainer.getConnectedClient2();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Retrieves a VoltDB Client2 from the cluster instance with the specified host ID.
+     *
+     * @param host The host ID of the cluster instance from which to retrieve the client.
+     * @return The VoltDB Client2 associated with the specified host, or null if no running instance is found.
+     * @throws java.io.IOException if an I/O error occurs while retrieving the client.
+     */
+    public Client2 getClient2(String host) throws IOException {
+        for (VoltDBContainer voltDBContainer : containers()) {
+            if (voltDBContainer.isRunning() && voltDBContainer.getHostId().equals(host)) {
+                return voltDBContainer.getConnectedClient2();
             }
         }
         return null;

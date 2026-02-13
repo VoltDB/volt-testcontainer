@@ -5,11 +5,12 @@
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  */
-package voter;
+package voter.client1;
 
 import org.junit.Test;
 import org.voltdb.client.ProcCallException;
 import org.voltdbtest.testcontainer.VoltDBCluster;
+import voter.TestBase;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -27,7 +28,7 @@ public class IntegrationVoterTestWithPreloadedSchemaAndClasses extends TestBase 
         try {
             db.start();
             // Now run benchmark which will invoke all procedures.
-            VoterValidation.run(db.getClient2());
+            VoterValidation.run(db.getClient());
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ProcCallException e) {
@@ -65,7 +66,7 @@ public class IntegrationVoterTestWithPreloadedSchemaAndClasses extends TestBase 
             db.withInitialClasses(getJars());
             db.start();
             // Now run benchmark which will invoke all procedures.
-            VoterValidation.run(db.getClient2());
+            VoterValidation.run(db.getClient());
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ProcCallException e) {

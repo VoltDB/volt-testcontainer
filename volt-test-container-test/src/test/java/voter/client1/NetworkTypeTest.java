@@ -1,4 +1,4 @@
-package voter;
+package voter.client1;
 
 import org.junit.After;
 import org.junit.Test;
@@ -6,11 +6,12 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.voltdb.VoltTable;
-import org.voltdb.client.Client2;
+import org.voltdb.client.Client;
 import org.voltdb.client.ClientResponse;
 import org.voltdb.client.ProcCallException;
 import org.voltdbtest.testcontainer.VoltDBCluster;
 import org.voltdbtest.testcontainer.VoltDBContainer;
+import voter.TestBase;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -42,8 +43,8 @@ public class NetworkTypeTest extends TestBase {
         cluster.setNetworkType(VoltDBContainer.NetworkType.HOST);
         cluster.start(60000); // 60 seconds timeout
 
-        Client2 client = cluster.getClient2();
-        ClientResponse clientResponse = client.callProcedureSync("@SystemInformation", "OVERVIEW");
+        Client client = cluster.getClient();
+        ClientResponse clientResponse = client.callProcedure("@SystemInformation", "OVERVIEW");
         VoltTable table = clientResponse.getResults()[0];
 
         String publicHost = null;
@@ -73,8 +74,8 @@ public class NetworkTypeTest extends TestBase {
         cluster.setNetworkType(VoltDBContainer.NetworkType.DOCKER);
         cluster.start(60000); // 60 seconds timeout
 
-        Client2 client = cluster.getClient2();
-        ClientResponse clientResponse = client.callProcedureSync("@SystemInformation", "OVERVIEW");
+        Client client = cluster.getClient();
+        ClientResponse clientResponse = client.callProcedure("@SystemInformation", "OVERVIEW");
 
         Set<String> publicHosts = new HashSet<>();
         Set<Integer> publicPorts = new HashSet<>();
@@ -112,8 +113,8 @@ public class NetworkTypeTest extends TestBase {
         container.start(); // 60 seconds timeout
         await().until(container::isRunning);
 
-        Client2 client = container.getConnectedClient2();
-        ClientResponse clientResponse = client.callProcedureSync("@SystemInformation", "OVERVIEW");
+        Client client = container.getConnectedClient();
+        ClientResponse clientResponse = client.callProcedure("@SystemInformation", "OVERVIEW");
 
         Set<String> publicHosts = new HashSet<>();
         Set<Integer> publicPorts = new HashSet<>();

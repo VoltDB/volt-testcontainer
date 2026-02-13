@@ -5,7 +5,7 @@
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  */
-package voter;
+package voter.client1;
 
 import org.joda.time.LocalTime;
 import org.joda.time.format.ISODateTimeFormat;
@@ -16,6 +16,7 @@ import org.voltdb.VoltTable;
 import org.voltdb.client.ClientResponse;
 import org.voltdb.client.ProcCallException;
 import org.voltdbtest.testcontainer.VoltDBCluster;
+import voter.TestBase;
 
 import java.io.IOException;
 
@@ -32,7 +33,7 @@ public class IntegrationVoterTest extends TestBase {
         try {
             configureTestContainer(db);
             // Now run benchmark which will invoke all procedures.
-            VoterValidation.run(db.getClient2());
+            VoterValidation.run(db.getClient());
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ProcCallException e) {

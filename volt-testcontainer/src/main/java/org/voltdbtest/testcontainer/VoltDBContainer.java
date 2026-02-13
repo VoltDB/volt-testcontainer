@@ -16,6 +16,8 @@ import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 import org.voltdb.client.Client;
+import org.voltdb.client.Client2;
+import org.voltdb.client.Client2Config;
 import org.voltdb.client.ClientConfig;
 import org.voltdb.client.ClientFactory;
 import org.voltdb.client.ClientResponse;
@@ -30,6 +32,7 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A local containerized cluster which takes host alias, docker image name
@@ -110,6 +113,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
 
     // This client is created automatically when cluster is up, dont close this its used for internal healthcheck.
     Client client;
+    Client2 client2;
     private final String hostId;
     private NetworkType networkType = NetworkType.HOST;
     private String topicPublicInterface;
@@ -428,6 +432,48 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
                     //Ignore
                 }
             }
+        }
+        throw new IOException("Could not connect to VoltDB, Server may have failed to start");
+    }
+
+    /**
+     * Retrieves a connected Client2 to the VoltDB instance with a default timeout of 120000 milliseconds.
+     *
+     * @return a {@link Client2} object representing the connected client.
+     * @throws IOException if an I/O error occurs while attempting to connect to the client.
+     */
+    public Client2 getConnectedClient2() throws IOException {
+        return getConnectedClient2(120000);
+    }
+
+    /**
+     * Retrieves a connected Client2 to the VoltDB instance.
+     *
+     * @param timeoutMillis time to wait for a client connection
+     * @return a {@link Client2} object
+     * @throws IOException if any.
+     */
+    public Client2 getConnectedClient2(int timeoutMillis) throws IOException {
+        int mappedPort = getMappedPort(21211);
+        Client2Config config = new Client2Config();
+        if (tlsEnabled) {
+            config.enableSSL();
+            config.trustStore(trustStorePath, trustStorePassword);
+            if (keyStorePath != null && !keyStorePath.isEmpty()) {
+                System.setProperty("javax.net.ssl.keyStore", keyStorePath);
+                System.setProperty("javax.net.ssl.keyStorePassword", keyStorePassword);
+            }
+        }
+        int retries = Math.max(1, timeoutMillis / 5000);
+        client2 = ClientFactory.createClient(config);
+        try {
+            client2.connectSync("localhost:" + mappedPort, retries, 5, TimeUnit.SECONDS);
+            ClientResponse response = client2.callProcedureSync("@Ping");
+            if (response.getStatus() == ClientResponse.SUCCESS) {
+                return client2;
+            }
+        } catch (IOException | ProcCallException e) {
+            throw new IOException("Could not connect to VoltDB, Server may have failed to start", e);
         }
         throw new IOException("Could not connect to VoltDB, Server may have failed to start");
     }
