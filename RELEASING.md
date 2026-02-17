@@ -23,9 +23,10 @@ Check if you want to update the versions of any of the dependencies
     - set volt-procedure-api.version property to latest published release, e.g. 15.0.0
     - set voltdbclient.version to the latest published release, e.g. 15.0.0
 
-3. Manually build & test
+3. Manually build & test (set path to your VoltDB license if different)
 
     ```sh
+    export VOLTDB_LICENSE=~/license.xml
     mvn clean install
     ```
 
