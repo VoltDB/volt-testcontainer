@@ -5,12 +5,14 @@
 1. Create a release branch (skip if doing a patch release)
 
     ```sh
+    git checkout main
+    git pull
     git checkout -b release-1.8.x
     ```
 
 2. Set the version (without -SNAPSHOT)
 
-Since this project had 4 modules and a parent pom.xml, the easiest way is using the `mvn versions` command:
+Since this project has 4 modules and a parent pom.xml, the easiest way is using the `mvn versions` command:
 
     ```sh
     mvn versions:set -DnewVersion=1.8.0
@@ -23,7 +25,7 @@ Check if you want to update the versions of any of the dependencies
     - set volt-procedure-api.version property to latest published release, e.g. 15.0.0
     - set voltdbclient.version to the latest published release, e.g. 15.0.0
 
-3. Manually build & test (set path to your VoltDB license if different)
+3. Manually build & test (set path to your VoltDB license)
 
     ```sh
     export VOLTDB_LICENSE=~/license.xml
@@ -33,7 +35,7 @@ Check if you want to update the versions of any of the dependencies
 4. Commit this change and push to the branch.
 
     ```sh
-    git add -A
+    git add pom.xml */pom.xml
     git commit -m "Setting version to 1.8.0"
     git push -u origin release-1.8.x
     ```
