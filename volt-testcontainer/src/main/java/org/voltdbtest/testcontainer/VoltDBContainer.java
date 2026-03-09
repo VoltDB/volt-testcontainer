@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Volt Active Data Inc.
+ * Copyright (C) 2024-2026 Volt Active Data Inc.
  *
  * Use of this source code is governed by an MIT
  * license that can be found in the LICENSE file or at
@@ -101,6 +101,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
                                 "<deployment>\n" +
                                 "    <cluster hostcount=\"%d\" sitesperhost=\"8\" kfactor=\"%d\"/>\n" +
                                 "    <metrics enabled=\"true\" interval=\"60s\" maxbuffersize=\"200\" />\n" +
+                                "%s" +
                                 "</deployment>\n";
 
     /** Network mode for the VoltDB container. */
@@ -128,6 +129,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     private int kfactor = 0;
     private int hostcount = 1;
     private String containerName = "";
+    private boolean commandLogEnabled = true;
 
     /**
      * Creates a VoltDB container using a public, free Developer Edition container.
@@ -208,6 +210,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         this.hostcount = hostcount;
         this.kfactor = kfactor;
         this.hostId = "host-" + id;
+        this.commandLogEnabled = !isDevImage(image);
 
         if (deployment == null) {
             deployment = getDeployment();
@@ -571,8 +574,13 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         this.client = client;
     }
 
+    private static boolean isDevImage(String image) {
+        return image != null && image.toLowerCase().contains("developer");
+    }
+
     private String getDeployment() {
-        return String.format(deploymentTemplate, hostcount, kfactor);
+        String commandLogElement = commandLogEnabled ? "" : "    <commandlog enabled=\"false\"/>\n";
+        return String.format(deploymentTemplate, hostcount, kfactor, commandLogElement);
     }
 
     /**
@@ -584,6 +592,19 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         this.kfactor = kfactor;
         String deployment = getDeployment();
         withCopyToContainer(Transferable.of(deployment), "/etc/deployment.xml");
+    }
+
+    /**
+     * Enables or disables command logging in the deployment configuration.
+     * Command logging is not supported by the VoltDB developer edition, so it is automatically
+     * disabled when a developer edition image is detected. Use this method to override
+     * the auto-detected default.
+     *
+     * @param enabled true to enable command logging (enterprise default), false to explicitly disable it
+     */
+    protected void setCommandLogEnabled(boolean enabled) {
+        this.commandLogEnabled = enabled;
+        withCopyToContainer(Transferable.of(getDeployment()), "/etc/deployment.xml");
     }
 
     public String getContainerName() {

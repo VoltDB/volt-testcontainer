@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Volt Active Data Inc.
+ * Copyright (C) 2024-2026 Volt Active Data Inc.
  *
  * Use of this source code is governed by an MIT
  * license that can be found in the LICENSE file or at
@@ -604,6 +604,22 @@ public class VoltDBCluster {
         for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.setUsername(username);
             voltDBContainer.setPassword(password);
+        }
+        return this;
+    }
+
+    /**
+     * Enables or disables command logging in the deployment configuration for all containers.
+     * Command logging is not supported by the VoltDB developer edition, and is automatically
+     * disabled when a developer edition image is detected. Use this method to override
+     * the auto-detected default.
+     *
+     * @param enabled true to enable command logging (enterprise default), false to explicitly disable it
+     * @return the updated VoltDBCluster object
+     */
+    public VoltDBCluster withCommandLogEnabled(boolean enabled) {
+        for (VoltDBContainer voltDBContainer : containers()) {
+            voltDBContainer.setCommandLogEnabled(enabled);
         }
         return this;
     }
