@@ -15,9 +15,10 @@ import org.voltdb.client.Client2;
 import org.voltdb.client.ClientResponse;
 import org.voltdb.client.ProcCallException;
 import org.voltdbtest.testcontainer.VoltDBCluster;
-import org.voltdbtest.testcontainer.VoltDBContainer;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -30,10 +31,16 @@ import static org.junit.Assert.assertNotNull;
  * Command logging is automatically disabled when a developer edition
  * image is detected.
  * <p>
- * To run these tests, set the {@code VOLTDB_DEV_IMAGE} environment variable
- * to your developer edition image (e.g. {@code voltdb/voltdb-developer:14.1.0})
- * and set {@code VOLTDB_LICENSE} to a valid developer edition license file.
- * If {@code VOLTDB_DEV_IMAGE} is not set, these tests are skipped.
+ * To run these tests, set:
+ * <ul>
+ *   <li>{@code VOLTDB_DEV_IMAGE} — the developer edition image to test against
+ *       (e.g. {@code voltdb/voltdb-developer:14.1.0})</li>
+ *   <li>{@code VOLTDB_DEV_LICENSE} — path to a valid developer edition license file.
+ *       Developer and enterprise licenses are incompatible, so this must be separate
+ *       from the {@code VOLTDB_LICENSE} used by the enterprise tests.</li>
+ * </ul>
+ * If {@code VOLTDB_DEV_IMAGE} is not set, these tests are skipped entirely, so existing
+ * CI pipelines that only have an enterprise license are unaffected.
  */
 public class IntegrationVoltDBDeveloperEditionTest extends TestBase {
 
@@ -42,10 +49,29 @@ public class IntegrationVoltDBDeveloperEditionTest extends TestBase {
     /**
      * Returns the developer edition image to test against.
      * Reads from the {@code VOLTDB_DEV_IMAGE} environment variable.
-     * Returns null if not set, which causes tests to be skipped.
+     * Returns {@code null} if not set, which causes tests to be skipped.
      */
     private static String getDevImage() {
         return System.getenv("VOLTDB_DEV_IMAGE");
+    }
+
+    /**
+     * Returns the path to the developer edition license file.
+     * Reads from {@code VOLTDB_DEV_LICENSE}. Falls back to {@code validLicensePath}
+     * (i.e. {@code VOLTDB_LICENSE}) if not set, which is useful when the same license
+     * file happens to work for both editions.
+     */
+    private static String getDevLicensePath() {
+        String devLicense = System.getenv("VOLTDB_DEV_LICENSE");
+        if (devLicense != null && !devLicense.isEmpty()) {
+            File file = Paths.get(devLicense).toAbsolutePath().toFile();
+            if (file.exists()) {
+                return file.getAbsolutePath();
+            }
+            throw new IllegalStateException(
+                    "VOLTDB_DEV_LICENSE is set but the file does not exist: " + devLicense);
+        }
+        return validLicensePath;
     }
 
     @Test
@@ -53,7 +79,7 @@ public class IntegrationVoltDBDeveloperEditionTest extends TestBase {
         String devImage = getDevImage();
         Assume.assumeNotNull("Skipping developer edition test: VOLTDB_DEV_IMAGE not set", devImage);
 
-        VoltDBCluster cluster = new VoltDBCluster(validLicensePath, devImage);
+        VoltDBCluster cluster = new VoltDBCluster(getDevLicensePath(), devImage);
         cluster.withLogConsumer(LOG);
         try {
             cluster.start();
@@ -84,7 +110,7 @@ public class IntegrationVoltDBDeveloperEditionTest extends TestBase {
         String devImage = getDevImage();
         Assume.assumeNotNull("Skipping developer edition test: VOLTDB_DEV_IMAGE not set", devImage);
 
-        VoltDBCluster cluster = new VoltDBCluster(validLicensePath, devImage);
+        VoltDBCluster cluster = new VoltDBCluster(getDevLicensePath(), devImage);
         cluster.withLogConsumer(LOG);
         cluster.withCommandLogEnabled(false);
         try {
