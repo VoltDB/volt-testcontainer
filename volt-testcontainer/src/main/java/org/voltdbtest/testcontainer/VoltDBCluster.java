@@ -514,6 +514,15 @@ public class VoltDBCluster {
      * This method blocks until all instances have been shutdown or the timeout is reached.
      */
     public void shutdown() {
+        try {
+            Client client = getClient();
+            if (client != null) {
+                client.callProcedure("@Shutdown");
+            }
+        } catch (IOException | ProcCallException e) {
+            // ignore loss of connection shutting down
+        }
+
         for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.stop();
             long st = System.currentTimeMillis();
@@ -755,12 +764,12 @@ public class VoltDBCluster {
     }
 
     /**
-     * <p>withKsaftey.</p>
+     * <p>withKsafety.</p>
      *
      * @param kfactor a int
      * @return a {@link org.voltdbtest.testcontainer.VoltDBCluster} object
      */
-    public VoltDBCluster withKsaftey(int kfactor) {
+    public VoltDBCluster withKsafety(int kfactor) {
         for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.setKfactor(kfactor);
         }
