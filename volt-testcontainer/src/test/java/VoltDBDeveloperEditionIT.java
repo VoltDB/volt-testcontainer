@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 2024-2025 Volt Active Data Inc.
+ * Copyright (C) 2024-2026 Volt Active Data Inc.
  *
  * Use of this source code is governed by an MIT
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  */
 
-import org.junit.Assume;
-import org.junit.Test;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.voltdb.client.Client2;
@@ -19,8 +19,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Integration tests for the VoltDB developer-edition image.
@@ -45,8 +45,8 @@ public class VoltDBDeveloperEditionIT extends TestBase {
     /** Skips the test if {@code VOLTDB_DEV_IMAGE} is not set in the environment. */
     private static String requireDevImage() {
         String image = System.getenv("VOLTDB_DEV_IMAGE");
-        Assume.assumeNotNull(
-                "Skipping developer-edition test: VOLTDB_DEV_IMAGE is not set", image);
+        Assumptions.assumeTrue(image != null,
+                "Skipping developer-edition test: VOLTDB_DEV_IMAGE is not set");
         return image;
     }
 

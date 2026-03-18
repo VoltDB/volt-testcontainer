@@ -1,18 +1,18 @@
 /*
- * Copyright (C) 2024-2025 Volt Active Data Inc.
+ * Copyright (C) 2024-2026 Volt Active Data Inc.
  *
  * Use of this source code is governed by an MIT
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  */
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.voltdb.VoltTable;
 import org.voltdb.client.ClientResponse;
 import org.voltdbtest.testcontainer.VoltDBCluster;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Verifies that a stored procedure depending on an external runtime JAR
@@ -37,18 +37,16 @@ public class FlashSaleExternalLibIT extends TestBase {
             configureTestContainer(db);
 
             ClientResponse insert = db.callProcedure("ToJson", input);
-            assertTrue("ToJson must succeed",
-                    insert.getStatus() == ClientResponse.SUCCESS);
+            assertTrue(insert.getStatus() == ClientResponse.SUCCESS, "ToJson must succeed");
 
             ClientResponse select = db.callProcedure("@AdHoc",
                     "SELECT input, result FROM string_transform;");
-            assertTrue("SELECT must succeed",
-                    select.getStatus() == ClientResponse.SUCCESS);
+            assertTrue(select.getStatus() == ClientResponse.SUCCESS, "SELECT must succeed");
 
             VoltTable t = select.getResults()[0];
-            assertTrue("Must have one row", t.advanceRow());
-            assertEquals("Stored input must match", input,    t.getString("input"));
-            assertEquals("JSON result must match",  expected, t.getString("result"));
+            assertTrue(t.advanceRow(), "Must have one row");
+            assertEquals(input,    t.getString("input"),  "Stored input must match");
+            assertEquals(expected, t.getString("result"), "JSON result must match");
         } finally {
             db.shutdown();
         }

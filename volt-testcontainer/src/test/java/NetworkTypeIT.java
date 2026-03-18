@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 2024-2025 Volt Active Data Inc.
+ * Copyright (C) 2024-2026 Volt Active Data Inc.
  *
  * Use of this source code is governed by an MIT
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  */
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -35,7 +35,7 @@ public class NetworkTypeIT extends TestBase {
     private VoltDBCluster  cluster;
     private VoltDBContainer container;
 
-    @After
+    @AfterEach
     public void tearDown() {
         if (cluster   != null) cluster.shutdown();
         if (container != null) container.stop();

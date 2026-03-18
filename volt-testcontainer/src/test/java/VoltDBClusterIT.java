@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 2024-2025 Volt Active Data Inc.
+ * Copyright (C) 2024-2026 Volt Active Data Inc.
  *
  * Use of this source code is governed by an MIT
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  */
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.Network;
@@ -24,7 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration tests for the {@link VoltDBCluster} API.
@@ -39,7 +39,7 @@ public class VoltDBClusterIT extends TestBase {
     private static final Logger LOG = LoggerFactory.getLogger(VoltDBClusterIT.class);
     private VoltDBCluster cluster;
 
-    @After
+    @AfterEach
     public void tearDown() {
         if (cluster != null) {
             cluster.shutdown();
@@ -63,19 +63,19 @@ public class VoltDBClusterIT extends TestBase {
         cluster = new VoltDBCluster(validLicensePath, VOLTDB_IMAGE);
         cluster.start();
 
-        assertTrue("Mapped port 21211 should be > 0", cluster.getMappedPort(21211) > 0);
-        assertTrue("First mapped port should be > 0", cluster.getFirstMappedPort() > 0);
-        assertFalse("Host should not be empty", cluster.getHost().isEmpty());
-        assertTrue("HostAndPort should contain ':'", cluster.getHostAndPort().contains(":"));
+        assertTrue(cluster.getMappedPort(21211) > 0, "Mapped port 21211 should be > 0");
+        assertTrue(cluster.getFirstMappedPort() > 0, "First mapped port should be > 0");
+        assertFalse(cluster.getHost().isEmpty(), "Host should not be empty");
+        assertTrue(cluster.getHostAndPort().contains(":"), "HostAndPort should contain ':'");
 
         // Both client types must be obtainable and functional
         Client2 client2 = cluster.getClient2();
-        assertNotNull("Client2 must not be null", client2);
+        assertNotNull(client2, "Client2 must not be null");
         assertEquals(ClientResponse.SUCCESS,
                 client2.callProcedureSync("@SystemInformation").getStatus());
 
         Client client = cluster.getClient();
-        assertNotNull("Client must not be null", client);
+        assertNotNull(client, "Client must not be null");
         assertEquals(ClientResponse.SUCCESS,
                 client.callProcedure("@SystemInformation").getStatus());
     }
@@ -96,10 +96,10 @@ public class VoltDBClusterIT extends TestBase {
                     .withInitialSchemaFromHostPath(tempSchema.toAbsolutePath().toString(), "schema.sql")
                     .withInitialClasses(new File[]{tempJar.toFile()})
                     .withCommandLogEnabled(false);
-            assertSame("Builder methods must return same instance", cluster, result);
+            assertSame(cluster, result, "Builder methods must return same instance");
 
             Network network = Network.newNetwork();
-            assertSame("withNetwork must return same instance", cluster, cluster.withNetwork(network));
+            assertSame(cluster, cluster.withNetwork(network), "withNetwork must return same instance");
             network.close();
         } finally {
             Files.deleteIfExists(tempSchema);
@@ -172,14 +172,14 @@ public class VoltDBClusterIT extends TestBase {
 
         List<String> ids   = cluster.getContainerIds();
         List<String> names = cluster.getContainerNames();
-        assertEquals("Expected 3 container IDs",   3, ids.size());
-        assertEquals("Expected 3 container names", 3, names.size());
-        ids.forEach(id     -> assertFalse("Container ID must not be empty",   id.isEmpty()));
-        names.forEach(name -> assertFalse("Container name must not be empty", name.isEmpty()));
+        assertEquals(3, ids.size(),   "Expected 3 container IDs");
+        assertEquals(3, names.size(), "Expected 3 container names");
+        ids.forEach(id     -> assertFalse(id.isEmpty(),   "Container ID must not be empty"));
+        names.forEach(name -> assertFalse(name.isEmpty(), "Container name must not be empty"));
 
         String networkId = cluster.getNetworkId();
-        assertNotNull("Network ID must not be null", networkId);
-        assertFalse("Network ID must not be empty", networkId.isEmpty());
+        assertNotNull(networkId, "Network ID must not be null");
+        assertFalse(networkId.isEmpty(), "Network ID must not be empty");
 
         ClientResponse ddlResp = cluster.runDDL(
                 "CREATE TABLE multi_node_test (id INTEGER NOT NULL, PRIMARY KEY(id));");
@@ -209,6 +209,6 @@ public class VoltDBClusterIT extends TestBase {
         cluster.start();
 
         Client2 client = cluster.getClient2("host-0");
-        assertNotNull("Client2 for host-0 must not be null", client);
+        assertNotNull(client, "Client2 for host-0 must not be null");
     }
 }

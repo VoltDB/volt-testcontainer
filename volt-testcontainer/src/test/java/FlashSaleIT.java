@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024-2025 Volt Active Data Inc.
+ * Copyright (C) 2024-2026 Volt Active Data Inc.
  *
  * Use of this source code is governed by an MIT
  * license that can be found in the LICENSE file or at
@@ -7,7 +7,7 @@
  */
 
 import flashsale.common.Constants;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.voltdb.VoltTable;
@@ -19,8 +19,7 @@ import org.voltdbtest.testcontainer.VoltDBCluster;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Integration tests for the flash sale stored procedures against a live VoltDB
@@ -132,21 +131,21 @@ public class FlashSaleIT extends TestBase {
         // 1. Valid purchase: buy 3 units, verify stock falls to STOCK-3
         ClientResponse buyResp = db.callProcedure("Purchase", CUSTOMER_ID, PRODUCT_ID, 3);
         assertEquals(ClientResponse.SUCCESS, buyResp.getStatus());
-        assertEquals("Valid purchase must return PURCHASE_SUCCESS",
-                Constants.PURCHASE_SUCCESS,
-                buyResp.getResults()[0].fetchRow(0).getLong(0));
+        assertEquals(Constants.PURCHASE_SUCCESS,
+                buyResp.getResults()[0].fetchRow(0).getLong(0),
+                "Valid purchase must return PURCHASE_SUCCESS");
 
         ClientResponse stockResp = db.callProcedure("GetStock", PRODUCT_ID);
         assertEquals(ClientResponse.SUCCESS, stockResp.getStatus());
         long remaining = stockResp.getResults()[0].fetchRow(0).getLong(0);
-        assertEquals("Stock must have decreased by 3", STOCK - 3, remaining);
+        assertEquals(STOCK - 3, remaining, "Stock must have decreased by 3");
 
         // 2. Invalid product: product 999 does not exist
         ClientResponse invalidResp = db.callProcedure("Purchase", CUSTOMER_ID, 999, 1);
         assertEquals(ClientResponse.SUCCESS, invalidResp.getStatus());
-        assertEquals("Purchase of invalid product must return ERR_INVALID_PRODUCT",
-                Constants.ERR_INVALID_PRODUCT,
-                invalidResp.getResults()[0].fetchRow(0).getLong(0));
+        assertEquals(Constants.ERR_INVALID_PRODUCT,
+                invalidResp.getResults()[0].fetchRow(0).getLong(0),
+                "Purchase of invalid product must return ERR_INVALID_PRODUCT");
 
         // 3. Out-of-stock: buy remaining units, then one more
         long toBuy = remaining;
@@ -157,8 +156,8 @@ public class FlashSaleIT extends TestBase {
 
         ClientResponse oosResp = db.callProcedure("Purchase", CUSTOMER_ID, PRODUCT_ID, 1);
         assertEquals(ClientResponse.SUCCESS, oosResp.getStatus());
-        assertEquals("Purchase after stock exhausted must return ERR_OUT_OF_STOCK",
-                Constants.ERR_OUT_OF_STOCK,
-                oosResp.getResults()[0].fetchRow(0).getLong(0));
+        assertEquals(Constants.ERR_OUT_OF_STOCK,
+                oosResp.getResults()[0].fetchRow(0).getLong(0),
+                "Purchase after stock exhausted must return ERR_OUT_OF_STOCK");
     }
 }

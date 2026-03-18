@@ -1,12 +1,11 @@
 /*
- * Copyright (C) 2024-2025 Volt Active Data Inc.
+ * Copyright (C) 2024-2026 Volt Active Data Inc.
  *
  * Use of this source code is governed by an MIT
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  */
 
-import org.jetbrains.annotations.Nullable;
 import org.voltdb.client.ClientResponse;
 import org.voltdb.client.ProcCallException;
 import org.voltdbtest.testcontainer.VoltDBCluster;
@@ -16,7 +15,7 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URL;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Base class for VoltDB testcontainer integration tests.
@@ -64,10 +63,10 @@ public class TestBase {
             for (File jar : getJars()) {
                 System.out.println("Loading classes from: " + jar);
                 ClientResponse response = db.loadClasses(jar.getAbsolutePath());
-                assertTrue("Load classes must pass", response.getStatus() == ClientResponse.SUCCESS);
+                assertTrue(response.getStatus() == ClientResponse.SUCCESS, "Load classes must pass");
             }
             URL schema = getClass().getClassLoader().getResource("schema.ddl");
-            assertTrue("Schema must be loaded", db.runDDL(new File(schema.getFile())));
+            assertTrue(db.runDDL(new File(schema.getFile())), "Schema must be loaded");
         } catch (IOException | ProcCallException e) {
             throw new RuntimeException(e);
         }

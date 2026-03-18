@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 2024-2025 Volt Active Data Inc.
+ * Copyright (C) 2024-2026 Volt Active Data Inc.
  *
  * Use of this source code is governed by an MIT
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  */
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.voltdb.client.Client2;
 import org.voltdb.client.ClientResponse;
 import org.voltdb.client.ProcCallException;
@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Verifies security-related cluster configuration options: deployment XML
@@ -29,7 +29,7 @@ public class VoltDBClusterSecurityIT extends TestBase {
 
     private VoltDBCluster cluster;
 
-    @After
+    @AfterEach
     public void tearDown() {
         if (cluster != null) {
             cluster.shutdown();
@@ -56,7 +56,7 @@ public class VoltDBClusterSecurityIT extends TestBase {
         try {
             VoltDBCluster result = cluster.withDeploymentResourceFromHostPath(
                     tempDeployment.toAbsolutePath().toString());
-            assertSame("Must return same instance", cluster, result);
+            assertSame(cluster, result, "Must return same instance");
         } finally {
             Files.delete(tempDeployment);
         }
@@ -74,11 +74,11 @@ public class VoltDBClusterSecurityIT extends TestBase {
                 .withDeploymentContent(
                         "<?xml version=\"1.0\"?><deployment><cluster kfactor=\"0\"/></deployment>")
                 .withKsafety(0);
-        assertSame("Chaining must return same instance", cluster, result);
+        assertSame(cluster, result, "Chaining must return same instance");
 
         cluster.start();
         Client2 client = cluster.getClient2();
-        assertNotNull("Client2 must not be null after start", client);
+        assertNotNull(client, "Client2 must not be null after start");
     }
 
     /**
