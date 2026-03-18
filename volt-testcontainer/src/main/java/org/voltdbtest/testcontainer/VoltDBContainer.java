@@ -210,7 +210,12 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         this.hostcount = hostcount;
         this.kfactor = kfactor;
         this.hostId = "host-" + id;
-        this.commandLogEnabled = !isDevImage(image);
+
+        // disable command log if using dev edition
+        if (isDevImage(image)) {
+            this.commandLogEnabled = false;
+        }
+
 
         if (deployment == null) {
             deployment = getDeployment();

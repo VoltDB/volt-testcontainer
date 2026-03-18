@@ -101,17 +101,25 @@ public class IntegrationTestBase {
     }
 
     protected String getLicensePath() {
-        String licensePath = "/tmp/license.xml";
-        // Try file from environment variable
-        String elicenseFile = System.getenv("VOLTDB_LICENSE");
-        if (elicenseFile != null) {
-            File file = Paths.get(elicenseFile).toAbsolutePath().toFile();
+        // 1. VOLTDB_LICENSE environment variable
+        String envLicense = System.getenv("VOLTDB_LICENSE");
+        if (envLicense != null) {
+            File file = Paths.get(envLicense).toAbsolutePath().toFile();
             if (file.exists()) {
-                licensePath = file.getAbsolutePath();
+                System.out.println("License file path is: " + file.getAbsolutePath());
+                return file.getAbsolutePath();
             }
         }
-        System.out.println("License file path is: " + licensePath);
-        return licensePath;
+        // 2. ~/license.xml (most common developer location)
+        File homeFile = new File(System.getProperty("user.home"), "license.xml");
+        if (homeFile.exists()) {
+            System.out.println("License file path is: " + homeFile.getAbsolutePath());
+            return homeFile.getAbsolutePath();
+        }
+        // 3. System temp directory fallback (mirrors LicenseHelper)
+        String tmpLicense = System.getProperty("java.io.tmpdir") + File.separator + "license.xml";
+        System.out.println("License file path is: " + tmpLicense);
+        return tmpLicense;
     }
 
 }

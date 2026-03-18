@@ -54,9 +54,7 @@
     </developers>
 
     <modules>
-        <module>volt-voter-procedures</module>
         <module>volt-testcontainer</module>
-        <module>volt-test-container-test</module>
         <module>voltdb-stored-procedures-maven-quickstart</module>
     </modules>
 
