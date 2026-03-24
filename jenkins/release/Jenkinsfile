@@ -19,6 +19,9 @@ pipeline {
     parameters {
         string(name: 'TAG', defaultValue: '', description: 'Git tag to checkout and release (e.g., v1.0.0). Required.')
         booleanParam(name: 'DRY_RUN', defaultValue: true, description: 'If checked, skip the publish stage (dry run mode)')
+        booleanParam(name: 'PREVIEW_RELEASE_NOTES', defaultValue: false, description: 'If checked, only generate and display release notes without creating GitHub release')
+        booleanParam(name: 'GITHUB_RELEASE_ONLY', defaultValue: false, description: 'If checked, skip build/test/publish and only create GitHub release for an existing tag (for backfilling releases)')
+        text(name: 'CUSTOM_RELEASE_NOTES', defaultValue: '', description: 'Optional: Provide custom release notes (Markdown supported). If provided, these will be used instead of auto-generated changelog.')
     }
     stages {
         stage('Validate Parameters') {
@@ -80,7 +83,7 @@ pipeline {
                     echo "Version in pom.xml: ${currentVersion}"
 
                     // Update build name and description
-                    def runMode = params.DRY_RUN ? "DRY RUN" : "PUBLISHED"
+                    def runMode = params.DRY_RUN ? "DRY RUN" : (params.GITHUB_RELEASE_ONLY ? "GITHUB RELEASE ONLY" : (params.PREVIEW_RELEASE_NOTES ? "PREVIEW" : "PUBLISHED"))
                     currentBuild.displayName = "#${env.BUILD_NUMBER} - ${params.TAG} - ${runMode}"
                     currentBuild.description = """
                         <b>Tag:</b> ${params.TAG}<br/>
@@ -108,6 +111,9 @@ pipeline {
         }
         
         stage('Build and Test') {
+            when {
+                expression { return !params.GITHUB_RELEASE_ONLY }
+            }
             steps {
                 script {
                     startedStage('Build and Test')
@@ -147,7 +153,7 @@ pipeline {
         
         stage('Publish to Maven Central') {
             when {
-                expression { return !params.DRY_RUN }
+                expression { return !params.DRY_RUN && !params.GITHUB_RELEASE_ONLY }
             }
             steps {
                 script {
@@ -185,21 +191,207 @@ pipeline {
                 }
             }
         }
+
+        stage('Generate Release Notes') {
+            steps {
+                script {
+                    startedStage('Generate Release Notes')
+
+                    def changelogContent = ""
+
+                    // Check if custom release notes are provided
+                    if (params.CUSTOM_RELEASE_NOTES?.trim()) {
+                        echo "Using custom release notes provided by user"
+                        changelogContent = params.CUSTOM_RELEASE_NOTES.trim()
+                        env.PREVIOUS_TAG = ""
+                    } else {
+                        echo "Auto-generating release notes from git history"
+
+                        // Fetch all tags
+                        sh 'git fetch --tags --force'
+
+                        // Get previous tag for changelog
+                        def previousTag = sh(
+                            returnStdout: true,
+                            script: """
+                                git tag --sort=-version:refname | grep -v '^${params.TAG}\$' | head -1 || echo ""
+                            """
+                        ).trim()
+
+                        if (previousTag) {
+                            echo "Previous tag: ${previousTag}"
+                        } else {
+                            echo "No previous tag found - this appears to be the first release"
+                        }
+                        echo "Current tag: ${params.TAG}"
+
+                        // Generate changelog
+                        if (previousTag) {
+                            def commits = sh(
+                                returnStdout: true,
+                                script: """
+                                    git log ${previousTag}..${params.TAG} --pretty=format:'* %s ([%h](https://github.com/VoltDB/volt-testcontainer/commit/%H))' --no-merges || echo ""
+                                """
+                            ).trim()
+
+                            def prMerges = sh(
+                                returnStdout: true,
+                                script: """
+                                    git log ${previousTag}..${params.TAG} --merges --pretty=format:'%s' 2>/dev/null | \
+                                        grep -oE '#[0-9]+' | sort -u | \
+                                        sed 's/#\\([0-9]*\\)/* PR [#\\1](https:\\/\\/github.com\\/VoltDB\\/volt-testcontainer\\/pull\\/\\1)/' || echo ""
+                                """
+                            ).trim()
+
+                            changelogContent = "## Release ${params.TAG}\n\n"
+                            changelogContent += "### What's Changed\n\n"
+                            changelogContent += commits ?: "No commits found"
+                            changelogContent += "\n\n"
+                            if (prMerges) {
+                                changelogContent += "### Pull Requests\n\n${prMerges}\n\n"
+                            }
+                            changelogContent += "**Full Changelog**: https://github.com/VoltDB/volt-testcontainer/compare/${previousTag}...${params.TAG}"
+                        } else {
+                            changelogContent = "## Release ${params.TAG}\n\nInitial release of volt-testcontainer."
+                        }
+
+                        env.PREVIOUS_TAG = previousTag ?: ""
+                    }
+
+                    // Store for later use
+                    env.RELEASE_NOTES = changelogContent
+
+                    // Write to file
+                    writeFile file: 'release-notes.md', text: changelogContent
+
+                    // Display release notes
+                    echo "=========================================="
+                    echo "RELEASE NOTES ${params.CUSTOM_RELEASE_NOTES?.trim() ? '(CUSTOM)' : '(AUTO-GENERATED)'}"
+                    echo "=========================================="
+                    echo changelogContent
+                    echo "=========================================="
+
+                    // Archive the release notes
+                    archiveArtifacts artifacts: 'release-notes.md', fingerprint: true
+                }
+            }
+            post {
+                success {
+                    successfulStage('Generate Release Notes')
+                }
+                failure {
+                    failedStage('Generate Release Notes')
+                }
+            }
+        }
+
+        stage('Create GitHub Release') {
+            when {
+                expression { return (!params.DRY_RUN || params.GITHUB_RELEASE_ONLY) && !params.PREVIEW_RELEASE_NOTES }
+            }
+            steps {
+                script {
+                    startedStage('Create GitHub Release')
+
+                    // Read release notes from file
+                    def releaseNotes = readFile('release-notes.md')
+
+                    // Escape for JSON
+                    def escapedNotes = releaseNotes
+                        .replace('\\', '\\\\')
+                        .replace('"', '\\"')
+                        .replace('\n', '\\n')
+                        .replace('\r', '')
+                        .replace('\t', '\\t')
+
+                    // Write escaped notes to a temp file for curl
+                    def jsonPayload = """{
+                        "tag_name": "${params.TAG}",
+                        "name": "Release ${params.TAG}",
+                        "body": "${escapedNotes}",
+                        "draft": false,
+                        "prerelease": false
+                    }"""
+                    writeFile file: 'release-payload.json', text: jsonPayload
+
+                    // Create GitHub release using API
+                    withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
+                        def response = sh(
+                            returnStdout: true,
+                            script: '''
+                                curl -s -X POST \
+                                    -H "Authorization: token ${GH_TOKEN}" \
+                                    -H "Accept: application/vnd.github+v1+json" \
+                                    -H "Content-Type: application/json" \
+                                    -w "\\nHTTP_CODE:%{http_code}" \
+                                    -d @release-payload.json \
+                                    https://api.github.com/repos/VoltDB/volt-testcontainer/releases
+                            '''
+                        ).trim()
+
+                        def httpCode = (response =~ /HTTP_CODE:(\d+)/)[0][1]
+                        def body = response.replaceAll(/\nHTTP_CODE:\d+$/, '')
+
+                        if (httpCode == '201') {
+                            def json = readJSON text: body
+                            echo "✓ GitHub Release created successfully!"
+                            echo "Release URL: ${json.html_url}"
+                            env.RELEASE_URL = json.html_url
+                        } else if (httpCode == '422') {
+                            echo "⚠ Release may already exist for tag ${params.TAG}"
+                            echo "Response: ${body}"
+                            // Don't fail - release might already exist
+                        } else {
+                            error("Failed to create GitHub release. HTTP ${httpCode}: ${body}")
+                        }
+                    }
+                }
+            }
+            post {
+                success {
+                    successfulStage('Create GitHub Release')
+                }
+                failure {
+                    failedStage('Create GitHub Release')
+                }
+            }
+        }
     }
-    
+
     post {
         success {
             script {
-                if (params.DRY_RUN) {
+                if (params.GITHUB_RELEASE_ONLY) {
+                    if (params.PREVIEW_RELEASE_NOTES) {
+                        echo "✓ GitHub release preview completed!"
+                        echo "Tag: ${params.TAG}"
+                        echo "NOTE: GitHub release was SKIPPED (preview mode)"
+                        echo "Release notes have been generated and archived"
+                    } else {
+                        echo "✓ GitHub release backfill completed!"
+                        echo "Tag: ${params.TAG}"
+                        echo "NOTE: Build/Test/Publish stages were SKIPPED (GitHub release only mode)"
+                        echo "GitHub Release created: ${env.RELEASE_URL ?: 'URL not available'}"
+                    }
+                } else if (params.DRY_RUN) {
                     echo "✓ Dry run completed successfully!"
                     echo "Tag: ${params.TAG}"
                     echo "Version: ${env.CURRENT_VERSION}"
-                    echo "NOTE: Publish stage was SKIPPED (dry run mode)"
-                } else {
-                    echo "✓ Release completed successfully!"
+                    echo "NOTE: Publish and GitHub release stages were SKIPPED (dry run mode)"
+                    echo "Release notes have been generated and archived"
+                } else if (params.PREVIEW_RELEASE_NOTES) {
+                    echo "✓ Release with preview completed!"
                     echo "Tag: ${params.TAG}"
                     echo "Version: ${env.CURRENT_VERSION}"
                     echo "Published to Maven Central"
+                    echo "NOTE: GitHub release was SKIPPED (preview mode)"
+                    echo "Release notes have been generated and archived"
+                } else {
+                    echo "✓ Full release completed successfully!"
+                    echo "Tag: ${params.TAG}"
+                    echo "Version: ${env.CURRENT_VERSION}"
+                    echo "Published to Maven Central"
+                    echo "GitHub Release created: ${env.RELEASE_URL ?: 'URL not available'}"
                 }
             }
         }
