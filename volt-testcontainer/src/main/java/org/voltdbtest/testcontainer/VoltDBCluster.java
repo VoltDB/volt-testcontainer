@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Volt Active Data Inc.
+ * Copyright (C) 2024-2026 Volt Active Data Inc.
  *
  * Use of this source code is governed by an MIT
  * license that can be found in the LICENSE file or at
@@ -15,6 +15,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.utility.MountableFile;
 import org.voltdb.client.Client;
+import org.voltdb.client.Client2;
 import org.voltdb.client.ClientResponse;
 import org.voltdb.client.ProcCallException;
 import org.voltdb.testparser.SQLLoader;
@@ -395,6 +396,37 @@ public class VoltDBCluster {
         return null;
     }
 
+    /**
+     * Retrieves a VoltDB Client2 from the cluster instance.
+     *
+     * @return The VoltDB Client2 associated with the running instance, or null if no running instance is found.
+     * @throws java.io.IOException if an I/O error occurs while retrieving the client.
+     */
+    public Client2 getClient2() throws IOException {
+        for (VoltDBContainer voltDBContainer : containers()) {
+            if (voltDBContainer.isRunning()) {
+                return voltDBContainer.getConnectedClient2();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Retrieves a VoltDB Client2 from the cluster instance with the specified host ID.
+     *
+     * @param host The host ID of the cluster instance from which to retrieve the client.
+     * @return The VoltDB Client2 associated with the specified host, or null if no running instance is found.
+     * @throws java.io.IOException if an I/O error occurs while retrieving the client.
+     */
+    public Client2 getClient2(String host) throws IOException {
+        for (VoltDBContainer voltDBContainer : containers()) {
+            if (voltDBContainer.isRunning() && voltDBContainer.getHostId().equals(host)) {
+                return voltDBContainer.getConnectedClient2();
+            }
+        }
+        return null;
+    }
+
     private static String userHome() {
         String home = System.getProperty("user.home");
         if (home == null || home.isEmpty() || home.equals("?")) {
@@ -482,6 +514,15 @@ public class VoltDBCluster {
      * This method blocks until all instances have been shutdown or the timeout is reached.
      */
     public void shutdown() {
+        try {
+            Client client = getClient();
+            if (client != null) {
+                client.callProcedure("@Shutdown");
+            }
+        } catch (IOException | ProcCallException e) {
+            // ignore loss of connection shutting down
+        }
+
         for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.stop();
             long st = System.currentTimeMillis();
@@ -503,6 +544,12 @@ public class VoltDBCluster {
         System.out.println("Done Shutting down VoltDB");
     }
 
+    /**
+     * Configures a logger to consume container logs.
+     *
+     * @param logger the logger to use for container output
+     * @return the updated VoltDBCluster object
+     */
     public VoltDBCluster withLogConsumer(Logger logger) {
         this.logger = logger;
 
@@ -566,6 +613,22 @@ public class VoltDBCluster {
         for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.setUsername(username);
             voltDBContainer.setPassword(password);
+        }
+        return this;
+    }
+
+    /**
+     * Enables or disables command logging in the deployment configuration for all containers.
+     * Command logging is not supported by the VoltDB developer edition, and is automatically
+     * disabled when a developer edition image is detected. Use this method to override
+     * the auto-detected default.
+     *
+     * @param enabled true to enable command logging (enterprise default), false to explicitly disable it
+     * @return the updated VoltDBCluster object
+     */
+    public VoltDBCluster withCommandLogEnabled(boolean enabled) {
+        for (VoltDBContainer voltDBContainer : containers()) {
+            voltDBContainer.setCommandLogEnabled(enabled);
         }
         return this;
     }
@@ -701,12 +764,12 @@ public class VoltDBCluster {
     }
 
     /**
-     * <p>withKsaftey.</p>
+     * <p>withKsafety.</p>
      *
      * @param kfactor a int
      * @return a {@link org.voltdbtest.testcontainer.VoltDBCluster} object
      */
-    public VoltDBCluster withKsaftey(int kfactor) {
+    public VoltDBCluster withKsafety(int kfactor) {
         for (VoltDBContainer voltDBContainer : containers()) {
             voltDBContainer.setKfactor(kfactor);
         }
@@ -740,6 +803,9 @@ public class VoltDBCluster {
      * for network aliases and settle for container id if none were found.
      * <p>
      * The default network type is HOST.
+     *
+     * @param networkType the network type to use
+     * @return the updated VoltDBCluster object
      */
     public VoltDBCluster setNetworkType(VoltDBContainer.NetworkType networkType) {
         for (VoltDBContainer voltDBContainer : containers()) {

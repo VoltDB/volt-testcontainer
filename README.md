@@ -13,7 +13,11 @@ VoltDB Stored Procedures implement a run() method with:
 
 Testing VoltDB procedures traditionally required a mix of manual and scripted steps to initialize a VoltDB database instance, start the server process, load the schema SQL file and procedure jar, load some data, run some sequence of procedure invocations, and validate the results. Now, tests can be run using Junit in a maven project, leveraging VoltDB test docker containers to run the database and validate the results in seconds. This enables VoltDB users to develop more robust tests with less effort, to catch potential problems quickly without requiring complex setup or infrastructure resources.
 
-
+# Pre-requisites
+- have a valid Volt license.xml file; assuming it is in ~/license.xml - set the env var:
+```shell
+export VOLTDB_LICENSE=~/license.xml
+```
 
 # Generate a maven project with sample schema, procedures, and tests
 ```shell
@@ -28,11 +32,15 @@ mvn -B -ntp archetype:generate \
 ```
 This uses a maven archetype to generate your own project that starts you off with a simple example schema, a few simple procedures, and passing Junit and Integration tests.
 
-To build the project and run the tests, you can use a single maven command.
+To build the project and run the tests, you can use a single maven command. First you need to specify the path to your VoltDB license file.
+```shell
+export VOLTDB_LICENSE=~/license.xml
+```
 
+Now you can build the project and run the tests.
 ```shell
 cd my-voltdb-procedures
-mvn verify
+mvn clean verify
 ```
 You can then replace the schema, procedures, and tests with your own, and expand the project to cover your business requirements.
 
@@ -111,21 +119,21 @@ public class KeyValueIT extends IntegrationTestBase {
 }
 ```
 
-## License search path
+## License Requirement
 
-You can provide a path to your VoltDB license file via the constructor. If the path is not provided, the container class will try to load it from the following search path:
-- If `VOLTDB_LICENSE` environment variable is set it will use that value.
-- `license.xml` in the user home directory if it exists.
-- `license.xml` in the system temp directory if it exists.
+To run the VoltDB testcontainer, you will need a VoltDB license. The container class will search for a license file in the following locations (in order):
 
-If the license file cannot be found, the container will throw an exception. The validity of the license if verified
-by the actual VoltDB server process upo startup.
+1. The path specified by the `VOLTDB_LICENSE` environment variable
+2. `~/license.xml` (in your home directory)
+3. `/tmp/license.xml`
+
+If the license file cannot be found or is invalid, the tests will fail.
 
 # Test your procedures:
 
-Since this is an integration test, the procedure classes are compiled, unit tests are run, and the jar is created, then the integration test runs, since it depends on loading the procedure jar. To run all of these stages, you can use a single maven command.
+Integration tests run after the package phase because they load the compiled procedure jar file. The `mvn verify` command executes all build phases: compile, test (unit tests), package (jar creation), integration-test, and verify.
 ```shell
-mvn clean verify
+mvn verify
 ```
 
-With your stored procedure successfully tested, you can integrate the procedures and schema into your testing environment to prepare for migration to production.
+With your stored procedures successfully tested, you can integrate the procedures and schema into your testing environment to prepare for migration to production. 

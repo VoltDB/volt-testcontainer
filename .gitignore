@@ -29,3 +29,6 @@ target/
 # generated project used to test the archetype
 voltdb-stored-procedures-maven-quickstart/scripts/test-generated-project/
 
+/.DS_Store
+.DS_Store
+
