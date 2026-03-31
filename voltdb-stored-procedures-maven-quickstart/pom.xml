@@ -1,4 +1,13 @@
 <?xml version="1.0"?>
+<!--
+
+    Copyright (C) 2024 Volt Active Data Inc.
+
+    Use of this source code is governed by an MIT
+    license that can be found in the LICENSE file or at
+    https://opensource.org/licenses/MIT.
+
+-->
 <project
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
         xmlns="http://maven.apache.org/POM/4.0.0"
