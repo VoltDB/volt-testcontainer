@@ -44,92 +44,117 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("resource")
 public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
 
-    /** Default VoltDB developer edition image. */
+    /**
+     * Default VoltDB developer edition image.
+     */
     public static final String DEV_IMAGE = "voltactivedata/volt-developer-edition:14.1.0_voltdb";
+
+    /**
+     * Port used by VoltDB to accept client connections.
+     */
+    public static final int VOLTDB_CLIENT_PORT = 21211;
 
     private static final Network NETWORK = Network.newNetwork();
 
-    String startScript = "#!/bin/sh\n" +
-                         "# This file is part of VoltDB.\n" +
-                         "# Copyright (C) 2022 Volt Active Data Inc.\n" +
-                         "#\n" +
-                         "# A simple script to (optionally) initialize a voltdb directory and start\n" +
-                         "# a voltdb instance.  Suitable for simple container testing\n" +
-                         "#\n" +
-                         "# Assumes license is mounted at /etc/voltdb-license.xml, otherwise\n" +
-                         "# set VOLTDB_LICENSE environment variable\n" +
-                         "\n" +
-                         ": ${VOLTDB_START_CONFIG:=}\n" +
-                         ": ${VOLTDB_DIR:=$(pwd)}\n" +
-                         ": ${VOLTDB_CONFIG:=}\n" +
-                         ": ${VOLTDB_LICENSE:=/etc/voltdb-license.xml}\n" +
-                         ": ${VOLTDB_SCHEMA:=/etc/schemas}\n" +
-                         ": ${VOLTDB_CLASSES:=/etc/classes}\n" +
-                         "\n" +
-                         "s=\"\"\n" +
-                         "if [ -n \"${VOLTDB_SCHEMA}\" -a -e \"${VOLTDB_SCHEMA}\" ] ; then\n" +
-                         "  s=`ls ${VOLTDB_SCHEMA}/*.ddl ${VOLTDB_SCHEMA}/*.sql | tr '\\n' ',' | sed 's/,$/\\n/'`\n" +
-                         "fi\n" +
-                         "\n" +
-                         "j=\"\"\n" +
-                         "if [ -n \"${VOLTDB_CLASSES}\" -a -e \"${VOLTDB_CLASSES}\" ] ; then\n" +
-                         "  j=`ls ${VOLTDB_CLASSES}/*.jar | tr '\\n' ',' | sed 's/,$/\\n/'`\n" +
-                         "fi\n" +
-                         "\n" +
-                         "echo \"Schemas requested to load: \" $s\n" +
-                         "echo \"Classes requested to load: \" $j\n" +
-                         "\n" +
-                         "if [ ! -e ${VOLTDB_DIR}/voltdbroot ] ; then\n" +
-                         "    if [ -n \"${VOLTDB_CONFIG}\" -a -e \"${VOLTDB_CONFIG}\" ] ; then\n" +
-                         "        INIT_CMD=\"voltdb init -C ${VOLTDB_CONFIG} -D ${VOLTDB_DIR} --license=${VOLTDB_LICENSE}\"\n" +
-                         "    else\n" +
-                         "        INIT_CMD=\"voltdb init -D ${VOLTDB_DIR} --license=${VOLTDB_LICENSE}\"\n" +
-                         "    fi\n" +
-                         "    if [ ! -z $s ] ; then\n" +
-                         "        INIT_CMD=\"$INIT_CMD -s $s\"\n" +
-                         "    fi\n" +
-                         "    if [ ! -z $j ] ; then\n" +
-                         "        INIT_CMD=\"$INIT_CMD -j $j\"\n" +
-                         "    fi\n" +
-                         "    echo $INIT_CMD\n" +
-                         "    eval $INIT_CMD\n" +
-                         "fi\n" +
-                         "\n" +
-                         "exec voltdb start -D ${VOLTDB_DIR} ${VOLTDB_START_CONFIG} --topicspublic=%s --drpublic=%s \"$@\"\n";
+    String startScript = """
+            #!/bin/sh
+            # This file is part of VoltDB.
+            # Copyright (C) 2022 Volt Active Data Inc.
+            #
+            # A simple script to (optionally) initialize a voltdb directory and start
+            # a voltdb instance.  Suitable for simple container testing
+            #
+            # Assumes license is mounted at /etc/voltdb-license.xml, otherwise
+            # set VOLTDB_LICENSE environment variable
+            
+            : ${VOLTDB_START_CONFIG:=}
+            : ${VOLTDB_DIR:=$(pwd)}
+            : ${VOLTDB_CONFIG:=}
+            : ${VOLTDB_LICENSE:=/etc/voltdb-license.xml}
+            : ${VOLTDB_SCHEMA:=/etc/schemas}
+            : ${VOLTDB_CLASSES:=/etc/classes}
+            
+            s=""
+            if [ -n "${VOLTDB_SCHEMA}" -a -e "${VOLTDB_SCHEMA}" ] ; then
+              s=`ls ${VOLTDB_SCHEMA}/*.ddl ${VOLTDB_SCHEMA}/*.sql | tr '\\n' ',' | sed 's/,$/\\n/'`
+            fi
+            
+            j=""
+            if [ -n "${VOLTDB_CLASSES}" -a -e "${VOLTDB_CLASSES}" ] ; then
+              j=`ls ${VOLTDB_CLASSES}/*.jar | tr '\\n' ',' | sed 's/,$/\\n/'`
+            fi
+            
+            echo "Schemas requested to load: " $s
+            echo "Classes requested to load: " $j
+            
+            if [ ! -e ${VOLTDB_DIR}/voltdbroot ] ; then
+                if [ -n "${VOLTDB_CONFIG}" -a -e "${VOLTDB_CONFIG}" ] ; then
+                    INIT_CMD="voltdb init -C ${VOLTDB_CONFIG} -D ${VOLTDB_DIR} --license=${VOLTDB_LICENSE}"
+                else
+                    INIT_CMD="voltdb init -D ${VOLTDB_DIR} --license=${VOLTDB_LICENSE}"
+                fi
+                if [ ! -z $s ] ; then
+                    INIT_CMD="$INIT_CMD -s $s"
+                fi
+                if [ ! -z $j ] ; then
+                    INIT_CMD="$INIT_CMD -j $j"
+                fi
+                echo $INIT_CMD
+                eval $INIT_CMD
+            fi
+            
+            exec voltdb start -D ${VOLTDB_DIR} ${VOLTDB_START_CONFIG} --topicspublic=%s --drpublic=%s "$@"
+            """;
 
-    String deploymentTemplate = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
-                                "<deployment>\n" +
-                                "    <cluster hostcount=\"%d\" sitesperhost=\"8\" kfactor=\"%d\"/>\n" +
-                                "    <metrics enabled=\"true\" interval=\"60s\" maxbuffersize=\"200\" />\n" +
-                                "%s" +
-                                "</deployment>\n";
+    String deploymentTemplate = """
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+            <deployment>
+                <cluster hostcount="%d" sitesperhost="8" kfactor="%d"/>
+                <metrics enabled="true" interval="60s" maxbuffersize="200" />
+            %s\
+            </deployment>
+            """;
 
-    /** Network mode for the VoltDB container. */
+    /**
+     * Network mode for the VoltDB container.
+     */
     public enum NetworkType {
-        /** Use host networking mode. */
+        /**
+         * Use host networking mode.
+         */
         HOST,
-        /** Use Docker bridge networking mode. */
+        /**
+         * Use Docker bridge networking mode.
+         */
         DOCKER
     }
 
-    // This client is created automatically when cluster is up, dont close this its used for internal healthcheck.
+    // This client is created automatically when cluster is up, don't close this is used for internal health check.
     Client client;
     Client2 client2;
+
     private final String hostId;
+    private int kfactor;
+    private int hostcount;
+    private String containerName = "";
+    private boolean commandLogEnabled = true;
+
     private NetworkType networkType = NetworkType.HOST;
     private String topicPublicInterface;
     private String drPublicInterface;
     private boolean tlsEnabled = false;
+
     private String username = "";
     private String password = "";
     private String trustStorePassword = "";
     private String keyStorePassword = "";
     private String keyStorePath = "";
     private String trustStorePath = "";
-    private int kfactor = 0;
-    private int hostcount = 1;
-    private String containerName = "";
-    private boolean commandLogEnabled = true;
+
+    private String startCommand;
+    private String licensePath;
+    private String extraJarsDir;
+    private String deployment;
 
     /**
      * Creates a VoltDB container using a public, free Developer Edition container.
@@ -177,6 +202,26 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     }
 
     /**
+     * Creates a VoltDB container using a specified container image.
+     * <p>
+     * Assumes the license file is named "license.xml" and placed in the user home directory or system temp directory.
+     *
+     * @param image the image name of the Docker container
+     * @return a new VoltDB container instance
+     */
+    public static VoltDBContainer withImage(String image) {
+        return new VoltDBContainer(
+                0,
+                "",
+                image,
+                1,
+                0,
+                VoltDBCluster.getStartCommand(1),
+                null
+        );
+    }
+
+    /**
      * Creates a VoltDB container with the specified parameters.
      *
      * @param id           the ID of the container
@@ -190,8 +235,6 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     public VoltDBContainer(int id, String licensePath, String image, int hostCount, int kfactor, String startCommand, String extraJarsDir) {
         this(id, licensePath, image, hostCount, kfactor, null, startCommand, extraJarsDir);
     }
-
-    private String startCommand;
 
     /**
      * Creates a VoltDB container with the specified parameters.
@@ -210,18 +253,27 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         this.hostcount = hostcount;
         this.kfactor = kfactor;
         this.hostId = "host-" + id;
+        this.startCommand = startCommand;
+        this.licensePath = licensePath;
+        this.extraJarsDir = extraJarsDir;
+        this.deployment = deployment;
 
         // disable command log if using dev edition
         if (isDevImage(image)) {
             this.commandLogEnabled = false;
         }
 
+        topicPublicInterface = hostId;
+        drPublicInterface = hostId;
+    }
 
+    @Override
+    protected void configure() {
         if (deployment == null) {
             deployment = getDeployment();
         }
 
-        GenericContainer container = withEnv("VOLTDB_START_CONFIG", startCommand);
+        withEnv("VOLTDB_START_CONFIG", startCommand);
         withEnv("VOLTDB_CONFIG", "/etc/deployment.xml");
         withEnv("VOLTDB_OPTS",
                 "-Dlog4j.configuration=file:///opt/voltdb/tools/kubernetes/console-log4j.xml "
@@ -231,13 +283,11 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         withNetworkMode(NETWORK.getId());
         withNetwork(NETWORK);
         withNetworkAliases(hostId);
-        topicPublicInterface = hostId;
-        drPublicInterface = hostId;
 
         handleLicenseSetup(licensePath);
 
         withCopyToContainer(Transferable.of(deployment), "/etc/deployment.xml");
-        withExposedPorts(21212, 21211, 9092, 5555);
+        addExposedPorts(21212, VOLTDB_CLIENT_PORT, 9092, 5555);
         withCreateContainerCmdModifier(cmd -> cmd.withHostName(hostId));
         withReuse(true);
 
@@ -248,12 +298,221 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
             File[] jars = getJars(extraJarsDir);
             for (File jar : jars) {
                 String name = jar.getName();
-                container.withCopyToContainer(
+                withCopyToContainer(
                         MountableFile.forHostPath(jar.getAbsolutePath()),
                         "/opt/voltdb/lib/extension/" + name
                 );
             }
         }
+
+        // START_SCRIPT waiter
+        this.withCommand("/bin/bash", "-c",
+                "while [ ! -f /opt/voltdb/tools/entrypoint.sh ]; " +
+                "do sleep 1; done; /opt/voltdb/tools/entrypoint.sh"
+        );
+    }
+
+    /**
+     * Sets the host count for the VoltDB cluster.
+     *
+     * @param hostcount the number of hosts in the cluster
+     * @return this container instance for method chaining
+     */
+    public VoltDBContainer withHostCount(int hostcount) {
+        this.hostcount = hostcount;
+        return this;
+    }
+
+    /**
+     * Sets the kfactor for the VoltDB cluster.
+     *
+     * @param kfactor the kfactor value to set
+     * @return this container instance for method chaining
+     */
+    public VoltDBContainer withKfactor(int kfactor) {
+        this.kfactor = kfactor;
+        return this;
+    }
+
+    /**
+     * Enables or disables command logging in the deployment configuration.
+     * Command logging is not supported by the VoltDB developer edition, so it is automatically
+     * disabled when a developer edition image is detected. Use this method to override
+     * the auto-detected default.
+     *
+     * @param enabled true to enable command logging (enterprise default), false to explicitly disable it
+     * @return this container instance for method chaining
+     */
+    public VoltDBContainer withCommandLogEnabled(boolean enabled) {
+        this.commandLogEnabled = enabled;
+        return this;
+    }
+
+    /**
+     * Controls how public interfaces of the VoltDB server are configured. Both DR and Topics
+     * protocols must be aware of the public interfaces used to communicate with the VoltDB instance.
+     * If the network type is {@code NetworkType.DOCKER} then we assume all communication is within
+     * a docker network and these interfaces advertise container ports (e.g., 9092 for topics).
+     * If the network type is {@code NetworkType.HOST} then we assume all communication is from
+     * the host machine and these interfaces advertise mapped (external) ports.
+     * <p>
+     * For {@code NetworkType.DOCKER} mode hostnames can be set separately using
+     * #withTopicPublicInterface or #withDrPublicInterface. In case of {@code NetworkType.HOST} "localhost" is assumed.
+     * In case of {@code NetworkType.DOCKER} we search for network aliases and settle for container id if none were found.
+     * <p>
+     * The default network type is HOST.
+     *
+     * @param networkType the network type to use
+     * @return this container instance for method chaining
+     */
+    public VoltDBContainer withNetworkType(NetworkType networkType) {
+        this.networkType = networkType;
+        return this;
+    }
+
+    /**
+     * Sets the public interface hostname for Kafka topics communication.
+     *
+     * @param topicPublicInterface the hostname to use for topics
+     * @return this container instance for method chaining
+     */
+    public VoltDBContainer withTopicPublicInterface(String topicPublicInterface) {
+        this.topicPublicInterface = topicPublicInterface;
+        return this;
+    }
+
+    /**
+     * Sets the public interface hostname for DR (Database Replication) communication.
+     *
+     * @param drPublicInterface the hostname to use for DR
+     * @return this container instance for method chaining
+     */
+    public VoltDBContainer withDrPublicInterface(String drPublicInterface) {
+        this.drPublicInterface = drPublicInterface;
+        return this;
+    }
+
+    /**
+     * Sets the flag to enable or disable TLS for the VoltDBContainer.
+     *
+     * @param tlsEnabled true to enable TLS, false to disable TLS
+     * @return this container instance for method chaining
+     */
+    public VoltDBContainer withTlsEnabled(boolean tlsEnabled) {
+        this.tlsEnabled = tlsEnabled;
+        return this;
+    }
+
+    /**
+     * Sets the username for the VoltDBContainer.
+     *
+     * @param username the username to set
+     * @return this container instance for method chaining
+     */
+    public VoltDBContainer withUsername(String username) {
+        this.username = username;
+        return this;
+    }
+
+    /**
+     * Sets the password for the VoltDBContainer.
+     *
+     * @param password the password to set
+     * @return this container instance for method chaining
+     */
+    public VoltDBContainer withPassword(String password) {
+        this.password = password;
+        return this;
+    }
+
+    /**
+     * Sets the password for the truststore file.
+     *
+     * @param trustStorePassword the password for the truststore file
+     * @return this container instance for method chaining
+     */
+    public VoltDBContainer withTrustStorePassword(String trustStorePassword) {
+        this.trustStorePassword = trustStorePassword;
+        return this;
+    }
+
+    /**
+     * Sets the password for the keystore file.
+     *
+     * @param keyStorePassword the password for the keystore file
+     * @return this container instance for method chaining
+     */
+    public VoltDBContainer withKeyStorePassword(String keyStorePassword) {
+        this.keyStorePassword = keyStorePassword;
+        return this;
+    }
+
+    /**
+     * Sets the path to the keystore file.
+     *
+     * @param keyStorePath the path to the keystore file
+     * @return this container instance for method chaining
+     */
+    public VoltDBContainer withKeyStorePath(String keyStorePath) {
+        this.keyStorePath = keyStorePath;
+        return this;
+    }
+
+    /**
+     * Sets the path to the truststore file.
+     *
+     * @param trustStorePath the path to the truststore file
+     * @return this container instance for method chaining
+     */
+    public VoltDBContainer withTrustStorePath(String trustStorePath) {
+        this.trustStorePath = trustStorePath;
+        return this;
+    }
+
+    /**
+     * Sets the deployment content to use for this container.
+     * When set, this deployment will be used instead of the auto-generated one.
+     *
+     * @param deployment the deployment XML content
+     * @return this container instance for method chaining
+     */
+    public VoltDBContainer withDeployment(String deployment) {
+        this.deployment = deployment;
+        return this;
+    }
+
+    /**
+     * Sets the start command for the VoltDB container.
+     *
+     * @param startCommand the start command to use
+     * @return this container instance for method chaining
+     */
+    public VoltDBContainer withStartCommand(String startCommand) {
+        this.startCommand = startCommand;
+        return this;
+    }
+
+    /**
+     * Sets the path to the license file.
+     * If null, the home directory and system temp directory will be searched for the "license.xml" file.
+     *
+     * @param licensePath the path to the license file
+     * @return this container instance for method chaining
+     */
+    public VoltDBContainer withLicensePath(String licensePath) {
+        this.licensePath = licensePath;
+        return this;
+    }
+
+    /**
+     * Sets the folder from where extra jars need to be added to the server extension directory.
+     *
+     * @param extraJarsDir the path to the folder containing extra jars, can be null
+     * @return this container instance for method chaining
+     */
+    public VoltDBContainer withExtraJarsDir(String extraJarsDir) {
+        this.extraJarsDir = extraJarsDir;
+        return this;
     }
 
     private void handleLicenseSetup(String licensePath) {
@@ -285,15 +544,6 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         }
 
         return result;
-    }
-
-    @Override
-    protected void configure() {
-        // START_SCRIPT waiter
-        this.withCommand("/bin/bash", "-c",
-                "while [ ! -f /opt/voltdb/tools/entrypoint.sh ]; " +
-                "do sleep 1; done; /opt/voltdb/tools/entrypoint.sh"
-        );
     }
 
     @Override
@@ -347,13 +597,19 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
 
     /**
      * Executes the given DDL schema on the VoltDB cluster.
+     * <p>
+     * If the client is not connected, it will be connected before executing the DDL schema.
      *
      * @param schema the DDL schema to execute
      * @return a {@link ClientResponse} object representing the result of the DDL execution
-     * @throws IOException       if an I/O error occurs while executing the DDL schema
+     * @throws IOException       if an I/O error occurs while attempting to connect to the client or executing the DDL schema
      * @throws ProcCallException if an error occurs during the DDL execution process
      */
     public ClientResponse runDDL(String schema) throws IOException, ProcCallException {
+        if (client == null) {
+            client = getConnectedClient();
+        }
+
         return client.callProcedure("@AdHoc", schema);
     }
 
@@ -413,7 +669,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
      * @throws java.io.IOException if any.
      */
     public Client getConnectedClient(int timeoutMillis) throws IOException {
-        int mappedPort = getMappedPort(21211);
+        int mappedPort = getMappedPort(VOLTDB_CLIENT_PORT);
         ClientConfig config = new ClientConfig(username, password);
         if (tlsEnabled) {
             config.enableSSL();
@@ -462,7 +718,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
      * @throws IOException if any.
      */
     public Client2 getConnectedClient2(int timeoutMillis) throws IOException {
-        int mappedPort = getMappedPort(21211);
+        int mappedPort = getMappedPort(VOLTDB_CLIENT_PORT);
         Client2Config config = new Client2Config();
         if (tlsEnabled) {
             config.enableSSL();
@@ -595,8 +851,6 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
      */
     protected void setKfactor(int kfactor) {
         this.kfactor = kfactor;
-        String deployment = getDeployment();
-        withCopyToContainer(Transferable.of(deployment), "/etc/deployment.xml");
     }
 
     /**
@@ -609,7 +863,6 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
      */
     protected void setCommandLogEnabled(boolean enabled) {
         this.commandLogEnabled = enabled;
-        withCopyToContainer(Transferable.of(getDeployment()), "/etc/deployment.xml");
     }
 
     public String getContainerName() {
