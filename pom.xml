@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright (C) 2024 Volt Active Data Inc.
+    Copyright (C) 2025-2026 Volt Active Data Inc.
 
     Use of this source code is governed by an MIT
     license that can be found in the LICENSE file or at
@@ -178,7 +178,7 @@
                     <failIfUnknown>true</failIfUnknown>
                     <concurrencyFactor>4</concurrencyFactor>
                     <properties>
-                        <project.inceptionYear>2024</project.inceptionYear>
+                        <project.inceptionYear>2025</project.inceptionYear>
                     </properties>
                     <licenseSets>
                         <licenseSet>
