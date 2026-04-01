@@ -263,7 +263,7 @@ See README.md for more details.
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.7.0</version>
+                <version>3.12.0</version>
                 <configuration>
                     <excludePackageNames>org.voltdb.testparser</excludePackageNames>
                 </configuration>
