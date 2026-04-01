@@ -187,6 +187,7 @@
                                 <exclude>LICENSE</exclude>
                                 <exclude>**/Jenkinsfile</exclude>
                                 <exclude>**/*.ddl</exclude>
+                                <exclude>**/goal.txt</exclude>
                             </excludes>
                         </licenseSet>
                     </licenseSets>
