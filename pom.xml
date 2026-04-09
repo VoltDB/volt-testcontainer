@@ -1,22 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?><!--
-    This file is part of VoltDB.
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
 
-    Copyright (C) 2023-2026 Volt Active Data, Inc.
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Affero General Public License as
-    published by the Free Software Foundation, either version 3 of the
-    License, or (at your option) any later version.
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Affero General Public License for more details.
-    You should have received a copy of the GNU Affero General Public License
-    along with VoltDB.  If not, see <http://www.gnu.org/licenses/>.
+    Copyright (C) 2025-2026 Volt Active Data Inc.
 
-    This pom is used to:
-    - resolve dependencies from remote repo.
-    - set dependency version properties in one place (see: https://maven.apache.org/pom.html#Inheritance)
-    - set version in one place for all child projects (see: https://maven.apache.org/maven-ci-friendly.html)
+    Use of this source code is governed by an MIT
+    license that can be found in the LICENSE file or at
+    https://opensource.org/licenses/MIT.
+
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -70,8 +60,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+
+        <maven.compiler.release>17</maven.compiler.release>
 
         <!-- volt artifact versions - must be published versions -->
         <volt-procedure-api.version>15.0.0</volt-procedure-api.version>
@@ -83,6 +73,8 @@
         <assertj.version>3.27.4</assertj.version>
         <testcontainerVersion>2.0.3</testcontainerVersion>
         <slf4jVersion>1.7.36</slf4jVersion>
+
+        <license-maven-plugin.version>4.3</license-maven-plugin.version>
     </properties>
 
     <profiles>
@@ -103,7 +95,7 @@
                     <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>0.8.0</version>
+                        <version>0.9.0</version>
                         <extensions>true</extensions>
                         <configuration>
                             <serverId>central</serverId>
@@ -144,13 +136,18 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.15.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>3.1.1</version>
+                <version>3.3.1</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>2.2.1</version>
+                <version>3.4.0</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -163,15 +160,145 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.7.0</version>
-                <configuration>
-                    <source>17</source>
-                </configuration>
+                <version>3.12.0</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
                         <goals>
                             <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>${license-maven-plugin.version}</version>
+                <configuration>
+                    <reportSkipped>true</reportSkipped>
+                    <strictCheck>true</strictCheck>
+                    <aggregate>true</aggregate>
+                    <failIfMissing>true</failIfMissing>
+                    <failIfUnknown>true</failIfUnknown>
+                    <concurrencyFactor>4</concurrencyFactor>
+                    <properties>
+                        <project.inceptionYear>2025</project.inceptionYear>
+                    </properties>
+                    <licenseSets>
+                        <licenseSet>
+                            <header>etc/license.txt</header>
+                            <excludes>
+                                <exclude>LICENSE</exclude>
+                                <exclude>**/Jenkinsfile</exclude>
+                                <exclude>**/*.ddl</exclude>
+                                <exclude>**/goal.txt</exclude>
+                            </excludes>
+                        </licenseSet>
+                    </licenseSets>
+                    <mapping>
+                        <go>SLASHSTAR_STYLE</go>
+                    </mapping>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.mycila</groupId>
+                        <artifactId>license-maven-plugin-git</artifactId>
+                        <version>${license-maven-plugin.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>check-license-headers</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>2.7.1</version>
+
+                <configuration>
+                    <force>true</force>
+
+                    <!-- aggregate-download-licenses -->
+                    <errorRemedy>xmlOutput</errorRemedy>
+                    <includeTransitiveDependencies>true</includeTransitiveDependencies>
+                    <organizeLicensesByDependencies>true</organizeLicensesByDependencies>
+                    <cleanLicensesOutputDirectory>true</cleanLicensesOutputDirectory>
+                    <licensesOutputDirectory>${license-report-dir}/licenses
+                    </licensesOutputDirectory>
+                    <licensesOutputFile>
+                        ${license-report-dir}/downloaded-licenses-report.xml
+                    </licensesOutputFile>
+                    <licensesErrorsFile>${license-report-dir}/licenses-errors.xml
+                    </licensesErrorsFile>
+
+                    <excludedGroups>org.voltdb</excludedGroups>
+                    <excludedScopes>test,system,provided</excludedScopes>
+
+                    <!-- aggregate-third-party-report -->
+                    <acceptPomPackaging>true</acceptPomPackaging>
+                    <outputDirectory>${license-report-dir}</outputDirectory>
+                    <thirdPartyFilename>third-party-licenses.txt</thirdPartyFilename>
+                    <fileTemplate>etc/third-party-file-groupByMultiLicense.ftl
+                    </fileTemplate>
+
+                    <failOnMissing>true</failOnMissing>
+                    <failOnBlacklist>true</failOnBlacklist>
+                    <includeOptional>false</includeOptional>
+
+                    <includedLicenses>
+                        <includedLicense>Apache 2.0</includedLicense>
+                        <includedLicense>MIT License</includedLicense>
+                        <includedLicense>BSD Licence 3</includedLicense>
+                        <includedLicense>Eclipse Public License 1.0</includedLicense>
+                    </includedLicenses>
+
+                    <licenseMerges>
+                        <licenseMerge>
+                            Apache 2.0 |
+                            Apache-2.0 |
+                            Apache 2 |
+                            ASL, version 2 |
+                            The Apache License, Version 2.0 |
+                            Apache License Version 2.0 |
+                            Apache License 2.0 |
+                            Apache Software License - Version 2.0 |
+                            The Apache Software License, Version 2.0 |
+                            The Apache Software License, version 2.0 |
+                            Apache License, Version 2.0 |
+                            Similar to Apache License but with the acknowledgment clause
+                            removed |
+                            apache_v2
+                        </licenseMerge>
+                        <licenseMerge>
+                            MIT License |
+                            MIT |
+                            The MIT License
+                        </licenseMerge>
+                        <licenseMerge>
+                            BSD Licence 3 |
+                            3-Clause BSD License |
+                            BSD-3-Clause |
+                            New BSD License (3-clause BSD license) |
+                            New BSD License
+                        </licenseMerge>
+                        <licenseMerge>
+                            Eclipse Public License 1.0 |
+                            Eclipse Public License, Version 1.0 |
+                            Eclipse Public License - Version 1.0
+                        </licenseMerge>
+                    </licenseMerges>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>add-third-party</id>
+                        <goals>
+                            <goal>add-third-party</goal>
                         </goals>
                     </execution>
                 </executions>

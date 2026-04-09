@@ -30,7 +30,7 @@ pipeline {
 
                     def currentVersion = sh(
                         returnStdout: true,
-                        script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout"
+                        script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout -ntp"
                     ).trim()
 
                     echo "Building version: ${currentVersion}"
@@ -77,7 +77,7 @@ pipeline {
 
                     // Run Maven build and tests
                     sh '''
-                       mvn clean install javadoc:javadoc archetype:update-local-catalog
+                       mvn clean install javadoc:javadoc archetype:update-local-catalog -ntp
                     '''
                 }
             }

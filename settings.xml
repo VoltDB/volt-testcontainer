@@ -1,7 +1,10 @@
 <!--
 
-    This file is part of Volt Active Data.
-    Copyright (C) 2024 Volt Active Data Inc. All rights reserved.
+    Copyright (C) 2025-2026 Volt Active Data Inc.
+
+    Use of this source code is governed by an MIT
+    license that can be found in the LICENSE file or at
+    https://opensource.org/licenses/MIT.
 
 -->
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"

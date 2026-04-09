@@ -1,6 +1,9 @@
 /*
- * This file is part of VoltSP.
- * Copyright (C) 2024-2025 Volt Active Data Inc. All rights reserved.
+ * Copyright (C) 2025-2026 Volt Active Data Inc.
+ *
+ * Use of this source code is governed by an MIT
+ * license that can be found in the LICENSE file or at
+ * https://opensource.org/licenses/MIT.
  */
 package org.voltdbtest.testcontainer;
 

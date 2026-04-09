@@ -75,7 +75,7 @@ pipeline {
                 script {
                     startedStage('Validate Version')
                     
-                    def currentVersion = sh(returnStdout: true, script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout").trim()
+                    def currentVersion = sh(returnStdout: true, script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout -ntp").trim()
                     env.CURRENT_VERSION = currentVersion
                     echo "Version in pom.xml: ${currentVersion}"
 
@@ -127,7 +127,7 @@ pipeline {
                     }
 
                     sh '''
-                       mvn clean install javadoc:javadoc archetype:update-local-catalog
+                       mvn clean install javadoc:javadoc archetype:update-local-catalog -ntp
                     '''
                 }
             }
