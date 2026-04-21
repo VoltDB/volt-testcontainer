@@ -5,8 +5,10 @@
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  */
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.voltdb.VoltTable;
 import org.voltdb.client.Client2;
 import org.voltdb.client.ClientResponse;
 import org.voltdb.client.ProcCallException;
@@ -17,7 +19,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * Verifies security-related cluster configuration options: deployment XML
@@ -61,6 +66,48 @@ public class VoltDBClusterSecurityIT extends TestBase {
         }
     }
 
+    @Test
+    public void testWithDeploymentIsApplied() throws IOException, ProcCallException {
+        cluster = new VoltDBCluster(validLicensePath, VOLTDB_IMAGE);
+        cluster.withDeployment("custom-deployment.xml");
+        cluster.start();
+
+        assertEquals("2", readSitesPerHost(cluster),
+                "Custom deployment passed via withDeployment() must be applied "
+                + "(auto-generated default is 8)");
+    }
+
+    @Test
+    public void testWithDeploymentContentIsApplied() throws IOException, ProcCallException {
+        String customDeployment = """
+                <?xml version="1.0" encoding="UTF-8"?>\
+                <deployment>\
+                    <cluster hostcount="1" sitesperhost="3" kfactor="0"/>\
+                </deployment>""";
+
+        cluster = new VoltDBCluster(validLicensePath, VOLTDB_IMAGE);
+        cluster.withDeploymentContent(customDeployment);
+        cluster.start();
+
+        assertEquals("3", readSitesPerHost(cluster),
+                "Custom deployment passed via withDeploymentContent() must be applied");
+    }
+
+    private static String readSitesPerHost(VoltDBCluster cluster)
+            throws IOException, ProcCallException {
+        ClientResponse resp = cluster.callProcedure("@SystemInformation", "DEPLOYMENT");
+        assertEquals(ClientResponse.SUCCESS, resp.getStatus());
+
+        for (VoltTable table : resp.getResults()) {
+            while (table.advanceRow()) {
+                if ("sitesperhost".equals(table.getString("PROPERTY"))) {
+                    return table.getString("VALUE");
+                }
+            }
+        }
+        return null;
+    }
+
     /**
      * Multiple security configurations can be chained before {@code start()};
      * the cluster must start and accept connections.
@@ -88,9 +135,9 @@ public class VoltDBClusterSecurityIT extends TestBase {
     public void testMultiNodeSecureCluster() throws IOException, ProcCallException {
         cluster = new VoltDBCluster(validLicensePath, VOLTDB_IMAGE, 3, 1);
         cluster
-            .withUserNameAndPassword("testuser", "testpass")
-            .withDeploymentContent(
-                    "<?xml version=\"1.0\"?><deployment><cluster kfactor=\"1\"/></deployment>");
+                .withUserNameAndPassword("testuser", "testpass")
+                .withDeploymentContent(
+                        "<?xml version=\"1.0\"?><deployment><cluster kfactor=\"1\"/></deployment>");
 
         cluster.start();
 

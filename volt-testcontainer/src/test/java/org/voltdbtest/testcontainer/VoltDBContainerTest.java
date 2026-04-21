@@ -182,16 +182,39 @@ public class VoltDBContainerTest {
     }
 
     @Test
-    void withDeploymentReturnsSameInstance() throws IOException {
+    void withDeploymentContentReturnsSameInstance() throws IOException {
         // Given
         VoltDBContainer container = createContainer();
 
         // When
-        VoltDBContainer result = container.withDeployment("<deployment/>");
+        VoltDBContainer result = container.withDeploymentContent("<deployment/>");
         result.configure();
 
         // Then
         assertThat(result).isSameAs(container);
+    }
+
+    @Test
+    void withDeploymentLoadsClasspathResource() throws IOException {
+        // Given
+        VoltDBContainer container = createContainer();
+
+        // When
+        VoltDBContainer result = container.withDeployment("eng29007-deployment.xml");
+        result.configure();
+
+        // Then
+        assertThat(result).isSameAs(container);
+    }
+
+    @Test
+    void withDeploymentRejectsMissingResource() throws IOException {
+        // Given
+        VoltDBContainer container = createContainer();
+
+        // Then
+        assertThatThrownBy(() -> container.withDeployment("does-not-exist.xml"))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

@@ -26,6 +26,7 @@ import org.voltdb.client.ProcCallException;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -470,14 +471,34 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     }
 
     /**
+     * Sets the deployment for this container from a classpath resource.
+     * When set, this deployment will be used instead of the auto-generated one.
+     *
+     * @param resourcePath path to a deployment XML file on the classpath
+     * @return this container instance for method chaining
+     * @throws IllegalArgumentException if the resource cannot be found
+     */
+    public VoltDBContainer withDeployment(String resourcePath) {
+        try (InputStream in = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
+            if (in == null) {
+                throw new IllegalArgumentException("Classpath resource not found: " + resourcePath);
+            }
+            this.deployment = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+        return this;
+    }
+
+    /**
      * Sets the deployment content to use for this container.
      * When set, this deployment will be used instead of the auto-generated one.
      *
-     * @param deployment the deployment XML content
+     * @param deploymentContent the deployment XML content
      * @return this container instance for method chaining
      */
-    public VoltDBContainer withDeployment(String deployment) {
-        this.deployment = deployment;
+    public VoltDBContainer withDeploymentContent(String deploymentContent) {
+        this.deployment = deploymentContent;
         return this;
     }
 

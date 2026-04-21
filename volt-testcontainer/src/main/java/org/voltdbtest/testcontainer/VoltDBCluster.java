@@ -684,7 +684,7 @@ public class VoltDBCluster {
      */
     public VoltDBCluster withDeploymentContent(String deploymentContent) {
         for (VoltDBContainer voltDBContainer : containers()) {
-            voltDBContainer.withCopyToContainer(Transferable.of(deploymentContent), "/etc/deployment.xml");
+            voltDBContainer.withDeploymentContent(deploymentContent);
         }
         return this;
     }
