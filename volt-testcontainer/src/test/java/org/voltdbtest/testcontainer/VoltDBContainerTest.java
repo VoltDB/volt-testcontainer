@@ -200,7 +200,7 @@ public class VoltDBContainerTest {
         VoltDBContainer container = createContainer();
 
         // When
-        VoltDBContainer result = container.withDeployment("eng29007-deployment.xml");
+        VoltDBContainer result = container.withDeployment("custom-deployment.xml");
         result.configure();
 
         // Then
