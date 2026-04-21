@@ -8,9 +8,9 @@
 package org.voltdbtest.testcontainer;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.Network;
+import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.utility.MountableFile;
@@ -34,6 +34,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -112,8 +113,6 @@ public class VoltDBCluster {
      */
     protected String licensePath;
 
-    private Logger logger = LoggerFactory.getLogger(VoltDBCluster.class);
-
     /**
      * Represents a VoltDB cluster with a single host for testing purposes.
      *
@@ -179,7 +178,6 @@ public class VoltDBCluster {
             String host = String.format("%s-%d", "host", i);
             VoltDBContainer container = new VoltDBContainer(i, licensePath, image, hostCount, kfactor, startCommand, extraJarsDir);
             container.setKfactor(kfactor);
-            container.withLogConsumer(new Slf4jLogConsumer(logger));
             containers.put(host, container);
             images.put(host, image);
         }
@@ -551,7 +549,25 @@ public class VoltDBCluster {
      * @return the updated VoltDBCluster object
      */
     public VoltDBCluster withLogConsumer(Logger logger) {
-        this.logger = logger;
+        for (VoltDBContainer container : containers()) {
+            container.withLogConsumer(new Slf4jLogConsumer(logger));
+
+        }
+
+        return this;
+    }
+
+    /**
+     * Configures a consumer to attach at container startup.
+     *
+     * @param consumer the callback to use for reporting container output
+     * @return the updated VoltDBCluster object
+     */
+    public VoltDBCluster withLogConsumer(Consumer<OutputFrame> consumer) {
+        for (VoltDBContainer container : containers()) {
+            container.withLogConsumer(consumer);
+
+        }
 
         return this;
     }
