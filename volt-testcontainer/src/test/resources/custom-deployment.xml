@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (C) 2025-2026 Volt Active Data Inc.
+
+    Use of this source code is governed by an MIT
+    license that can be found in the LICENSE file or at
+    https://opensource.org/licenses/MIT.
+
+-->
 <deployment>
     <cluster hostcount="1" sitesperhost="2" kfactor="0"/>
 </deployment>
