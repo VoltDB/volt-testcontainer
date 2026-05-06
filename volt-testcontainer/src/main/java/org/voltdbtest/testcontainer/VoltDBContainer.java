@@ -31,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -158,6 +159,12 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     private String deployment;
 
     /**
+     * Extra {@code -D} JVM system properties to forward to the VoltDB server JVM via
+     * the {@code VOLTDB_OPTS} environment variable. Insertion order is preserved.
+     */
+    private final Map<String, String> javaProperties = new LinkedHashMap<>();
+
+    /**
      * Creates a VoltDB container using a public, free Developer Edition container.
      * <p>
      * Does not add any jars to its extension directory.
@@ -276,10 +283,7 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
 
         withEnv("VOLTDB_START_CONFIG", startCommand);
         withEnv("VOLTDB_CONFIG", "/etc/deployment.xml");
-        withEnv("VOLTDB_OPTS",
-                "-Dlog4j.configuration=file:///opt/voltdb/tools/kubernetes/console-log4j.xml "
-                + " --add-opens=java.base/java.net=ALL-UNNAMED"
-                + " --add-opens=java.base/java.lang.reflect=ALL-UNNAMED");
+        withEnv("VOLTDB_OPTS", buildVoltdbOpts());
 
         withNetworkMode(NETWORK.getId());
         withNetwork(NETWORK);
@@ -534,6 +538,57 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
     public VoltDBContainer withExtraJarsDir(String extraJarsDir) {
         this.extraJarsDir = extraJarsDir;
         return this;
+    }
+
+    /**
+     * Adds a {@code -D} JVM system property that will be forwarded to the VoltDB server JVM
+     * via the {@code VOLTDB_OPTS} environment variable. Subsequent calls with the same key
+     * overwrite the previous value. Properties take effect on the next container start.
+     * <p>
+     * Values must not contain whitespace; the JVM splits {@code VOLTDB_OPTS} on spaces, so
+     * a value like {@code "a b"} would be parsed as two separate arguments.
+     *
+     * @param key   the property name (must be non-null and non-empty)
+     * @param value the property value (must be non-null; may be empty)
+     * @return this container instance for method chaining
+     * @throws NullPointerException     if {@code key} or {@code value} is null
+     * @throws IllegalArgumentException if {@code key} is empty or contains whitespace,
+     *                                  or if {@code value} contains whitespace
+     */
+    public VoltDBContainer withJavaProperty(String key, String value) {
+        Objects.requireNonNull(key, "key must not be null");
+        Objects.requireNonNull(value, "value must not be null");
+        if (key.isEmpty()) {
+            throw new IllegalArgumentException("key must not be empty");
+        }
+        if (containsWhitespace(key)) {
+            throw new IllegalArgumentException("key must not contain whitespace: " + key);
+        }
+        if (containsWhitespace(value)) {
+            throw new IllegalArgumentException("value must not contain whitespace: " + value);
+        }
+        this.javaProperties.put(key, value);
+        return this;
+    }
+
+    private static boolean containsWhitespace(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            if (Character.isWhitespace(s.charAt(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String buildVoltdbOpts() {
+        StringBuilder sb = new StringBuilder()
+                .append("-Dlog4j.configuration=file:///opt/voltdb/tools/kubernetes/console-log4j.xml ")
+                .append(" --add-opens=java.base/java.net=ALL-UNNAMED")
+                .append(" --add-opens=java.base/java.lang.reflect=ALL-UNNAMED");
+        for (Map.Entry<String, String> e : javaProperties.entrySet()) {
+            sb.append(" -D").append(e.getKey()).append('=').append(e.getValue());
+        }
+        return sb.toString();
     }
 
     private void handleLicenseSetup(String licensePath) {

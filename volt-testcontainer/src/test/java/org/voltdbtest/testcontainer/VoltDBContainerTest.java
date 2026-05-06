@@ -390,4 +390,161 @@ public class VoltDBContainerTest {
         assertThat(container.getExposedPorts())
                 .contains(VoltDBContainer.VOLTDB_CLIENT_PORT);
     }
+
+    @Test
+    void withJavaPropertyReturnsSameInstance() throws IOException {
+        // Given
+        VoltDBContainer container = createContainer();
+
+        // When
+        VoltDBContainer result = container.withJavaProperty("voltdb.test.flag", "true");
+
+        // Then
+        assertThat(result).isSameAs(container);
+    }
+
+    @Test
+    void withJavaPropertyAppendsToVoltdbOpts() throws IOException {
+        // Given
+        VoltDBContainer container = createContainer()
+                .withJavaProperty("voltdb.test.streamingSnapshot.failOnDemand", "true")
+                .withJavaProperty("custom.flag", "42");
+
+        // When
+        container.configure();
+
+        // Then — the env value should retain the base options and append both -D entries
+        // in insertion order.
+        String voltdbOpts = container.getEnvMap().get("VOLTDB_OPTS");
+        assertThat(voltdbOpts)
+                .as("base options must still be present")
+                .contains("-Dlog4j.configuration=")
+                .contains("--add-opens=java.base/java.net=ALL-UNNAMED")
+                .contains("--add-opens=java.base/java.lang.reflect=ALL-UNNAMED");
+        assertThat(voltdbOpts)
+                .as("user-supplied properties must be appended")
+                .contains(" -Dvoltdb.test.streamingSnapshot.failOnDemand=true")
+                .contains(" -Dcustom.flag=42");
+        assertThat(voltdbOpts.indexOf(" -Dvoltdb.test.streamingSnapshot.failOnDemand=true"))
+                .as("insertion order must be preserved")
+                .isLessThan(voltdbOpts.indexOf(" -Dcustom.flag=42"));
+    }
+
+    @Test
+    void voltdbOptsHasNoExtraPropertiesByDefault() throws IOException {
+        // Given
+        VoltDBContainer container = createContainer();
+
+        // When
+        container.configure();
+
+        // Then — no extra -D entries beyond the hardcoded baseline
+        String voltdbOpts = container.getEnvMap().get("VOLTDB_OPTS");
+        assertThat(voltdbOpts).isNotNull();
+        assertThat(countSubstring(voltdbOpts, " -D"))
+                .as("only the baseline log4j -D should appear when no user properties are set")
+                .isZero();
+        assertThat(voltdbOpts).startsWith("-Dlog4j.configuration=");
+    }
+
+    @Test
+    void withJavaPropertyOverwritesPreviousValueForSameKey() throws IOException {
+        // Given
+        VoltDBContainer container = createContainer()
+                .withJavaProperty("voltdb.test.flag", "first")
+                .withJavaProperty("voltdb.test.flag", "second");
+
+        // When
+        container.configure();
+
+        // Then
+        String voltdbOpts = container.getEnvMap().get("VOLTDB_OPTS");
+        assertThat(voltdbOpts).contains(" -Dvoltdb.test.flag=second");
+        assertThat(voltdbOpts).doesNotContain("=first");
+    }
+
+    @Test
+    void withJavaPropertyAllowsEmptyValue() throws IOException {
+        // Given
+        VoltDBContainer container = createContainer()
+                .withJavaProperty("voltdb.test.flag", "");
+
+        // When
+        container.configure();
+
+        // Then
+        String voltdbOpts = container.getEnvMap().get("VOLTDB_OPTS");
+        assertThat(voltdbOpts).contains(" -Dvoltdb.test.flag=");
+    }
+
+    @Test
+    void withJavaPropertyRejectsNullKey() throws IOException {
+        VoltDBContainer container = createContainer();
+        assertThatThrownBy(() -> container.withJavaProperty(null, "v"))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void withJavaPropertyRejectsNullValue() throws IOException {
+        VoltDBContainer container = createContainer();
+        assertThatThrownBy(() -> container.withJavaProperty("k", null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void withJavaPropertyRejectsEmptyKey() throws IOException {
+        VoltDBContainer container = createContainer();
+        assertThatThrownBy(() -> container.withJavaProperty("", "v"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void withJavaPropertyRejectsWhitespaceInKey() throws IOException {
+        VoltDBContainer container = createContainer();
+        assertThatThrownBy(() -> container.withJavaProperty("bad key", "v"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void withJavaPropertyRejectsWhitespaceInValue() throws IOException {
+        VoltDBContainer container = createContainer();
+        assertThatThrownBy(() -> container.withJavaProperty("k", "bad value"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void clusterWithJavaPropertyFansOutToAllContainers() throws IOException {
+        // Given
+        Path fakeLicense = tempDir.resolve("license.xml");
+        Files.writeString(fakeLicense, "<license/>");
+        VoltDBCluster cluster = new VoltDBCluster(
+                fakeLicense.toAbsolutePath().toString(),
+                VoltDBContainer.DEV_IMAGE,
+                3,
+                1
+        );
+
+        // When
+        VoltDBCluster result = cluster.withJavaProperty("voltdb.test.fanout", "yes");
+
+        // Then
+        assertThat(result).isSameAs(cluster);
+        assertThat(cluster.containers()).hasSize(3);
+        for (VoltDBContainer c : cluster.containers()) {
+            c.configure();
+            assertThat(c.getEnvMap().get("VOLTDB_OPTS"))
+                    .as("each container in the cluster must receive the property")
+                    .contains(" -Dvoltdb.test.fanout=yes");
+        }
+    }
+
+    private static int countSubstring(String haystack, String needle) {
+        int count = 0;
+        int from = 0;
+        while ((from = haystack.indexOf(needle, from)) != -1) {
+            count++;
+            from += needle.length();
+        }
+        return count;
+    }
 }

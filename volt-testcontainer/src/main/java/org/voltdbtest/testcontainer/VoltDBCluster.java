@@ -634,6 +634,30 @@ public class VoltDBCluster {
     }
 
     /**
+     * Adds a {@code -D} JVM system property that will be forwarded to every VoltDB server JVM
+     * in the cluster via the {@code VOLTDB_OPTS} environment variable. Subsequent calls with
+     * the same key overwrite the previous value on each container. Properties take effect on
+     * the next container start.
+     * <p>
+     * Useful for fault-injection or knob tweaking that VoltDB reads from JVM system properties
+     * (e.g. streaming-snapshot throttle, test-only behavior flags).
+     *
+     * @param key   the property name (must be non-null and non-empty, no whitespace)
+     * @param value the property value (must be non-null, no whitespace; may be empty)
+     * @return this cluster instance for method chaining
+     * @throws NullPointerException     if {@code key} or {@code value} is null
+     * @throws IllegalArgumentException if {@code key} is empty or {@code key}/{@code value}
+     *                                  contains whitespace
+     * @see VoltDBContainer#withJavaProperty(String, String)
+     */
+    public VoltDBCluster withJavaProperty(String key, String value) {
+        for (VoltDBContainer voltDBContainer : containers()) {
+            voltDBContainer.withJavaProperty(key, value);
+        }
+        return this;
+    }
+
+    /**
      * Enables or disables command logging in the deployment configuration for all containers.
      * Command logging is not supported by the VoltDB developer edition, and is automatically
      * disabled when a developer edition image is detected. Use this method to override
@@ -832,7 +856,7 @@ public class VoltDBCluster {
         return this;
     }
 
-    private Collection<VoltDBContainer> containers() {
+    Collection<VoltDBContainer> containers() {
         return containers.values();
     }
 }
