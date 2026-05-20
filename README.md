@@ -24,7 +24,7 @@ export VOLTDB_LICENSE=~/license.xml
 mvn -B -ntp archetype:generate \
     -DarchetypeGroupId=org.voltdb \
     -DarchetypeArtifactId=voltdb-stored-procedures-maven-quickstart \
-    -DarchetypeVersion=1.6.0 \
+    -DarchetypeVersion=1.11.0 \
     -DgroupId=org.example.test \
     -DartifactId=my-voltdb-procedures \
     -Dpackage=org.example.procedures \
@@ -32,7 +32,7 @@ mvn -B -ntp archetype:generate \
 ```
 This uses a maven archetype to generate your own project that starts you off with a simple example schema, a few simple procedures, and passing Junit and Integration tests.
 
-To build the project and run the tests, you can use a single maven command. First you need to specify the path to your VoltDB license file.
+To build the project and run the tests, you can use a single maven command. First, you need to specify the path to your VoltDB license file.
 ```shell
 export VOLTDB_LICENSE=~/license.xml
 ```

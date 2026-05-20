@@ -7,15 +7,15 @@
     ```sh
     git checkout main
     git pull
-    git checkout -b release-1.8.x
+    git checkout -b release-1.11.x
     ```
 
-2. Set the version (without -SNAPSHOT)
+1. Set the version (without - SNAPSHOT)
 
 Since this project has 4 modules and a parent pom.xml, the easiest way is using the `mvn versions` command:
 
     ```sh
-    mvn versions:set -DnewVersion=1.8.0
+    mvn versions:set -DnewVersion=1.11.0
     mvn versions:commit
     ```
 
@@ -25,32 +25,32 @@ Check if you want to update the versions of any of the dependencies
     - set volt-procedure-api.version property to latest published release, e.g. 15.0.0
     - set voltdbclient.version to the latest published release, e.g. 15.0.0
 
-3. Manually build & test (set path to your VoltDB license)
+1. Manually build & test (set path to your VoltDB license)
 
     ```sh
     export VOLTDB_LICENSE=~/license.xml
     mvn clean install
     ```
 
-4. Commit this change and push to the branch.
+1. Commit this change and push to the branch.
 
     ```sh
     git add pom.xml */pom.xml
-    git commit -m "Setting version to 1.8.0"
-    git push -u origin release-1.8.x
+    git commit -m "Setting version to 1.11.0"
+    git push -u origin release-1.11.x
     ```
 
-5. Create the release tag
+1. Create the release tag
 
     ```sh
-    git tag -a v1.8.0 -m "Tagging v1.8.0 release"
-    git push origin v1.8.0
+    git tag -a v1.11.0 -m "Tagging v1.11.0 release"
+    git push origin v1.11.0
     ```
 
-6. Run the Release job in Jenkins
-   - TAG: v1.5.0
+1. Run the Release [job](https://voltdb-devs-ci.voltactivedata.com/job/testcontainer/job/Release/) in Jenkins
+   - TAG: v1.11.0
 
-7. Login to Sonatype, verify the artifact is Validated, then click Publish
+1. Login to Sonatype, verify the artifact is Validated, then click Publish
 
 
 ## After Release
@@ -60,7 +60,8 @@ To set things up for the next releases:
 - In the main branch, set the version to the next planned release, which may be the next major or minor version.
 
     ```sh
-    mvn versions:set -DnewVersion=1.9.0-SNAPSHOT
+    git checkout main
+    mvn versions:set -DnewVersion=1.12.0-SNAPSHOT
     mvn versions:commit
     ```
 
