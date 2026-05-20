@@ -795,15 +795,10 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
      */
     public Client2 getConnectedClient2(int timeoutMillis) throws IOException {
         int mappedPort = getMappedPort(VOLTDB_CLIENT_PORT);
-        Client2Config config = new Client2Config();
-        if (tlsEnabled) {
-            config.enableSSL();
-            config.trustStore(trustStorePath, trustStorePassword);
-            if (keyStorePath != null && !keyStorePath.isEmpty()) {
-                System.setProperty("javax.net.ssl.keyStore", keyStorePath);
-                System.setProperty("javax.net.ssl.keyStorePassword", keyStorePassword);
-            }
-        }
+        Client2Config config = new Client2Config()
+                .username(username)
+                .password(password);
+        applyClient2SslConfig(config);
         int retries = Math.max(1, timeoutMillis / 5000);
         client2 = ClientFactory.createClient(config);
         try {
@@ -816,6 +811,33 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
             throw new IOException("Could not connect to VoltDB, Server may have failed to start", e);
         }
         throw new IOException("Could not connect to VoltDB, Server may have failed to start");
+    }
+
+    /**
+     * Applies this container's TLS settings to the supplied {@link Client2Config}.
+     * <p>
+     * If TLS is enabled and a keystore path is configured, mutual TLS is set up
+     * via {@link Client2Config#trustStoreWithMutualAuth}. If TLS is enabled with
+     * only a truststore, {@link Client2Config#trustStore} is used. In both cases
+     * {@link Client2Config#enableSSL} is called after the stores are configured.
+     * <p>
+     * If TLS is not enabled, the config is left untouched.
+     * <p>
+     *
+     * @param config the {@link Client2Config} to configure; must not be {@code null}
+     */
+    private void applyClient2SslConfig(Client2Config config) {
+        if (!tlsEnabled) {
+            return;
+        }
+
+        if (keyStorePath == null || keyStorePath.isEmpty()) {
+            config.trustStore(trustStorePath, trustStorePassword);
+        } else {
+            config.trustStoreWithMutualAuth(trustStorePath, trustStorePassword,
+                    keyStorePath, keyStorePassword);
+        }
+        config.enableSSL();
     }
 
     /**
