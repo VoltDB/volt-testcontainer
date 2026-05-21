@@ -7,7 +7,7 @@
     ```sh
     git checkout main
     git pull
-    git checkout -b release-1.11.x
+    git checkout -b release-1.12.x
     ```
 
 1. Set the version (without - SNAPSHOT)
@@ -15,7 +15,7 @@
 Since this project has 4 modules and a parent pom.xml, the easiest way is using the `mvn versions` command:
 
     ```sh
-    mvn versions:set -DnewVersion=1.11.0
+    mvn versions:set -DnewVersion=1.12.0
     mvn versions:commit
     ```
 
@@ -36,19 +36,19 @@ Check if you want to update the versions of any of the dependencies
 
     ```sh
     git add pom.xml */pom.xml
-    git commit -m "Setting version to 1.11.0"
-    git push -u origin release-1.11.x
+    git commit -m "Setting version to 1.12.0"
+    git push -u origin release-1.12.x
     ```
 
 1. Create the release tag
 
     ```sh
-    git tag -a v1.11.0 -m "Tagging v1.11.0 release"
-    git push origin v1.11.0
+    git tag -a v1.12.0 -m "Tagging v1.12.0 release"
+    git push origin v1.12.0
     ```
 
 1. Run the Release [job](https://voltdb-devs-ci.voltactivedata.com/job/testcontainer/job/Release/) in Jenkins
-   - TAG: v1.11.0
+   - TAG: v1.12.0
 
 1. Login to Sonatype, verify the artifact is Validated, then click Publish
 
@@ -61,7 +61,7 @@ To set things up for the next releases:
 
     ```sh
     git checkout main
-    mvn versions:set -DnewVersion=1.12.0-SNAPSHOT
+    mvn versions:set -DnewVersion=1.13.0-SNAPSHOT
     mvn versions:commit
     ```
 
