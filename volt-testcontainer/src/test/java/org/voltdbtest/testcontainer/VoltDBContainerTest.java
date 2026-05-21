@@ -9,6 +9,7 @@ package org.voltdbtest.testcontainer;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.testcontainers.containers.Network;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -63,6 +64,38 @@ public class VoltDBContainerTest {
 
         assertThat(exposedPorts)
                 .contains(21212, VoltDBContainer.VOLTDB_CLIENT_PORT, 9092, 5555);
+    }
+
+    @Test
+    void shouldApplyProvidedNetwork() throws IOException {
+        VoltDBContainer container = createContainer();
+        try (Network userNetwork = Network.newNetwork()) {
+            container.setNetwork(userNetwork);
+            container.setNetworkMode(userNetwork.getId());
+
+            container.configure();
+
+            assertThat(container.getNetwork())
+                    .as("Network passed in before configure() must not be replaced")
+                    .isSameAs(userNetwork);
+            assertThat(container.getNetworkMode())
+                    .as("Network mode passed in before configure() must not be replaced")
+                    .isEqualTo(userNetwork.getId());
+        }
+    }
+
+    @Test
+    void shouldApplyDefaultNetworkIfNoneIsProvided() throws IOException {
+        VoltDBContainer container = createContainer();
+
+        container.configure();
+
+        assertThat(container.getNetwork())
+                .as("configure() must wire up a default network when none is supplied")
+                .isNotNull();
+        assertThat(container.getNetworkMode())
+                .as("configure() must wire up a default network mode when none is supplied")
+                .isNotNull();
     }
 
     @Test
