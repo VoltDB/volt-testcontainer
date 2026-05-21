@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!--
+
+    Copyright (C) 2025-2026 Volt Active Data Inc.
+
+    Use of this source code is governed by an MIT
+    license that can be found in the LICENSE file or at
+    https://opensource.org/licenses/MIT.
+
+-->
+<deployment>
+    <cluster kfactor="0" sitesperhost="2"/>
+
+    <security enabled="true" provider="hash"/>
+
+    <ssl enabled="true"
+         external="true"
+         internal="false"
+         dr="false"
+         clientauthrequired="true">
+        <keystore path="/etc/ssl/keystore.jks" password="topsecret"/>
+        <truststore path="/etc/ssl/truststore.jks" password="topsecret"/>
+    </ssl>
+
+    <users>
+        <user name="john"
+              password="A51DDA7C7FF50B61EAEA0444371F4A6A9301E50196D9632F363564CC3032521409CF22A852F2032EEC099ED5967C0D000CEC607A"
+              roles="administrator" plaintext="false"/>
+    </users>
+</deployment>
