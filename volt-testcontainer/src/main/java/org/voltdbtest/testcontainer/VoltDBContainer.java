@@ -285,8 +285,10 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         withEnv("VOLTDB_CONFIG", "/etc/deployment.xml");
         withEnv("VOLTDB_OPTS", buildVoltdbOpts());
 
-        withNetworkMode(NETWORK.getId());
-        withNetwork(NETWORK);
+        if (getNetwork() == null) {
+            withNetworkMode(NETWORK.getId());
+            withNetwork(NETWORK);
+        }
         withNetworkAliases(hostId);
 
         handleLicenseSetup(licensePath);
