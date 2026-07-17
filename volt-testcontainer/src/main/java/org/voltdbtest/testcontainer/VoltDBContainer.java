@@ -292,9 +292,31 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
      * image digest — the registry can update it under the same name over time.
      * Callers that pass such a tag need an always-pull policy so a stale local
      * cache can't mask a registry update.
+     *
+     * <p>The recognised suffixes cover the tag conventions produced by the
+     * VoltDB image-build pipelines:
+     * <ul>
+     *   <li>{@code :latest} — Docker's global rolling tag; pushed on master.</li>
+     *   <li>{@code --latest} — per-branch rolling tag published by the
+     *       release-image and VMC-svc image builds.</li>
+     *   <li>{@code --debug} — per-branch rolling CI/debug tag published by
+     *       {@code 1_pre_check_and_build}.</li>
+     *   <li>{@code --dev} — per-branch rolling tag still used by the VMC-svc
+     *       dev image and by older release branches that predate the rename
+     *       of {@code --dev} to {@code --debug}.</li>
+     * </ul>
+     * Numbered variants (e.g. {@code --debug-142}, {@code --142}) and pinned
+     * released versions (e.g. {@code 15.3.0}) are treated as immutable and
+     * keep the testcontainers default pull policy.
      */
     public static boolean isMutableTag(String image) {
-        return image != null && image.endsWith("--latest");
+        if (image == null) {
+            return false;
+        }
+        return image.endsWith(":latest")
+                || image.endsWith("--latest")
+                || image.endsWith("--debug")
+                || image.endsWith("--dev");
     }
 
     @Override
