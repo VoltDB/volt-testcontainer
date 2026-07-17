@@ -12,6 +12,7 @@ import com.github.dockerjava.api.model.ContainerNetwork;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.images.PullPolicy;
 import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
@@ -266,6 +267,17 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
         this.extraJarsDir = extraJarsDir;
         this.deployment = deployment;
 
+        // A tag ending in "--latest" is mutable: the same tag string can point
+        // at different image digests on the registry over time. Testcontainers'
+        // default pull policy only pulls when the image is absent locally, so
+        // a cached copy from an earlier run can silently mask a registry update
+        // and the container ends up running a stale image. Force an always-pull
+        // for these tags only; pinned/immutable tags keep the default so tests
+        // don't re-pull on every invocation.
+        if (isMutableTag(image)) {
+            withImagePullPolicy(PullPolicy.alwaysPull());
+        }
+
         // disable command log if using dev edition
         if (isDevImage(image)) {
             this.commandLogEnabled = false;
@@ -273,6 +285,16 @@ public class VoltDBContainer extends GenericContainer<VoltDBContainer> {
 
         topicPublicInterface = hostId;
         drPublicInterface = hostId;
+    }
+
+    /**
+     * A mutable image tag is one whose string identity does not pin a specific
+     * image digest — the registry can update it under the same name over time.
+     * Callers that pass such a tag need an always-pull policy so a stale local
+     * cache can't mask a registry update.
+     */
+    public static boolean isMutableTag(String image) {
+        return image != null && image.endsWith("--latest");
     }
 
     @Override
