@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TestBase {
 
     /** Default enterprise image used by most tests. */
-    public static final String VOLTDB_IMAGE = "voltdb/voltdb-enterprise:14.3.3";
+    public static final String VOLTDB_IMAGE = "voltdb/voltdb-enterprise:15.3.0";
 
     /** Path to a valid VoltDB license file, resolved from well-known locations. */
     protected static final String validLicensePath;
